@@ -48,13 +48,13 @@ public class ArticleDTO {
     private Long categoryId;
 
     @Schema(hidden = true)
-    private CategoryDTO categoryDetails;
-
-    @Schema(hidden = true)
     private Long entrepriseId;
 
     @Schema(hidden = true)
-    private EntrepriseDTO entrepriseDetails;
+    private String entrepriseName;
+
+    @Schema(hidden = true)
+    private String categoryDesignation;
 
     @Schema(hidden = true)
     private LocalDateTime creationDate;

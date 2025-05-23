@@ -90,13 +90,13 @@ public class CategoryServiceImpl implements CategoryService {
         List<Category> categories = categoryRepository.findAllWithEntreprise();
 
         return categories.stream().map(category -> {
-            CategoryDTO dto = modelMapper.map(category, CategoryDTO.class);
+            CategoryDTO categoryFromDB = modelMapper.map(category, CategoryDTO.class);
 
             if (category.getEntreprise() != null) {
-                dto.setEntrepriseName(category.getEntreprise().getNom());
+                categoryFromDB .setEntrepriseName(category.getEntreprise().getNom());
             }
 
-            return dto;
+            return categoryFromDB ;
         }).collect(Collectors.toList());
     }
 
@@ -106,16 +106,16 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "not found with id", id));
 
-        CategoryDTO categoryDTO = modelMapper.map(category, CategoryDTO.class);
+        CategoryDTO deletedCategory = modelMapper.map(category, CategoryDTO.class);
 
         if (category.getEntreprise() != null) {
-            categoryDTO.setEntrepriseName(category.getEntreprise().getNom());
-            categoryDTO.setEntrepriseId(category.getEntreprise().getId());
+            deletedCategory .setEntrepriseName(category.getEntreprise().getNom());
+            deletedCategory .setEntrepriseId(category.getEntreprise().getId());
         }
 
         categoryRepository.delete(category);
 
-        return categoryDTO;
+        return deletedCategory;
     }
 
 
