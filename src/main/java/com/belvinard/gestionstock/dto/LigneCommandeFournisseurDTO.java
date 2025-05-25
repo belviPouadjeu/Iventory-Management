@@ -40,8 +40,8 @@ public class LigneCommandeFournisseurDTO {
  @NotNull(message = "L'identifiant de la commande fournisseur est obligatoire")
  private Long commandeFournisseurId;
 
- private CommandeFournisseurDTO commandeFournisseurDetails;
+ private String commandeFournisseurName;
 
- private ArticleDTO articleDetails;
+ private String articleName;
 
 }

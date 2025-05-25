@@ -43,7 +43,6 @@ public class ArticleDTO {
     @Schema(hidden = true)
     private BigDecimal prixUnitaireTtc;
 
-
     @Schema(hidden = true)
     private Long categoryId;
 

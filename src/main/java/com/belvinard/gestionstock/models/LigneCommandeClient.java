@@ -22,9 +22,19 @@ public class LigneCommandeClient extends AbstractEntity {
   @DecimalMin(value = "0.01", message = "La quantité doit être supérieure à zéro")
   private BigDecimal quantite;
 
-  @NotNull(message = "Le prix unitaire est obligatoire")
-  @DecimalMin(value = "0.01", message = "Le prix unitaire doit être supérieur à zéro")
-  private BigDecimal prixUnitaire;
+  //@NotNull(message = "Le prix unitaire HT est obligatoire")
+  @DecimalMin(value = "0.01", message = "Le prix HT doit être supérieur à zéro")
+  private BigDecimal prixUnitaireHt;
+
+  //@NotNull(message = "Le taux de TVA est obligatoire")
+  @DecimalMin(value = "0.0", message = "Le taux de TVA doit être supérieur ou égal à 0")
+  //@Column(nullable = false)
+  private BigDecimal tauxTva;
+
+  //@NotNull(message = "Le prix unitaire TTC est obligatoire")
+  @DecimalMin(value = "0.01", message = "Le prix TTC doit être supérieur à zéro")
+  //@Column(nullable = false)
+  private BigDecimal prixUnitaireTtc;
 
   @ManyToOne
   @JoinColumn(name = "idcommandeclient")
@@ -33,7 +43,4 @@ public class LigneCommandeClient extends AbstractEntity {
   @ManyToOne
   @JoinColumn(name = "idarticle")
   private Article article;
-
-
 }
-

@@ -62,8 +62,6 @@ public class CommandeClientController {
         CommandeClientDTO updatedCommande = commandeClientService.updateEtatCommande(idCommande, etatCommande);
         return ResponseEntity.ok(updatedCommande);
     }
-
-
     @GetMapping
     @Operation(summary = "Lister toutes les commandes clients", description = "Retourne toutes les commandes clients enregistrées")
     public ResponseEntity<List<CommandeClientDTO>> findAll() {
@@ -84,8 +82,6 @@ public class CommandeClientController {
             @PathVariable Long commandeId) {
         return ResponseEntity.ok(commandeClientService.findAllLignesCommandesClientByCommandeClientId(commandeId));
     }
-
-
     @DeleteMapping("/{id}")
     @Operation(summary = "Supprimer une commande client", description = "Supprime une commande client par son identifiant")
     public ResponseEntity<CommandeClientDTO> deleteCommandeClient(@PathVariable Long id) {
