@@ -71,7 +71,7 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
         ligneCommandeClientDTO.setCommandeClientName(commande.getCode());
         ligneCommandeClientDTO.setArticleId(article.getId());
         ligneCommandeClientDTO.setArticleName(article.getDesignation());
-        ligneCommandeClientDTO.setPrixTotal(prixTotal); // calculé ici
+        ligneCommandeClientDTO.setPrixTotal(prixTotal);
 
         return ligneCommandeClientDTO;
     }

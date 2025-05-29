@@ -45,6 +45,6 @@ public class CommandeClientDTO {
     private String clientName;
 
 
-    @Schema(hidden = true)
-    private List<LigneCommandeClientDTO> ligneCommandeClients;
+//    @Schema(hidden = true)
+//    private List<LigneCommandeClientDTO> ligneCommandeClients;
 }

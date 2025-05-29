@@ -30,7 +30,6 @@ public class CommandeClientServiceImpl implements CommandeClientService {
     private final ModelMapper modelMapper;
     private static final Logger log = LoggerFactory.getLogger(CommandeClientServiceImpl.class);
 
-    // Création d'une commande (retourne seulement clientName)
     @Override
     public CommandeClientDTO createCommandeClient(Long clientId, Long entrepriseId, CommandeClientDTO commandeClientDTO) {
         Client client = clientRepository.findById(clientId)
@@ -64,26 +63,21 @@ public class CommandeClientServiceImpl implements CommandeClientService {
     @Override
     public CommandeClientDTO updateEtatCommande(Long idCommande, EtatCommande etatCommande) {
 
-        // 1. Vérifier l'existence de la commande
         CommandeClient commande = commandeClientRepository.findById(idCommande)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "CommandeClient", "id", idCommande
                 ));
 
-        // 2. Vérifier que la commande n'est pas déjà livrée
         if (commande.getEtatCommande() == EtatCommande.LIVREE) {
             throw new BusinessRuleException("Impossible de modifier une commande déjà livrée.");
         }
 
         log.info("Mise à jour de la commande ID {} vers l'état {}", idCommande, etatCommande);
 
-        // 3. Mettre à jour l'état de la commande
         commande.setEtatCommande(etatCommande);
 
-        // 4. Sauvegarder la commande modifiée
         CommandeClient updatedCommande = commandeClientRepository.save(commande);
 
-        // 5. Retourner le DTO complet
         return convertToDTO(updatedCommande);
     }
 
@@ -121,7 +115,6 @@ public class CommandeClientServiceImpl implements CommandeClientService {
     }
 
 
-    // Recherche par code (retourne seulement clientName)
     @Override
     public CommandeClientDTO findByCode(String code) {
         CommandeClient commandeClient = commandeClientRepository.findByCode(code)
@@ -131,13 +124,13 @@ public class CommandeClientServiceImpl implements CommandeClientService {
         dto.setClientName(commandeClient.getClient().getNom());
         dto.setEntrepriseId(commandeClient.getEntreprise().getId());
 
-        if (commandeClient.getLigneCommandeClients() != null) {
-            List<LigneCommandeClientDTO> lignesDTO = commandeClient.getLigneCommandeClients()
-                    .stream()
-                    .map(ligne -> modelMapper.map(ligne, LigneCommandeClientDTO.class))
-                    .collect(Collectors.toList());
-            dto.setLigneCommandeClients(lignesDTO);
-        }
+//        if (commandeClient.getLigneCommandeClients() != null) {
+//            List<LigneCommandeClientDTO> lignesDTO = commandeClient.getLigneCommandeClients()
+//                    .stream()
+//                    .map(ligne -> modelMapper.map(ligne, LigneCommandeClientDTO.class))
+//                    .collect(Collectors.toList());
+//            dto.setLigneCommandeClients(lignesDTO);
+//        }
 
         return dto;
     }
@@ -149,20 +142,20 @@ public class CommandeClientServiceImpl implements CommandeClientService {
                 .collect(Collectors.toList());
     }
 
-    // Convertit une CommandeClient en DTO (utilisé dans findAll(), findById(), etc.)
+
     private CommandeClientDTO convertToDTO(CommandeClient commandeClient) {
         CommandeClientDTO dto = modelMapper.map(commandeClient, CommandeClientDTO.class);
         dto.setClientName(commandeClient.getClient().getNom());
         dto.setClientId(commandeClient.getClient().getId());
         dto.setEntrepriseId(commandeClient.getEntreprise().getId());
 
-        if (commandeClient.getLigneCommandeClients() != null) {
-            List<LigneCommandeClientDTO> lignesDTO = commandeClient.getLigneCommandeClients()
-                    .stream()
-                    .map(ligne -> modelMapper.map(ligne, LigneCommandeClientDTO.class))
-                    .collect(Collectors.toList());
-            dto.setLigneCommandeClients(lignesDTO);
-        }
+//        if (commandeClient.getLigneCommandeClients() != null) {
+//            List<LigneCommandeClientDTO> lignesDTO = commandeClient.getLigneCommandeClients()
+//                    .stream()
+//                    .map(ligne -> modelMapper.map(ligne, LigneCommandeClientDTO.class))
+//                    .collect(Collectors.toList());
+//            dto.setLigneCommandeClients(lignesDTO);
+//        }
 
         return dto;
     }
