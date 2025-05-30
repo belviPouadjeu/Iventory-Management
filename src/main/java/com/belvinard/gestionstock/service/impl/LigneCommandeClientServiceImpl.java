@@ -16,6 +16,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +30,26 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
     private final ArticleRepository articleRepository;
     private final ModelMapper modelMapper;
 
+    /**
+     * Creates a new order line item for a customer order.
+     *
+     * @param commandeId The ID of the customer order
+     * @param articleId The ID of the article/product to add to the order
+     * @param ligneDTO Data transfer object containing the order line details, including quantity
+     *
+     * @return LigneCommandeClientDTO The created order line with complete details including prices
+     *
+     * @throws ResourceNotFoundException If either the order or article is not found
+     * @throws IllegalArgumentException If requested quantity exceeds available stock
+     *
+     * This method:
+     * 1. Verifies the existence of both the order and article
+     * 2. Checks if sufficient stock is available
+     * 3. Updates the stock quantity
+     * 4. Calculates prices (HT, TVA, TTC)
+     * 5. Creates and saves the order line
+     * 6. Returns a DTO with complete order line information
+     */
     @Override
     public LigneCommandeClientDTO createLigneCommandeClient(Long commandeId, Long articleId,
                                                             LigneCommandeClientDTO ligneDTO) {
@@ -74,6 +97,54 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
         ligneCommandeClientDTO.setPrixTotal(prixTotal);
 
         return ligneCommandeClientDTO;
+    }
+
+    @Override
+    public List<LigneCommandeClientDTO> getAllLigneCommandeClients() {
+        List<LigneCommandeClient> lignes = ligneCommandeClientRepository.findAll();
+
+        return lignes.stream().map(ligne -> {
+            LigneCommandeClientDTO ligneCommandeClientFromDb = modelMapper.map(ligne, LigneCommandeClientDTO.class);
+
+            // Set commandeClient info
+            if (ligne.getCommandeClient() != null) {
+                ligneCommandeClientFromDb.setCommandeClientId(ligne.getCommandeClient().getId());
+                ligneCommandeClientFromDb.setCommandeClientName(ligne.getCommandeClient().getCode());
+            }
+
+            if (ligne.getArticle() != null) {
+                ligneCommandeClientFromDb.setArticleId(ligne.getArticle().getId());
+                ligneCommandeClientFromDb.setArticleName(ligne.getArticle().getDesignation());
+            }
+
+            if (ligne.getPrixUnitaireTtc() != null && ligne.getQuantite() != null) {
+                BigDecimal prixTotal = ligne.getPrixUnitaireTtc().multiply(ligne.getQuantite());
+                ligneCommandeClientFromDb.setPrixTotal(prixTotal);
+            }
+
+            return ligneCommandeClientFromDb;
+        }).collect(Collectors.toList());
+    }
+
+
+    @Override
+    public LigneCommandeClientDTO getLigneCommandeClientById(Long ligneId) {
+        LigneCommandeClient ligne = ligneCommandeClientRepository.findById(ligneId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ligne commande client non trouvée avec l'id " + ligneId));
+
+        LigneCommandeClientDTO ligneCommandeClientDTO = modelMapper.map(ligne, LigneCommandeClientDTO.class);
+
+        ligneCommandeClientDTO.setCommandeClientId(ligne.getCommandeClient().getId());
+        ligneCommandeClientDTO.setCommandeClientName(ligne.getCommandeClient().getCode());
+        ligneCommandeClientDTO.setArticleId(ligne.getArticle().getId());
+        ligneCommandeClientDTO.setArticleName(ligne.getArticle().getDesignation());
+
+        if (ligne.getPrixUnitaireTtc() != null && ligne.getQuantite() != null) {
+            BigDecimal prixTotal = ligne.getPrixUnitaireTtc().multiply(ligne.getQuantite());
+            ligneCommandeClientDTO.setPrixTotal(prixTotal);
+        }
+
+        return ligneCommandeClientDTO ;
     }
 
 

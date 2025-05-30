@@ -24,18 +24,12 @@ public class LigneCommandeClientDTO {
     @Schema(description = "Quantité commandée", required = true, example = "5.0")
     private BigDecimal quantite;
 
-//    @NotNull(message = "Le prix unitaire HT est obligatoire")
-//    @DecimalMin(value = "0.01", message = "Le prix HT doit être supérieur à zéro")
     @Schema(description = "Prix unitaire HT de l'article",example = "1500.00", hidden = true)
     private BigDecimal prixUnitaireHt;
 
-//    @NotNull(message = "Le taux de TVA est obligatoire")
-//    @DecimalMin(value = "0.0", message = "Le taux de TVA doit être supérieur ou égal à 0")
     @Schema(description = "Taux de TVA en pourcentage",example = "18.0", hidden = true)
     private BigDecimal tauxTva;
 
-//    @NotNull(message = "Le prix TTC est obligatoire")
-//    @DecimalMin(value = "0.01", message = "Le prix TTC doit être supérieur à zéro")
     @Schema(description = "Prix unitaire TTC",example = "1770.00", hidden = true)
     private BigDecimal prixUnitaireTtc;
 

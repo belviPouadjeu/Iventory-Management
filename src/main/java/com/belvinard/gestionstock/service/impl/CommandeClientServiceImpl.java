@@ -124,14 +124,6 @@ public class CommandeClientServiceImpl implements CommandeClientService {
         dto.setClientName(commandeClient.getClient().getNom());
         dto.setEntrepriseId(commandeClient.getEntreprise().getId());
 
-//        if (commandeClient.getLigneCommandeClients() != null) {
-//            List<LigneCommandeClientDTO> lignesDTO = commandeClient.getLigneCommandeClients()
-//                    .stream()
-//                    .map(ligne -> modelMapper.map(ligne, LigneCommandeClientDTO.class))
-//                    .collect(Collectors.toList());
-//            dto.setLigneCommandeClients(lignesDTO);
-//        }
-
         return dto;
     }
 
@@ -148,14 +140,6 @@ public class CommandeClientServiceImpl implements CommandeClientService {
         dto.setClientName(commandeClient.getClient().getNom());
         dto.setClientId(commandeClient.getClient().getId());
         dto.setEntrepriseId(commandeClient.getEntreprise().getId());
-
-//        if (commandeClient.getLigneCommandeClients() != null) {
-//            List<LigneCommandeClientDTO> lignesDTO = commandeClient.getLigneCommandeClients()
-//                    .stream()
-//                    .map(ligne -> modelMapper.map(ligne, LigneCommandeClientDTO.class))
-//                    .collect(Collectors.toList());
-//            dto.setLigneCommandeClients(lignesDTO);
-//        }
 
         return dto;
     }
