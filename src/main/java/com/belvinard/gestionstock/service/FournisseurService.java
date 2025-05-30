@@ -12,6 +12,7 @@ public interface FournisseurService {
 
   FournisseurDTO findFournisseurById(Long fournisseurId);
 
-
   FournisseurDTO deleteFournisseur(Long fournisseurId);
+
+  FournisseurDTO updateFournisseur(Long fournisseurId, FournisseurDTO fournisseurDTO);
 }

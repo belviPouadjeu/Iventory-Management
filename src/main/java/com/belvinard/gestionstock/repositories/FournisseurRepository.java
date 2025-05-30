@@ -9,4 +9,12 @@ public interface FournisseurRepository extends JpaRepository<Fournisseur, Long> 
 
     boolean existsByNomIgnoreCaseAndPrenomIgnoreCaseAndEntrepriseId(String nom, String prenom, Long entrepriseId);
 
+    boolean existsByNomAndPrenomAndEntrepriseIdAndIdNot(
+            String nom,
+            String prenom,
+            Long entrepriseId,
+            Long fournisseurId
+    );
+
+
 }

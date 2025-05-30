@@ -99,5 +99,50 @@ public class FournisseurController {
         return ResponseEntity.ok(fournisseurService.deleteFournisseur(id));
     }
 
+    /**
+     * Met à jour un fournisseur existant
+     *
+     * @param fournisseurId L'identifiant du fournisseur à mettre à jour
+     * @param fournisseurDTO Les nouvelles données du fournisseur
+     * @return Le fournisseur mis à jour
+     */
+    @PutMapping("/{fournisseurId}")
+    @Operation(
+            summary = "Mettre à jour un fournisseur",
+            description = "Met à jour les informations d'un fournisseur existant",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Fournisseur mis à jour avec succès",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = FournisseurDTO.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Fournisseur non trouvé",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Données invalides ou fournisseur en double",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    )
+            }
+    )
+    public ResponseEntity<FournisseurDTO> updateFournisseur(
+            @PathVariable Long fournisseurId,
+            @Valid @RequestBody FournisseurDTO fournisseurDTO) {
+        FournisseurDTO updatedFournisseur = fournisseurService.updateFournisseur(fournisseurId, fournisseurDTO);
+        return ResponseEntity.ok(updatedFournisseur);
+    }
+
 
 }

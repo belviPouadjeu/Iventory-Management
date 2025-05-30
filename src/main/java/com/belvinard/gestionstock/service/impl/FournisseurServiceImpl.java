@@ -184,7 +184,54 @@ public class FournisseurServiceImpl implements FournisseurService {
         return fournisseurDTO;
     }
 
+    /**
+     * Met à jour les informations d'un fournisseur.
+     *
+     * @param fournisseurId L'identifiant du fournisseur à mettre à jour
+     * @param fournisseurDTO Les nouvelles données du fournisseur
+     * @return FournisseurDTO Les informations du fournisseur mises à jour
+     * @throws ResourceNotFoundException si le fournisseur n'existe pas
+     * @throws DuplicateEntityException si le nom et prénom existent déjà pour un autre fournisseur
+     */
+    @Override
+    @Transactional
+    public FournisseurDTO updateFournisseur(Long fournisseurId, FournisseurDTO fournisseurDTO) {
 
+        Fournisseur existingFournisseur = fournisseurRepository.findById(fournisseurId)
+                .orElseThrow(() -> new ResourceNotFoundException("Fournisseur non trouvé avec l'id " + fournisseurId));
+
+        boolean fournisseurExists = fournisseurRepository.existsByNomAndPrenomAndEntrepriseIdAndIdNot(
+                fournisseurDTO.getNom(),
+                fournisseurDTO.getPrenom(),
+                existingFournisseur.getEntreprise().getId(),
+                fournisseurId
+        );
+
+        if (fournisseurExists) {
+            throw new DuplicateEntityException(
+                    "Un fournisseur avec le nom '" + fournisseurDTO.getNom() +
+                            "' et le prénom '" + fournisseurDTO.getPrenom() +
+                            "' existe déjà dans cette entreprise"
+            );
+        }
+
+        existingFournisseur.setNom(fournisseurDTO.getNom());
+        existingFournisseur.setPrenom(fournisseurDTO.getPrenom());
+        existingFournisseur.setNumTel(fournisseurDTO.getNumTel());
+        existingFournisseur.setAdresse(fournisseurDTO.getAdresse());
+        existingFournisseur.setPhoto(fournisseurDTO.getPhoto());
+
+        Fournisseur updatedFournisseur = fournisseurRepository.save(existingFournisseur);
+
+        FournisseurDTO updatedDTO = modelMapper.map(updatedFournisseur, FournisseurDTO.class);
+
+        if (updatedFournisseur.getEntreprise() != null) {
+            updatedDTO.setEntrepriseId(updatedFournisseur.getEntreprise().getId());
+            updatedDTO.setEntrepriseName(updatedFournisseur.getEntreprise().getNom());
+        }
+
+        return updatedDTO;
+    }
 
 
 }

@@ -28,7 +28,7 @@ public class FournisseurDTO {
     @Size(min = 4, max = 100, message = "Le prénom doit contenir 4 et 100 caractères")
     private String prenom;
 
-    private Adresse adresse; // Note: Adresse ne devrait pas non plus avoir d'annotations JPA si c'est dans le DTO
+    private Adresse adresse;
 
     @Pattern(regexp = ".*\\.(jpg|jpeg|png|gif|bmp)$", message = "Le nom du fichier photo doit être une image...")
     private String photo;
