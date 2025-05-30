@@ -41,7 +41,7 @@ public class FournisseurDTO {
     private String numTel;
 
     @Schema(hidden = true)
-    private EntrepriseDTO entrepriseDetails;
+    private String entrepriseName;
 
     @Schema(hidden = true)
     private Long entrepriseId;

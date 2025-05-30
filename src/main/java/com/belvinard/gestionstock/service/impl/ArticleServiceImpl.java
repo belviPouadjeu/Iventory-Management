@@ -94,12 +94,12 @@ public class ArticleServiceImpl implements ArticleService {
 
             if (article.getEntreprise() != null) {
                 createdArticleDTO.setEntrepriseId(article.getEntreprise().getId());
-                createdArticleDTO.setEntrepriseName(article.getEntreprise().getNom()); // ➜ juste le nom
+                createdArticleDTO.setEntrepriseName(article.getEntreprise().getNom());
             }
 
             if (article.getCategory() != null) {
                 createdArticleDTO.setCategoryId(article.getCategory().getId());
-                createdArticleDTO.setCategoryDesignation(article.getCategory().getDesignation()); // ➜ juste la désignation
+                createdArticleDTO.setCategoryDesignation(article.getCategory().getDesignation());
             }
 
             return createdArticleDTO;
