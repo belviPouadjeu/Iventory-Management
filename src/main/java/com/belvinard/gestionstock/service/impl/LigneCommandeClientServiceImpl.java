@@ -3,6 +3,7 @@ package com.belvinard.gestionstock.service.impl;
 import com.belvinard.gestionstock.dto.LigneCommandeClientDTO;
 import com.belvinard.gestionstock.exceptions.APIException;
 import com.belvinard.gestionstock.exceptions.BusinessRuleException;
+import com.belvinard.gestionstock.exceptions.InvalidOperationException;
 import com.belvinard.gestionstock.exceptions.ResourceNotFoundException;
 import com.belvinard.gestionstock.models.Article;
 import com.belvinard.gestionstock.models.CommandeClient;
@@ -191,6 +192,21 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
         result.setPrixTotal(prixTotal);
 
         return result;
+    }
+
+    @Override
+    public LigneCommandeClientDTO deleteLigneCommandeClient(Long ligneId) {
+        LigneCommandeClient ligne = ligneCommandeClientRepository.findById(ligneId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ligne de commande client introuvable avec ID : " + ligneId));
+
+        if (ligne.getCommandeClient().getEtatCommande() == EtatCommande.LIVREE) {
+            throw new InvalidOperationException("Impossible de supprimer une ligne : la commande est déjà livrée");
+        }
+
+        LigneCommandeClientDTO dto = modelMapper.map(ligne, LigneCommandeClientDTO.class);
+
+        ligneCommandeClientRepository.delete(ligne);
+        return dto;
     }
 
 

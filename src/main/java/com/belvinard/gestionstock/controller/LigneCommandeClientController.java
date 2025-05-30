@@ -101,5 +101,20 @@ public class LigneCommandeClientController {
         return ResponseEntity.ok(updatedLigne);
     }
 
+    @Operation(
+            summary = "Supprimer une ligne de commande client",
+            description = "Cette opération permet de supprimer une ligne de commande client sauf si la commande est déjà livrée."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Ligne de commande supprimée avec succès"),
+            @ApiResponse(responseCode = "409", description = "Impossible de supprimer la ligne car la commande est livrée"),
+            @ApiResponse(responseCode = "404", description = "Ligne de commande non trouvée")
+    })
+    @DeleteMapping("/{ligneId}")
+    public ResponseEntity<LigneCommandeClientDTO> deleteLigneCommandeClient(@PathVariable Long ligneId) {
+        LigneCommandeClientDTO deletedLigne = ligneCommandeClientService.deleteLigneCommandeClient(ligneId);
+        return ResponseEntity.ok(deletedLigne);
+    }
+
 
 }
