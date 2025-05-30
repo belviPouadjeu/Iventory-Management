@@ -10,8 +10,8 @@ public interface FournisseurService {
 
   List<FournisseurDTO> getAllFournisseur();
 
-  //FournisseurDTO findById(Long id);
+  FournisseurDTO findFournisseurById(Long fournisseurId);
 
 
-  //FournisseurDTO delete(Long id);
+  FournisseurDTO deleteFournisseur(Long fournisseurId);
 }

@@ -5,14 +5,17 @@ import com.belvinard.gestionstock.dto.EntrepriseDTO;
 import com.belvinard.gestionstock.dto.FournisseurDTO;
 import com.belvinard.gestionstock.exceptions.APIException;
 import com.belvinard.gestionstock.exceptions.DuplicateEntityException;
+import com.belvinard.gestionstock.exceptions.InvalidOperationException;
 import com.belvinard.gestionstock.exceptions.ResourceNotFoundException;
 import com.belvinard.gestionstock.models.Entreprise;
 import com.belvinard.gestionstock.models.Fournisseur;
 import com.belvinard.gestionstock.repositories.EntrepriseRepository;
 import com.belvinard.gestionstock.repositories.FournisseurRepository;
 import com.belvinard.gestionstock.service.FournisseurService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -104,6 +107,81 @@ public class FournisseurServiceImpl implements FournisseurService {
                     return fournisseurDTO;
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Récupère un fournisseur par son identifiant avec les informations de son entreprise.
+     *
+     * @param fournisseurId L'identifiant du fournisseur à rechercher
+     * @return FournisseurDTO contenant les informations du fournisseur et de son entreprise
+     * @throws ResourceNotFoundException si le fournisseur n'existe pas
+     */
+    @Override
+    public FournisseurDTO findFournisseurById(Long fournisseurId) {
+        Fournisseur fournisseur = fournisseurRepository.findById(fournisseurId)
+                .orElseThrow(() -> new ResourceNotFoundException("Fournisseur non trouvé avec l'id " + fournisseurId));
+
+        FournisseurDTO fournisseurDTO = modelMapper.map(fournisseur, FournisseurDTO.class);
+
+        if (fournisseur.getEntreprise() != null) {
+            fournisseurDTO.setEntrepriseId(fournisseur.getEntreprise().getId());
+            fournisseurDTO.setEntrepriseName(fournisseur.getEntreprise().getNom());
+        }
+
+        return fournisseurDTO;
+    }
+
+    /**
+     * Supprime un fournisseur par son identifiant.
+     *
+     * @param fournisseurId L'identifiant du fournisseur à supprimer
+     * @return FournisseurDTO Les informations du fournisseur qui a été supprimé
+     * @throws ResourceNotFoundException si le fournisseur n'existe pas
+     * @throws InvalidOperationException dans les cas suivants :
+     *         - Si le fournisseur a des commandes associées
+     *         - Si le fournisseur est référencé par d'autres entités dans la base de données
+     *
+     * Cette méthode :
+     * 1. Vérifie l'existence du fournisseur
+     * 2. Contrôle les dépendances (commandes associées)
+     * 3. Procède à la suppression si aucune contrainte n'est violée
+     * 4. Convertit et retourne les informations du fournisseur supprimé
+     *
+     * Note : La méthode est transactionnelle pour garantir l'intégrité des données
+     */
+    @Override
+    @Transactional
+    public FournisseurDTO deleteFournisseur(Long fournisseurId) {
+        // Récupérer le fournisseur
+        Fournisseur fournisseur = fournisseurRepository.findById(fournisseurId)
+                .orElseThrow(() -> new ResourceNotFoundException("Fournisseur non trouvé avec l'id " + fournisseurId));
+
+        // Vérifier si le fournisseur a des commandes
+        if (!fournisseur.getCommandeFournisseurs().isEmpty()) {
+            throw new InvalidOperationException(
+                    "Impossible de supprimer le fournisseur car il a des commandes associées"
+            );
+        }
+
+        try {
+            // Supprimer le fournisseur
+            fournisseurRepository.delete(fournisseur);
+        } catch (DataIntegrityViolationException e) {
+            throw new InvalidOperationException(
+                    "Impossible de supprimer le fournisseur car il est référencé par d'autres entités"
+            );
+        }
+
+        // Convertir en DTO pour le retour
+        FournisseurDTO fournisseurDTO = modelMapper.map(fournisseur, FournisseurDTO.class);
+
+        // Ajouter les informations de l'entreprise au DTO
+        if (fournisseur.getEntreprise() != null) {
+            fournisseurDTO.setEntrepriseId(fournisseur.getEntreprise().getId());
+            fournisseurDTO.setEntrepriseName(fournisseur.getEntreprise().getNom());
+        }
+
+        return fournisseurDTO;
     }
 
 

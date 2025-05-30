@@ -4,6 +4,7 @@ import com.belvinard.gestionstock.dto.FournisseurDTO;
 import com.belvinard.gestionstock.responses.ErrorResponse;
 import com.belvinard.gestionstock.service.FournisseurService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/fournisseurs")
+@RequestMapping("/api/v1/fournisseurs")
 @RequiredArgsConstructor
 @Tag(name = "Fournisseurs", description = "Opérations de gestion des fournisseurs")
 public class FournisseurController {
@@ -74,44 +75,29 @@ public class FournisseurController {
         return ResponseEntity.ok(fournisseurs);
     }
 
+    @GetMapping("/{fournisseurId}")
+    @Operation(summary = "Rechercher un fournisseur par ID",
+            description = "Cette opération permet de rechercher un fournisseur à partir de son identifiant.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Fournisseur trouvé"),
+            @ApiResponse(responseCode = "404", description = "Fournisseur non trouvé")
+    })
+    public ResponseEntity<FournisseurDTO> findById(
+            @Parameter(description = "ID du fournisseur à récupérer", required = true)
+            @PathVariable Long fournisseurId) {
+        return ResponseEntity.ok(fournisseurService.findFournisseurById(fournisseurId));
+    }
 
-
-//    @GetMapping("/{id}")
-//    @Operation(summary = "Rechercher un fournisseur par ID",
-//            description = "Cette opération permet de rechercher un fournisseur à partir de son identifiant.")
-//    @ApiResponses(value = {
-//        @ApiResponse(responseCode = "200", description = "Fournisseur trouvé"),
-//        @ApiResponse(responseCode = "404", description = "Fournisseur non trouvé")
-//    })
-//    public ResponseEntity<FournisseurDTO> findById(@PathVariable Long id) {
-//        return ResponseEntity.ok(fournisseurService.findById(id));
-//    }
-//
-//
-//    @GetMapping
-//    @Operation(summary = "Lister tous les fournisseurs",
-//            description = "Cette opération permet de récupérer la liste de tous les fournisseurs enregistrés.")
-//    @ApiResponses(value = {
-//        @ApiResponse(responseCode = "200", description = "Liste des fournisseurs retournée avec succès")
-//    })
-//    public ResponseEntity<List<FournisseurDTO>> findAll() {
-//
-//        return ResponseEntity.ok(fournisseurService.findAll());
-//    }
-//
-//
-//    @DeleteMapping("/{id}")
-//    @Operation(summary = "Supprimer un fournisseur",
-//            description = "Cette opération permet de supprimer un fournisseur à partir de son identifiant.")
-//    @ApiResponses(value = {
-//        @ApiResponse(responseCode = "200", description = "Fournisseur supprimé avec succès"),
-//        @ApiResponse(responseCode = "404", description = "Fournisseur non trouvé")
-//    })
-//    public ResponseEntity<FournisseurDTO> delete(@PathVariable Long id) {
-//        return ResponseEntity.ok(fournisseurService.delete(id));
-//    }
-
-
+    @DeleteMapping("/{fournisseurId}")
+    @Operation(summary = "Supprimer un fournisseur",
+            description = "Cette opération permet de supprimer un fournisseur à partir de son identifiant.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Fournisseur supprimé avec succès"),
+            @ApiResponse(responseCode = "404", description = "Fournisseur non trouvé")
+    })
+    public ResponseEntity<FournisseurDTO> deleteFourniseur(@PathVariable Long id) {
+        return ResponseEntity.ok(fournisseurService.deleteFournisseur(id));
+    }
 
 
 }
