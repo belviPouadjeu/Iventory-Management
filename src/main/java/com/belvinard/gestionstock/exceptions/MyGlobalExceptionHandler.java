@@ -151,4 +151,16 @@ public class MyGlobalExceptionHandler {
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(InvalidOperationException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidOperationException(InvalidOperationException ex) {
+        ErrorResponse response = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                "Opération non autorisée",
+                Collections.singletonMap("erreur", ex.getMessage())
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
 }
