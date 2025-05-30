@@ -1,10 +1,12 @@
 package com.belvinard.gestionstock.service.impl;
 
 import com.belvinard.gestionstock.dto.LigneCommandeClientDTO;
+import com.belvinard.gestionstock.exceptions.APIException;
 import com.belvinard.gestionstock.exceptions.BusinessRuleException;
 import com.belvinard.gestionstock.exceptions.ResourceNotFoundException;
 import com.belvinard.gestionstock.models.Article;
 import com.belvinard.gestionstock.models.CommandeClient;
+import com.belvinard.gestionstock.models.EtatCommande;
 import com.belvinard.gestionstock.models.LigneCommandeClient;
 import com.belvinard.gestionstock.repositories.ArticleRepository;
 import com.belvinard.gestionstock.repositories.CommandeClientRepository;
@@ -103,6 +105,10 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
     public List<LigneCommandeClientDTO> getAllLigneCommandeClients() {
         List<LigneCommandeClient> lignes = ligneCommandeClientRepository.findAll();
 
+        if (lignes.isEmpty()) {
+            throw new APIException("Aucune de commande creer!");
+        }
+
         return lignes.stream().map(ligne -> {
             LigneCommandeClientDTO ligneCommandeClientFromDb = modelMapper.map(ligne, LigneCommandeClientDTO.class);
 
@@ -145,6 +151,46 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
         }
 
         return ligneCommandeClientDTO ;
+    }
+
+    @Override
+    public LigneCommandeClientDTO updateLigneCommandeClient(Long ligneId, LigneCommandeClientDTO ligneDTO) {
+        LigneCommandeClient ligne = ligneCommandeClientRepository.findById(ligneId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ligne de commande non trouvée avec l'id " + ligneId));
+
+        CommandeClient commande = ligne.getCommandeClient();
+
+
+        if (commande.getEtatCommande() == EtatCommande.LIVREE) {
+            throw new IllegalStateException("Impossible de modifier une ligne de commande déjà livrée.");
+        }
+
+        Article article = articleRepository.findById(ligneDTO.getArticleId())
+                .orElseThrow(() -> new ResourceNotFoundException("Article non trouvé avec l'id " + ligneDTO.getArticleId()));
+
+        ligne.setArticle(article);
+        ligne.setQuantite(ligneDTO.getQuantite());
+
+        BigDecimal prixHT = article.getPrixUnitaireHt();
+        BigDecimal tauxTVA = article.getTauxTva();
+        BigDecimal tva = prixHT.multiply(tauxTVA).divide(BigDecimal.valueOf(100));
+        BigDecimal prixTTC = prixHT.add(tva);
+        BigDecimal prixTotal = prixTTC.multiply(ligneDTO.getQuantite());
+
+        ligne.setPrixUnitaireHt(prixHT);
+        ligne.setTauxTva(tauxTVA);
+        ligne.setPrixUnitaireTtc(prixTTC);
+
+        LigneCommandeClient updatedLigne = ligneCommandeClientRepository.save(ligne);
+
+        LigneCommandeClientDTO result = modelMapper.map(updatedLigne, LigneCommandeClientDTO.class);
+        result.setCommandeClientId(commande.getId());
+        result.setCommandeClientName(commande.getCode());
+        result.setArticleId(article.getId());
+        result.setArticleName(article.getDesignation());
+        result.setPrixTotal(prixTotal);
+
+        return result;
     }
 
 

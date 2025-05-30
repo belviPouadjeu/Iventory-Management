@@ -5,6 +5,8 @@ import com.belvinard.gestionstock.dto.LigneCommandeClientDTO;
 import com.belvinard.gestionstock.service.LigneCommandeClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -76,4 +78,28 @@ public class LigneCommandeClientController {
         LigneCommandeClientDTO ligneCommandeClientDTO = ligneCommandeClientService.getLigneCommandeClientById(ligneId);
         return ResponseEntity.ok(ligneCommandeClientDTO);
     }
+
+
+    @PutMapping("/{ligneId}")
+    @Operation(summary = "Mettre à jour une ligne de commande client",
+            description = "Impossible si la commande est déjà livrée.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Ligne mise à jour",
+                    content = @Content(schema = @Schema(implementation = LigneCommandeClientDTO.class))),
+            @ApiResponse(responseCode = "409", description = "Commande déjà livrée")
+    })
+    public ResponseEntity<LigneCommandeClientDTO> updateLigneCommandeClient(
+            @PathVariable Long id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Données mises à jour pour la ligne de commande",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = LigneCommandeClientDTO.class))
+            )
+            @RequestBody LigneCommandeClientDTO ligneDTO) {
+
+        LigneCommandeClientDTO updatedLigne = ligneCommandeClientService.updateLigneCommandeClient(id, ligneDTO);
+        return ResponseEntity.ok(updatedLigne);
+    }
+
+
 }

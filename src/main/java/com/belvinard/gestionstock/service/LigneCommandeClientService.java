@@ -10,4 +10,6 @@ public interface LigneCommandeClientService {
     List<LigneCommandeClientDTO> getAllLigneCommandeClients();
 
     LigneCommandeClientDTO getLigneCommandeClientById(Long ligneId);
+
+    LigneCommandeClientDTO updateLigneCommandeClient(Long ligneId, LigneCommandeClientDTO ligneDTO);
 }
