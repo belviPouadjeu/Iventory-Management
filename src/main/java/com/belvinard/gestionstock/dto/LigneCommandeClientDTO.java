@@ -2,13 +2,16 @@ package com.belvinard.gestionstock.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -47,4 +50,8 @@ public class LigneCommandeClientDTO {
     private Long articleId;
     @Schema(description = "Détails de l'article associé à la ligne",hidden = true)
     private String articleName;
+
+    @CreationTimestamp
+    @Column(name = "creationDate", nullable = false, updatable = false)
+    private LocalDateTime dateLigneCommande;
 }

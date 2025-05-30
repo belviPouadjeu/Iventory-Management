@@ -1,8 +1,10 @@
 package com.belvinard.gestionstock.controller;
 
 import com.belvinard.gestionstock.dto.ArticleDTO;
+import com.belvinard.gestionstock.dto.LigneCommandeClientDTO;
 import com.belvinard.gestionstock.models.Article;
 import com.belvinard.gestionstock.service.ArticleService;
+import com.belvinard.gestionstock.service.LigneCommandeClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,6 +25,7 @@ import java.util.List;
 public class ArticleController {
 
     private final ArticleService articleService;
+    private final LigneCommandeClientService ligneCommandeClientService;
 
     /* ================== CREATE ARTICLE ================== */
     @Operation(summary = "Créer un nouvel article")
@@ -96,6 +99,22 @@ public class ArticleController {
     public ResponseEntity<List<ArticleDTO>> findAllByCategory(@PathVariable Long idCategory) {
         List<ArticleDTO> articles = articleService.findAllArticleByIdCategory(idCategory);
         return ResponseEntity.ok(articles);
+    }
+
+    @Operation(
+            summary = "Historique des commandes pour un article",
+            description = "Récupère toutes les lignes de commandes clients liées à un article spécifique via son ID"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Historique des lignes de commande récupéré avec succès"),
+            @ApiResponse(responseCode = "404", description = "Article non trouvé")
+    })
+    @GetMapping("/historique/article/{idArticle}")
+    public ResponseEntity<List<LigneCommandeClientDTO>> findHistoriqueCommandeClient(
+            @Parameter(description = "ID de l'article") @PathVariable Long idArticle) {
+
+        List<LigneCommandeClientDTO> lignes = ligneCommandeClientService.findHistoriqueCommandeClient(idArticle);
+        return ResponseEntity.ok(lignes);
     }
 
 

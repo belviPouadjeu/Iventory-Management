@@ -206,7 +206,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public List<LigneCommandeClientDTO> findHistoriaueCommandeClient(Long idArticle) {
+    public List<LigneCommandeClientDTO> findHistoriqueCommandeClient(Long idArticle) {
         Article article = articleRepository.findById(idArticle)
                 .orElseThrow(() -> new ResourceNotFoundException("Article", "id", idArticle));
 

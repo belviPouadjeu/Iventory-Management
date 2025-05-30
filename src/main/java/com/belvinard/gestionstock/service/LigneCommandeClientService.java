@@ -14,4 +14,6 @@ public interface LigneCommandeClientService {
     LigneCommandeClientDTO updateLigneCommandeClient(Long ligneId, LigneCommandeClientDTO ligneDTO);
 
     LigneCommandeClientDTO deleteLigneCommandeClient(Long ligneId);
+
+    List<LigneCommandeClientDTO> findHistoriqueCommandeClient(Long idArticle);
 }
