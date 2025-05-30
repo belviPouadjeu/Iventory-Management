@@ -20,6 +20,6 @@ public interface ArticleService {
 
     //List<LigneVenteDTO> findHistoriqueVentes(Long idArticle);
 
-    List<LigneCommandeClientDTO> findHistoriaueCommandeClient(Long idArticle);
+    List<LigneCommandeClientDTO> findHistoriqueCommandeClient(Long idArticle);
 
 }

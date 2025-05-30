@@ -116,5 +116,22 @@ public class LigneCommandeClientController {
         return ResponseEntity.ok(deletedLigne);
     }
 
+    @Operation(
+            summary = "Historique des commandes d'un article",
+            description = "Récupère la liste des lignes de commande client pour un article donné"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Liste des lignes de commande récupérée avec succès"),
+            @ApiResponse(responseCode = "404", description = "Article non trouvé")
+    })
+    @GetMapping("/article/{idArticle}/historique")
+    public ResponseEntity<List<LigneCommandeClientDTO>> getHistoriqueCommandeClient(
+            @Parameter(description = "ID de l'article concerné", example = "2")
+            @PathVariable Long idArticle
+    ) {
+        List<LigneCommandeClientDTO> historique = ligneCommandeClientService.findHistoriqueCommandeClient(idArticle);
+        return ResponseEntity.ok(historique);
+    }
+
 
 }
