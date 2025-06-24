@@ -15,7 +15,8 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CommandeFournisseurDTO {
+public class
+CommandeFournisseurDTO {
 
     @Schema(hidden = true)
     private Long id;
