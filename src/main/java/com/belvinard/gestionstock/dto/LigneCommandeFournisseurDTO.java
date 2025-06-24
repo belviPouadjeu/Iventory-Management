@@ -19,9 +19,6 @@ public class LigneCommandeFournisseurDTO {
  @Schema(hidden = true)
  private Long id;
 
- @NotNull(message = "L'article est obligatoire")
- private Long articleId;
-
  @NotNull(message = "La quantité est obligatoire")
  @DecimalMin(value = "0.1", message = "La quantité doit être supérieure à 0")
  private BigDecimal quantite;
@@ -37,11 +34,21 @@ public class LigneCommandeFournisseurDTO {
  @Schema(hidden = true)
  private BigDecimal prixUnitaireTtc;
 
- @NotNull(message = "L'identifiant de la commande fournisseur est obligatoire")
+ @Schema(description = "Prix total TTC pour cette ligne de commande", example = "8850.00", hidden = true)
+ private BigDecimal prixTotal;
+
+
+ @Schema(hidden = true)
  private Long commandeFournisseurId;
 
+ @Schema(hidden = true)
  private String commandeFournisseurName;
 
+ @NotNull(message = "L'ID de l'article est obligatoire")
+ @Schema(description = "ID de l'article", example = "1")
+ private Long articleId;
+
+ @Schema(hidden = true)
  private String articleName;
 
 }

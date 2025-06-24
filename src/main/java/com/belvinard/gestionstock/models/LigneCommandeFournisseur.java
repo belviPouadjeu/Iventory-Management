@@ -31,9 +31,10 @@ public class LigneCommandeFournisseur extends AbstractEntity {
 
     @NotNull(message = "La quantité est obligatoire")
     @DecimalMin(value = "0.1", message = "La quantité doit être supérieure à 0")
-    private BigDecimal quantiteCommande;
+    @Column(name = "quantite_commande")
+    private BigDecimal quantite;
 
-    private String photo;
+    //private String photo;
 
     @ManyToOne
     @JoinColumn(name = "commande_id", nullable = false)
@@ -50,4 +51,6 @@ public class LigneCommandeFournisseur extends AbstractEntity {
             this.prixUnitaireTtc = prixUnitaireHt.add(prixUnitaireHt.multiply(tauxTva).divide(BigDecimal.valueOf(100)));
         }
     }
+
+
 }
