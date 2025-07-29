@@ -90,8 +90,19 @@ public class VenteServiceImpl implements VenteService {
         return result;
     }
 
-    
-
+    @Override
+    @Transactional
+    public VenteDTO updateVente(Long id, VenteDTO venteDTO) {
+        Vente vente = venteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vente", "id", id));
+        if (vente.getEtatVente() == EtatVente.FINALISEE) {
+            throw new InvalidOperationException("Impossible de modifier une vente finalisée");
+        }
+        vente.setCode(venteDTO.getCode());
+        vente.setCommentaire(venteDTO.getCommentaire());
+        Vente updated = venteRepository.save(vente);
+        return modelMapper.map(updated, VenteDTO.class);
+    }
 
     @Transactional
     public VenteDTO updateEtatVente(Long idVente, EtatVente etatVente) {
