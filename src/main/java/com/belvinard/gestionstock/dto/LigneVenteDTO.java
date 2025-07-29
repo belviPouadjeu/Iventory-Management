@@ -28,7 +28,7 @@ public class LigneVenteDTO {
     private Long idArticle;
 
     @Schema(description = "Détails de l'article")
-    private ArticleDTO articleDetails;
+    private String articleName;
 
     @Schema(description = "Date de création", example = "2025-04-05T10:00:00")
     private LocalDateTime creationDate;
