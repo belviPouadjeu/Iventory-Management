@@ -22,6 +22,9 @@ public interface VenteService {
   VenteDTO createVente(Long entrepriseId, VenteDTO venteDTO);
 
   @Transactional
+  VenteDTO updateVente(Long id, VenteDTO venteDTO);
+
+  @Transactional
   VenteDTO finalizeVente(Long idVente);
 
   List<VenteDTO> findAllByEntreprise(Long entrepriseId);

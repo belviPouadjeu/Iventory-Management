@@ -58,6 +58,14 @@ public class VenteController {
                 .body(venteService.createVente(entrepriseId, venteDTO));
     }
 
+    @PutMapping("/{id}")
+    @Operation(summary = "Modifier une vente")
+    public ResponseEntity<VenteDTO> updateVente(
+            @PathVariable Long id,
+            @Valid @RequestBody VenteDTO venteDTO) {
+        return ResponseEntity.ok(venteService.updateVente(id, venteDTO));
+    }
+
     @PutMapping("/{id}/finalize")
     @Operation(summary = "Finaliser une vente")
     public ResponseEntity<VenteDTO> finalizeVente(@PathVariable Long id) {
