@@ -30,7 +30,7 @@ public class VenteDTO {
 
     // Ce champ est automatiquement rempli côté backend
     @Schema(hidden = true)
-    private EntrepriseDTO entrepriseDetails;
+    private String entrepriseName;
 
     @Schema(hidden = true, description = "Date de création de la vente", example = "2025-04-05T10:00:00")
     private LocalDateTime creationDate;
