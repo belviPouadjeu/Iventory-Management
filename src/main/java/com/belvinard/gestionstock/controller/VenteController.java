@@ -24,12 +24,6 @@ public class VenteController {
 
     private final VenteService venteService;
 
-    @PostMapping
-    @Operation(summary = "Créer une nouvelle vente")
-    public ResponseEntity<VenteDTO> save(@Valid @RequestBody VenteDTO venteDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(venteService.save(venteDTO));
-    }
-
     @GetMapping("/{id}")
     @Operation(summary = "Récupérer une vente par ID")
     public ResponseEntity<VenteDTO> findById(@PathVariable Long id) {

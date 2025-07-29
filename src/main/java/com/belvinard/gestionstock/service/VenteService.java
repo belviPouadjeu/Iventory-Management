@@ -10,8 +10,6 @@ import java.util.List;
 
 public interface VenteService {
 
-  VenteDTO save(VenteDTO dto);
-
   VenteDTO findById(Long id);
 
   VenteDTO findByCode(String code);

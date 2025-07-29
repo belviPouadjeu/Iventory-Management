@@ -26,20 +26,7 @@ public class VenteServiceImpl implements VenteService {
     private final EntrepriseRepository entrepriseRepository;
     private final ModelMapper modelMapper;
 
-    @Override
-    @Transactional
-    public VenteDTO save(VenteDTO dto) {
-        // Validate entreprise
-        Entreprise entreprise = entrepriseRepository.findById(dto.getIdEntreprise())
-                .orElseThrow(() -> new ResourceNotFoundException("Entreprise", "id", dto.getIdEntreprise()));
 
-        // Create Vente entity
-        Vente vente = modelMapper.map(dto, Vente.class);
-        vente.setEntreprise(entreprise);
-        vente.setEtatVente(EtatVente.EN_COURS);
-        Vente saved = venteRepository.save(vente);
-        return modelMapper.map(saved, VenteDTO.class);
-    }
 
     @Override
     public VenteDTO findById(Long id) {
@@ -77,12 +64,31 @@ public class VenteServiceImpl implements VenteService {
 
     // --- Business Operations ---
 
-    @Transactional
     @Override
+    @Transactional
     public VenteDTO createVente(Long entrepriseId, VenteDTO venteDTO) {
-        venteDTO.setIdEntreprise(entrepriseId);
-        return save(venteDTO);
+        // Check for duplicate by code
+        if (venteRepository.findAllByEntrepriseId(entrepriseId).stream()
+                .anyMatch(v -> v.getCode().equals(venteDTO.getCode()))) {
+            throw new APIException("Une vente avec le code '" + venteDTO.getCode() + "' existe déjà");
+        }
+        
+        // Verify enterprise exists
+        Entreprise entreprise = entrepriseRepository.findById(entrepriseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Entreprise", "id", entrepriseId));
+        
+        // Map DTO to entity
+        Vente vente = modelMapper.map(venteDTO, Vente.class);
+        vente.setEntreprise(entreprise);
+        vente.setCreationDate(LocalDateTime.now());
+        vente.setEtatVente(EtatVente.EN_COURS);
+        
+        // Save and return
+        Vente saved = venteRepository.save(vente);
+        return modelMapper.map(saved, VenteDTO.class);
     }
+
+    
 
 
     @Transactional
