@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/")
-@Tag(name = "Entreprise", description = "API pour la gestion des entreprises")
+@Tag(name = "Entreprise-Controller", description = "API pour la gestion des entreprises")
 public class EntrepriseControllers {
     public final EntrepriseService entrepriseService;
 

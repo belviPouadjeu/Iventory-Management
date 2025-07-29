@@ -2,25 +2,24 @@ package com.belvinard.gestionstock.controller;
 
 import com.belvinard.gestionstock.dto.LigneVenteDTO;
 import com.belvinard.gestionstock.dto.VenteDTO;
-import com.belvinard.gestionstock.enums.EtatVente;
+import com.belvinard.gestionstock.models.EtatVente;
 import com.belvinard.gestionstock.service.VenteService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/ventes")
+@RequestMapping("${api.prefix}/api/ventes")
 @RequiredArgsConstructor
-@Tag(name = "Vente", description = "API de gestion des ventes")
+@Tag(name = "Vente-Controller", description = "API de gestion des ventes")
 public class VenteController {
 
     private final VenteService venteService;

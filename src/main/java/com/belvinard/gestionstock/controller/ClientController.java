@@ -20,7 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/clients")
-@Tag(name = "Clients", description = "Opérations liées à la gestion des clients")
+@Tag(name = "Clients-Controller", description = "Opérations liées à la gestion des clients")
 @RequiredArgsConstructor
 public class ClientController {
 

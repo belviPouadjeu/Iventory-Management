@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/fournisseurs")
 @RequiredArgsConstructor
-@Tag(name = "Fournisseurs", description = "Opérations de gestion des fournisseurs")
+@Tag(name = "Fournisseurs-Controller", description = "Opérations de gestion des fournisseurs")
 public class FournisseurController {
 
     private final FournisseurService fournisseurService;

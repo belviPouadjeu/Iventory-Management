@@ -7,6 +7,7 @@ import com.belvinard.gestionstock.service.CommandeClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/commande-clients")
+@Tag(name = "Commande Client-Controller", description = "Opérations liées à la gestion des clients")
 @RequiredArgsConstructor
 public class CommandeClientController {
 

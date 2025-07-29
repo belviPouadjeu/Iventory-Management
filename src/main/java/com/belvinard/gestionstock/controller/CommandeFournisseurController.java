@@ -21,7 +21,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/commandes-fournisseurs")
-@Tag(name = "Commande Fournisseur", description = "API de gestion des commandes fournisseurs")
+@Tag(name = "Commande Fournisseur-Controller", description = "API de gestion des commandes fournisseurs")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class CommandeFournisseurController {
