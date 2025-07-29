@@ -85,7 +85,9 @@ public class VenteServiceImpl implements VenteService {
         
         // Save and return
         Vente saved = venteRepository.save(vente);
-        return modelMapper.map(saved, VenteDTO.class);
+        VenteDTO result = modelMapper.map(saved, VenteDTO.class);
+        result.setEntrepriseName(entreprise.getNom());
+        return result;
     }
 
     
