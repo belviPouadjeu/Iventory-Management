@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ai.zencoder.plugin.chat.index">
+    <option name="chatMetadata" value="{&quot;504af1f4-7b1f-4563-af0a-7bcd3fc55ea6&quot;:{&quot;id&quot;:&quot;504af1f4-7b1f-4563-af0a-7bcd3fc55ea6&quot;,&quot;title&quot;:&quot;Unit Testing Save Method&quot;,&quot;createdAt&quot;:1754098110854,&quot;updatedAt&quot;:1754098221506,&quot;isAgent&quot;:true,&quot;isUnitTestsAgent&quot;:true,&quot;isNameGenerated&quot;:true,&quot;messageCount&quot;:2,&quot;lastMessagePreview&quot;:&quot;I'll help you generate tests for the save method. Let me first explore the project structure to unde...&quot;}}" />
+  </component>
+</project>
