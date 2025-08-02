@@ -55,4 +55,9 @@ public class Utilisateur extends AbstractEntity {
   @OneToMany(fetch = FetchType.EAGER, mappedBy = "utilisateur")
   @JsonIgnore
   private List<Roles> roles;
+
+  @Column(name = "actif")
+  private Boolean actif = true;
+
+
 }
