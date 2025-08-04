@@ -1,7 +1,13 @@
-FROM amazoncorretto:21 AS build
+FROM maven:3.9.4-amazoncorretto-21 AS build
 WORKDIR /app
-COPY . .
-RUN ./mvnw clean package -DskipTests
+
+# Copy pom.xml first for dependency caching
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copy source and build
+COPY src ./src
+RUN mvn clean package -DskipTests
 
 FROM amazoncorretto:21-alpine
 WORKDIR /app
