@@ -1,11 +1,9 @@
 package com.belvinard.gestionstock.service.impl;
 
-
 import com.belvinard.gestionstock.service.MicroService;
-import io.minio.GetPresignedObjectUrlArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
+import io.minio.*;
 import io.minio.http.Method;
+
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

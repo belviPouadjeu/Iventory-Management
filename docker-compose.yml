@@ -3,13 +3,19 @@ services:
     build: .
     container_name: gestionstock-app
     ports:
-      - "8080:8080"
+      - "8082:8082"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - MINIO_URL=http://minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=admin123
+      - MINIO_BUCKET_NAME=gestionstock
     depends_on:
-      - minio
+      minio:
+        condition: service_started
     networks:
       - app-network
+    restart: unless-stopped
 
   minio:
     image: minio/minio:latest
@@ -25,9 +31,16 @@ services:
     command: server --console-address ":9001" /data
     networks:
       - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
 volumes:
   minio-data:
 
 networks:
   app-network:
+    driver: bridge
