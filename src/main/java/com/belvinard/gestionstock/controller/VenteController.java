@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("${api.prefix}/api/ventes")
+@RequestMapping("${api.prefix}/ventes")
 @RequiredArgsConstructor
 @Tag(name = "Vente-Controller", description = "API de gestion des ventes")
 public class VenteController {

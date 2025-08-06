@@ -2,6 +2,7 @@ package com.belvinard.gestionstock.dto;
 
 
 import com.belvinard.gestionstock.models.Adresse;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -17,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UtilisateurDTO {
-
+    @Schema(hidden = true)
     private Long id;
 
     @NotBlank(message = "Le nom est obligatoire")

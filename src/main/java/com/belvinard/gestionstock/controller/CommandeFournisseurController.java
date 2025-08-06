@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/commandes-fournisseurs")
+@RequestMapping("${api.prefix}/commandes-fournisseurs")
 @Tag(name = "Commande Fournisseur-Controller", description = "API de gestion des commandes fournisseurs")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor

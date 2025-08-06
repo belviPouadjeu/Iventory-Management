@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/commande-clients")
+@RequestMapping("${api.prefix}/commande-clients")
 @Tag(name = "Commande Client-Controller", description = "Opérations liées à la gestion des clients")
 @RequiredArgsConstructor
 public class CommandeClientController {

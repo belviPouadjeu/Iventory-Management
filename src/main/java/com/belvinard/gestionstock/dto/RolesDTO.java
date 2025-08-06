@@ -1,6 +1,7 @@
 package com.belvinard.gestionstock.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RolesDTO {
-
+    @Schema(hidden = true)
     private Long id;
 
     @NotBlank(message = "Le nom du rôle est obligatoire")

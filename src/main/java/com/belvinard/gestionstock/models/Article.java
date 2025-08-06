@@ -45,6 +45,7 @@ public class Article extends AbstractEntity {
   @Schema(hidden = true)
   private BigDecimal prixUnitaireTtc; // Prix Toutes Taxes Comprises
 
+  private String photo;
 
   @ManyToOne(optional = false)
   @JoinColumn(name = "idcategory", nullable = false)

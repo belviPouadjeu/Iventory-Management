@@ -7,20 +7,21 @@ import com.belvinard.gestionstock.models.Entreprise;
 import com.belvinard.gestionstock.repositories.EntrepriseRepository;
 import com.belvinard.gestionstock.responses.EntrepriseResponse;
 import com.belvinard.gestionstock.service.EntrepriseService;
+import com.belvinard.gestionstock.service.MinioService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class EntrepriseServiceImpl implements EntrepriseService {
     private final EntrepriseRepository entrepriseRepository;
     private final ModelMapper modelMapper;
-
-    public EntrepriseServiceImpl(EntrepriseRepository entrepriseRepository, ModelMapper modelMapper) {
-        this.entrepriseRepository = entrepriseRepository;
-        this.modelMapper = modelMapper;
-    }
+    private final MinioService minioService;
 
     @Override
     public EntrepriseDTO createEntreprise(EntrepriseDTO entrepriseDTO) {
@@ -74,5 +75,32 @@ public class EntrepriseServiceImpl implements EntrepriseService {
         return entrepriseDTO;
     }
 
+    @Override
+    public EntrepriseDTO updateEntrepriseImage(Long id, MultipartFile image) throws IOException {
+        Entreprise entrepriseFromDb = entrepriseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Entreprise with id " + id + " not found !!"));
+        String fileName = minioService.uploadImage(image);
+        entrepriseFromDb.setPhoto(fileName);
+        String imageUrl = minioService.getPreSignedUrl(fileName, 15);
+        Entreprise updatedEntreprise = entrepriseRepository.save(entrepriseFromDb);
+        EntrepriseDTO entrepriseDTO = modelMapper.map(updatedEntreprise, EntrepriseDTO.class);
+        entrepriseDTO.setPhoto(imageUrl);
+
+        return entrepriseDTO;
+    }
+
+    @Override
+    public String getPresignedImageUrl(Long id) {
+        Entreprise entreprise = entrepriseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Entreprise with id " + id + " not found !!"));
+
+        String fileName = entreprise.getPhoto();
+
+        if (fileName == null || fileName.isBlank()) {
+            throw new APIException("No image found for this entreprise");
+        }
+
+        return minioService.getPreSignedUrl(fileName, 900); // 15 minutes
+    }
 
 }

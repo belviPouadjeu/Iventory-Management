@@ -30,4 +30,7 @@
 à automatiser le prix au moment de la commande dans prixUnitaire si tu choisis de le garder ?
 
 
+## For production
+docker-compose --env-file .env.prod up -d
+
 
