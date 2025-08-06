@@ -15,6 +15,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public class LigneCommandeFournisseurController {
     private final LigneCommandeFournisseurService ligneCommandeFournisseurService;
 
     @PostMapping("/commande/{commandeFournisseurId}")
-    //@PreAuthorize("hasRole('ADMIN') or hasRole('STOCK_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('STOCK_MANAGER')")
     @Operation(
             summary = "Créer une nouvelle ligne de commande fournisseur (ADMIN ou STOCK_MANAGER)",
             description = "Cette méthode permet de créer une nouvelle ligne de commande fournisseur avec les informations fournies"
@@ -46,7 +47,7 @@ public class LigneCommandeFournisseurController {
     }
 
     @GetMapping
-    //@PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
     @Operation(
             summary = "Récupérer toutes les lignes de commande fournisseur (ADMIN ou STOCK_MANAGER)",
             description = "Cette méthode permet de récupérer la liste de toutes les lignes de commande fournisseur"
@@ -57,7 +58,7 @@ public class LigneCommandeFournisseurController {
     }
 
     @GetMapping("/{id}")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
     @Operation(
             summary = "Récupérer une ligne de commande fournisseur par ID (ADMIN ou STOCK_MANAGER)",
             description = "Cette méthode permet de récupérer une ligne de commande fournisseur spécifique par son ID"
@@ -71,7 +72,7 @@ public class LigneCommandeFournisseurController {
     }
 
     @PutMapping("/{id}")
-    //@PreAuthorize("hasRole('ADMIN') or hasRole('STOCK_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('STOCK_MANAGER')")
     @Operation(
             summary = "Mettre à jour une ligne de commande fournisseur (ADMIN ou STOCK_MANAGER)",
             description = "Cette méthode permet de mettre à jour une ligne de commande fournisseur existante"
@@ -87,7 +88,7 @@ public class LigneCommandeFournisseurController {
     }
 
     @DeleteMapping("/{id}")
-    //@PreAuthorize("hasRole('ADMIN') or hasRole('STOCK_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('STOCK_MANAGER')")
     @Operation(
             summary = "Supprimer une ligne de commande fournisseur (ADMIN ou STOCK_MANAGER)",
             description = "Cette méthode permet de supprimer une ligne de commande fournisseur existante"
@@ -101,7 +102,7 @@ public class LigneCommandeFournisseurController {
     }
 
     @GetMapping("/commande/{commandeFournisseurId}")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
     @Operation(
             summary = "Récupérer les lignes d'une commande fournisseur (ADMIN ou STOCK_MANAGER)",
             description = "Cette méthode permet de récupérer toutes les lignes d'une commande fournisseur spécifique"
@@ -115,7 +116,7 @@ public class LigneCommandeFournisseurController {
     }
 
     @GetMapping("/article/{articleId}")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
     @Operation(
             summary = "Récupérer l'historique des commandes d'un article (ADMIN ou STOCK_MANAGER)",
             description = "Cette méthode permet de récupérer toutes les lignes de commande pour un article spécifique"
@@ -129,7 +130,7 @@ public class LigneCommandeFournisseurController {
     }
 
     @GetMapping("/commande/{commandeFournisseurId}/total")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
     @Operation(
             summary = "Calculer le total d'une commande fournisseur (ADMIN ou STOCK_MANAGER)",
             description = "Cette méthode permet de calculer le montant total TTC d'une commande fournisseur"

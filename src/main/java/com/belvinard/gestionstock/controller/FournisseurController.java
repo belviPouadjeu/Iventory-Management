@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public class FournisseurController {
     private final FournisseurService fournisseurService;
 
     @PostMapping("/entreprise/{entrepriseId}")
-    //@PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(summary = "Créer un fournisseur (ADMIN ou MANAGER)", description = "Ajoute un nouveau fournisseur lié à une entreprise")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Fournisseur créé avec succès"),
@@ -43,7 +44,7 @@ public class FournisseurController {
     }
 
     @GetMapping
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(
             summary = "Récupérer tous les fournisseurs (ADMIN ou MANAGER)",
             description = "Récupère la liste complète des fournisseurs avec leurs informations d'entreprise",
@@ -72,7 +73,7 @@ public class FournisseurController {
     }
 
     @GetMapping("/{fournisseurId}")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Rechercher un fournisseur par ID (ADMIN ou MANAGER)",
             description = "Cette opération permet de rechercher un fournisseur à partir de son identifiant.")
     @ApiResponses(value = {
@@ -86,7 +87,7 @@ public class FournisseurController {
     }
 
     @DeleteMapping("/{fournisseurId}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Supprimer un fournisseur (ADMIN)",
             description = "Cette opération permet de supprimer un fournisseur à partir de son identifiant.")
     @ApiResponses(value = {
@@ -98,7 +99,7 @@ public class FournisseurController {
     }
 
     @PutMapping("/{fournisseurId}")
-    //@PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(
             summary = "Mettre à jour un fournisseur (ADMIN ou MANAGER)",
             description = "Met à jour les informations d'un fournisseur existant",

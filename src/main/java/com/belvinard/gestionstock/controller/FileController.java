@@ -14,6 +14,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,7 +31,7 @@ public class FileController {
     private final FileService fileService;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    //@PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(summary = "Uploader une image (ADMIN ou MANAGER)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Fichier uploadé avec succès",
@@ -52,7 +53,7 @@ public class FileController {
     }
 
     @GetMapping("/download/{fileName}")
-    //@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Télécharger un fichier (ADMIN ou MANAGER)")
     public ResponseEntity<InputStreamResource> downloadFile(
             @Parameter(description = "Nom du fichier") @PathVariable String fileName) {
@@ -68,7 +69,7 @@ public class FileController {
     }
 
     @DeleteMapping("/{fileName}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Supprimer un fichier (ADMIN)")
     public ResponseEntity<Map<String, String>> deleteFile(
             @Parameter(description = "Nom du fichier") @PathVariable String fileName) {
@@ -81,7 +82,7 @@ public class FileController {
     }
 
     @GetMapping("/list")
-    //@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Lister tous les fichiers (ADMIN ou MANAGER)")
     public ResponseEntity<List<String>> listFiles() {
         try {
@@ -92,7 +93,7 @@ public class FileController {
     }
 
     @GetMapping("/url/{fileName}")
-    //@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Obtenir l'URL pré-signée d'un fichier (ADMIN ou MANAGER)")
     public ResponseEntity<Map<String, String>> getPreSignedUrl(
             @Parameter(description = "Nom du fichier") @PathVariable String fileName,

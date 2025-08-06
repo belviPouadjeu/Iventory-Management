@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,7 +39,7 @@ public class ArticleController {
             @ApiResponse(responseCode = "201", description = "Article créé avec succès"),
             @ApiResponse(responseCode = "404", description = "Entreprise ou catégorie non trouvée")
     })
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/articles")
     public ResponseEntity<ArticleDTO> createArticle(
             @RequestParam Long entrepriseId,
@@ -53,7 +54,7 @@ public class ArticleController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
     })
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER', 'SALES_MANAGER')")
     @GetMapping("/manager/articles")
     public ResponseEntity<List<ArticleDTO>> getAllArticles() {
         List<ArticleDTO> articles = articleService.getAllArticles();
@@ -66,7 +67,7 @@ public class ArticleController {
             @ApiResponse(responseCode = "200", description = "Article trouvé"),
             @ApiResponse(responseCode = "404", description = "Article non trouvé")
     })
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER', 'SALES_MANAGER')")
     @GetMapping("/manager/{id}")
     public ResponseEntity<ArticleDTO> getArticleById(@PathVariable Long id) {
         ArticleDTO articleDTO = articleService.findAllByArticleId(id);
@@ -79,7 +80,7 @@ public class ArticleController {
             @ApiResponse(responseCode = "200", description = "Article supprimé"),
             @ApiResponse(responseCode = "404", description = "Article non trouvé")
     })
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/admin/{id}")
     public ResponseEntity<ArticleDTO> deleteArticle(@PathVariable Long id) {
         ArticleDTO deleted = articleService.deleteArticle(id);
@@ -88,7 +89,7 @@ public class ArticleController {
 
     /* ================== GET BY CODE ================== */
     @Operation(summary = "USER, MANAGER ou ADMIN: Rechercher un article par code")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER', 'SALES_MANAGER')")
     @GetMapping("/manager/code/{codeArticle}")
     public ResponseEntity<ArticleDTO> findByCodeArticle(@PathVariable String codeArticle) {
         ArticleDTO articleDTO = articleService.findByCodeArticle(codeArticle);
@@ -97,7 +98,7 @@ public class ArticleController {
 
     /* ================== GET BY CATEGORY ================== */
     @Operation(summary = "USER, MANAGER ou ADMIN: Lister les articles d'une catégorie")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER', 'SALES_MANAGER')")
     @GetMapping("/manager/category/{idCategory}")
     public ResponseEntity<List<ArticleDTO>> findAllByCategory(@PathVariable Long idCategory) {
         List<ArticleDTO> articles = articleService.findAllArticleByIdCategory(idCategory);
@@ -106,7 +107,7 @@ public class ArticleController {
 
     /* ================== HISTORIQUE DES COMMANDES ================== */
     @Operation(summary = "MANAGER ou ADMIN: Historique des commandes d’un article")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
     @GetMapping("/manager/historique/article/{idArticle}")
     public ResponseEntity<List<LigneCommandeClientDTO>> findHistoriqueCommandeClient(@PathVariable Long idArticle) {
         List<LigneCommandeClientDTO> lignes = ligneCommandeClientService.findHistoriqueCommandeClient(idArticle);
@@ -115,7 +116,7 @@ public class ArticleController {
 
     /* ================== UPDATE IMAGE ================== */
     @Operation(summary = "ADMIN ou MANAGER: Modifier l’image d’un article")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
     @PutMapping(value = "/manager/article/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ArticleDTO> updateArticleImage(
             @PathVariable Long id,

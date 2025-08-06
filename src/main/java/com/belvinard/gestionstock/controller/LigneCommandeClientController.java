@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public class LigneCommandeClientController {
     private final LigneCommandeClientService ligneCommandeClientService;
 
     @PostMapping("/commande/{commandeId}/article/{articleId}")
-    //@PreAuthorize("hasRole('ADMIN') or hasRole('SALES_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SALES_MANAGER')")
     @Operation(
             summary = "Créer une ligne de commande client (ADMIN ou SALES_MANAGER)",
             description = "Crée une ligne de commande pour un article donné et décrémente automatiquement le stock"
@@ -52,7 +53,7 @@ public class LigneCommandeClientController {
     }
 
     @GetMapping
-    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
     @Operation(summary = "Récupérer toutes les lignes de commande client (ADMIN ou SALES_MANAGER)",
             description = "Retourne la liste de toutes les lignes de commande client avec les détails enrichis")
     @ApiResponses(value = {
@@ -65,7 +66,7 @@ public class LigneCommandeClientController {
     }
 
     @GetMapping("/{ligneId}")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
     @Operation(
             summary = "Récupérer une ligne de commande client par ID (ADMIN ou SALES_MANAGER)",
             description = "Retourne une ligne de commande client en fonction de son identifiant unique."
@@ -83,7 +84,7 @@ public class LigneCommandeClientController {
     }
 
     @PutMapping("/{ligneId}")
-    //@PreAuthorize("hasRole('ADMIN') or hasRole('SALES_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SALES_MANAGER')")
     @Operation(summary = "Mettre à jour une ligne de commande client (ADMIN ou SALES_MANAGER)",
             description = "Impossible si la commande est déjà livrée.")
     @ApiResponses(value = {
@@ -105,7 +106,7 @@ public class LigneCommandeClientController {
     }
 
     @DeleteMapping("/{ligneId}")
-    //@PreAuthorize("hasRole('ADMIN') or hasRole('SALES_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SALES_MANAGER')")
     @Operation(
             summary = "Supprimer une ligne de commande client (ADMIN ou SALES_MANAGER)",
             description = "Cette opération permet de supprimer une ligne de commande client sauf si la commande est déjà livrée."
@@ -121,7 +122,7 @@ public class LigneCommandeClientController {
     }
 
     @GetMapping("/article/{idArticle}/historique")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
     @Operation(
             summary = "Historique des commandes d'un article (ADMIN ou SALES_MANAGER)",
             description = "Récupère la liste des lignes de commande client pour un article donné"

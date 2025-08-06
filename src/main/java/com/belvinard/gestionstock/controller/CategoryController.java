@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,7 +47,7 @@ public class CategoryController {
             @ApiResponse(responseCode = "400", description = "Données invalides"),
             @ApiResponse(responseCode = "404", description = "Entreprise non trouvée")
     })
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/category/{entrepriseId}")
     public ResponseEntity<CategoryDTO> createCategory(
             @Parameter(description = "ID de l'entreprise") @PathVariable Long entrepriseId,
@@ -64,7 +65,7 @@ public class CategoryController {
             @ApiResponse(responseCode = "200", description = "Liste retournée avec succès"),
             @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")
     })
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/manager/with-entreprise")
     public ResponseEntity<List<CategoryDTO>> getAllWithEntreprise() {
         List<CategoryDTO> categories = categoryService.getAllCategoriesWithEntreprise();
@@ -79,7 +80,7 @@ public class CategoryController {
             @ApiResponse(responseCode = "200", description = "Catégorie supprimée"),
             @ApiResponse(responseCode = "404", description = "Catégorie non trouvée")
     })
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/admin/category/{catergoryId}")
     public ResponseEntity<CategoryDTO> deleteCategory(@PathVariable Long catergoryId) {
         CategoryDTO deleted = categoryService.delete(catergoryId);

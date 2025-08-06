@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -70,7 +71,7 @@ public class ClientController {
             @ApiResponse(responseCode = "400", description = "Données de validation invalides"),
             @ApiResponse(responseCode = "404", description = "Entreprise non trouvée")
     })
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/entreprises/{entrepriseId}")
     public ResponseEntity<ClientDTO> createClient(
             @PathVariable Long entrepriseId,
@@ -88,7 +89,7 @@ public class ClientController {
             @ApiResponse(responseCode = "200", description = "Client trouvé"),
             @ApiResponse(responseCode = "404", description = "Client non trouvé")
     })
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/manager/{id}")
     public ResponseEntity<ClientDTO> getClientById(@PathVariable Long id) {
         ClientDTO clientDTO = clientService.findByClientId(id);
@@ -102,7 +103,7 @@ public class ClientController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Liste des clients récupérée avec succès")
     })
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/manager")
     public ResponseEntity<List<ClientDTO>> getAllClients() {
         List<ClientDTO> clients = clientService.getAllClients();
@@ -117,7 +118,7 @@ public class ClientController {
             @ApiResponse(responseCode = "200", description = "Client supprimé avec succès"),
             @ApiResponse(responseCode = "404", description = "Client non trouvé")
     })
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/admin/client/{id}")
     public ResponseEntity<ClientDTO> deleteClient(@PathVariable Long id) {
         ClientDTO deletedClient = clientService.deleteClient(id);

@@ -164,12 +164,9 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         Utilisateur utilisateur = utilisateurRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
 
-        Roles roleToRemove = utilisateur.getRoles().stream()
-                .filter(role -> role.getRoleType() == roleType)
-                .findFirst()
+        Roles roleToRemove = rolesRepository.findByUtilisateurIdAndRoleType(userId, roleType)
                 .orElseThrow(() -> new EntityNotFoundException("L'utilisateur ne possède pas ce rôle"));
 
-        utilisateur.getRoles().remove(roleToRemove);
         rolesRepository.delete(roleToRemove);
 
         return modelMapper.map(utilisateur, UtilisateurDTO.class);
@@ -181,7 +178,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
             throw new IllegalArgumentException("Le type de rôle est obligatoire");
         }
 
-        return utilisateurRepository.findByRoles_RoleType(roleType).stream()
+        return utilisateurRepository.findByRoleType(roleType).stream()
                 .map(user -> modelMapper.map(user, UtilisateurDTO.class))
                 .collect(Collectors.toList());
     }

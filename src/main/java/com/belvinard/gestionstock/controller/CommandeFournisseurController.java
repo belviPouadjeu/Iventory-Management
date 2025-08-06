@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,7 +30,7 @@ public class CommandeFournisseurController {
     private final CommandeFournisseurService commandeFournisseurService;
 
     @PostMapping("/admin/fournisseur/{fournisseurId}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "ADMIN: Créer une nouvelle commande fournisseur",
             description = "Accessible uniquement aux ADMIN. Crée une nouvelle commande pour un fournisseur spécifique."
@@ -43,7 +44,7 @@ public class CommandeFournisseurController {
     }
 
     @GetMapping("/manager/{fournisseurId}")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(
             summary = "MANAGER ou ADMIN: Rechercher une commande fournisseur par ID",
             description = "Retourne une commande fournisseur en fonction de son ID. Accès réservé aux MANAGER ou ADMIN."
@@ -55,7 +56,7 @@ public class CommandeFournisseurController {
     }
 
     @GetMapping("/manager")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(
             summary = "MANAGER ou ADMIN: Lister toutes les commandes fournisseurs",
             description = "Retourne la liste de toutes les commandes fournisseurs. Accès réservé aux MANAGER ou ADMIN."
@@ -66,7 +67,7 @@ public class CommandeFournisseurController {
     }
 
     @DeleteMapping("/admin/{fournisseurId}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "ADMIN: Supprimer une commande fournisseur",
             description = "Supprime une commande fournisseur par son ID. Accessible uniquement aux ADMIN."
@@ -77,7 +78,7 @@ public class CommandeFournisseurController {
     }
 
     @PutMapping("/admin/{idCommande}/etat")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "ADMIN: Mettre à jour l'état d'une commande fournisseur",
             description = "Permet aux ADMIN de modifier l’état d’une commande fournisseur."
@@ -90,7 +91,7 @@ public class CommandeFournisseurController {
     }
 
     @GetMapping("/manager/code/{code}")
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(
             summary = "MANAGER ou ADMIN: Rechercher une commande fournisseur par code",
             description = "Recherche une commande fournisseur à partir de son code unique. Accès réservé aux MANAGER ou ADMIN."

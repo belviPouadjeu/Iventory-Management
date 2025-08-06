@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,7 +34,7 @@ public class CommandeClientController {
             @ApiResponse(responseCode = "400", description = "Données invalides ou client/entreprise introuvable"),
             @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")
     })
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/client/{clientId}/entreprise/{entrepriseId}")
     public ResponseEntity<CommandeClientDTO> createCommandeClient(
             @PathVariable Long clientId,
@@ -55,7 +56,7 @@ public class CommandeClientController {
             @ApiResponse(responseCode = "200", description = "Commande mise à jour avec succès"),
             @ApiResponse(responseCode = "404", description = "Commande non trouvée")
     })
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/admin/{idCommande}/etat/{etatCommande}")
     public ResponseEntity<CommandeClientDTO> updateEtatCommande(
             @PathVariable Long idCommande,
@@ -69,7 +70,7 @@ public class CommandeClientController {
             summary = "MANAGER ou ADMIN: Lister toutes les commandes clients",
             description = "Retourne toutes les commandes clients enregistrées. Accessible aux MANAGER ou ADMIN."
     )
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/manager")
     public ResponseEntity<List<CommandeClientDTO>> findAll() {
         return ResponseEntity.ok(commandeClientService.findAll());
@@ -79,7 +80,7 @@ public class CommandeClientController {
             summary = "MANAGER ou ADMIN: Rechercher une commande client par ID",
             description = "Retourne une commande client à partir de son identifiant. Accessible aux MANAGER ou ADMIN."
     )
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/manager/{id}")
     public ResponseEntity<CommandeClientDTO> findById(@PathVariable Long id) {
         return ResponseEntity.ok(commandeClientService.findById(id));
@@ -89,7 +90,7 @@ public class CommandeClientController {
             summary = "MANAGER ou ADMIN: Lister les lignes d'une commande client",
             description = "Retourne toutes les lignes de commande associées à une commande client. Accessible aux MANAGER ou ADMIN."
     )
-    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/manager/{commandeId}/lignes")
     public ResponseEntity<List<LigneCommandeClientDTO>> findAllLignesCommandesClientByCommandeClientId(
             @PathVariable Long commandeId) {
@@ -100,7 +101,7 @@ public class CommandeClientController {
             summary = "ADMIN: Supprimer une commande client",
             description = "Supprime une commande client par son identifiant. Accessible uniquement aux ADMIN."
     )
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/admin/{id}")
     public ResponseEntity<CommandeClientDTO> deleteCommandeClient(@PathVariable Long id) {
         return ResponseEntity.ok(commandeClientService.deleteCommandeClient(id));

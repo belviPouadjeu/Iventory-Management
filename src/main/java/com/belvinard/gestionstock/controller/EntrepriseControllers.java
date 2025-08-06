@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,7 +35,7 @@ public class EntrepriseControllers {
     private final MinioService minioService;
 
     @PostMapping("/admin/create")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "Ajouter une entreprise",
             description = "Ajoute une nouvelle entreprise à la base de données"
@@ -79,7 +80,7 @@ public class EntrepriseControllers {
     }
 
     @DeleteMapping("/admin/delete/{id}")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Supprimer une entreprise par son ID",
             description = "Cette méthode permet de supprimer une entreprise en fonction de son ID")
     @ApiResponses(value = {
@@ -93,7 +94,7 @@ public class EntrepriseControllers {
     }
 
     @PutMapping(value = "/entreprise/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Mettre à jour l'image de l'entreprise",
             description = "Uploader une nouvelle image pour l'entreprise via MinIO")
     @ApiResponses(value = {

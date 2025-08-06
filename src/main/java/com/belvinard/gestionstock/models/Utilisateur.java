@@ -52,9 +52,12 @@ public class Utilisateur extends AbstractEntity {
   @JoinColumn(name = "identreprise")
   private Entreprise entreprise;
 
-  @OneToMany(fetch = FetchType.EAGER, mappedBy = "utilisateur")
-  @JsonIgnore
-  private List<Roles> roles;
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "role_id")
+  private Roles role;
+
+  @Column(name = "user_name", unique = true)
+  private String userName;
 
   @Column(name = "actif")
   private Boolean actif = true;
