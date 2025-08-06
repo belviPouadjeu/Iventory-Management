@@ -1,6 +1,6 @@
 package com.belvinard.gestionstock.service.impl;
 
-import com.belvinard.gestionstock.service.MicroService;
+import com.belvinard.gestionstock.service.MinioService;
 import io.minio.*;
 import io.minio.http.Method;
 
@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @Service
 @Slf4j
-public class MinioServiceImpl implements MicroService {
+public class MinioServiceImpl implements MinioService {
 
     private final MinioClient minioClient;
 

@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-public interface MicroService {
+public interface MinioService {
     String uploadImage(MultipartFile file) throws IOException;
     String getPreSignedUrl(String objectName, Integer expiryInMinutes);
     void deleteFile(String objectName);

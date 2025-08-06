@@ -1,8 +1,11 @@
 package com.belvinard.gestionstock.controller;
 
-import com.belvinard.gestionstock.service.MicroService;
+import com.belvinard.gestionstock.service.MinioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
@@ -22,18 +25,18 @@ import java.util.Map;
 @Tag(name = "File-Controller", description = "API de gestion des fichiers MinIO")
 public class FileController {
 
-    private final MicroService microService;
+    private final MinioService minioService;
 
-    @PostMapping("/upload")
-    @Operation(summary = "Uploader un fichier")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Uploader une image")
     public ResponseEntity<Map<String, String>> uploadFile(
-            @Parameter(description = "Fichier à uploader") @RequestParam("file") MultipartFile file) {
+            @Parameter(description = "Image à uploader") @RequestParam("file") MultipartFile file) {
         try {
-            String fileName = microService.uploadImage(file);
+            String fileName = minioService.uploadImage(file);
             return ResponseEntity.ok(Map.of(
                     "fileName", fileName,
                     "message", "Fichier uploadé avec succès",
-                    "url", microService.getFileUrl(fileName)
+                    "url", minioService.getFileUrl(fileName)
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -46,7 +49,7 @@ public class FileController {
     public ResponseEntity<InputStreamResource> downloadFile(
             @Parameter(description = "Nom du fichier") @PathVariable String fileName) {
         try {
-            InputStream inputStream = microService.downloadFile(fileName);
+            InputStream inputStream = minioService.downloadFile(fileName);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -61,7 +64,7 @@ public class FileController {
     public ResponseEntity<Map<String, String>> deleteFile(
             @Parameter(description = "Nom du fichier") @PathVariable String fileName) {
         try {
-            microService.deleteFile(fileName);
+            minioService.deleteFile(fileName);
             return ResponseEntity.ok(Map.of("message", "Fichier supprimé avec succès"));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -73,7 +76,7 @@ public class FileController {
     @Operation(summary = "Lister tous les fichiers")
     public ResponseEntity<List<String>> listFiles() {
         try {
-            List<String> files = microService.listFiles();
+            List<String> files = minioService.listFiles();
             return ResponseEntity.ok(files);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -86,7 +89,7 @@ public class FileController {
             @Parameter(description = "Nom du fichier") @PathVariable String fileName,
             @Parameter(description = "Durée d'expiration en minutes") @RequestParam(defaultValue = "60") Integer expiryInMinutes) {
         try {
-            String url = microService.getPreSignedUrl(fileName, expiryInMinutes);
+            String url = minioService.getPreSignedUrl(fileName, expiryInMinutes);
             return ResponseEntity.ok(Map.of("url", url));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
