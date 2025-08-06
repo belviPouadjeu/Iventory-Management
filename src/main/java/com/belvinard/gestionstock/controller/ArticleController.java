@@ -7,6 +7,7 @@ import com.belvinard.gestionstock.service.ArticleService;
 import com.belvinard.gestionstock.service.LigneCommandeClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,6 +29,7 @@ import java.util.List;
 @RequestMapping("${api.prefix}/articles")
 @RequiredArgsConstructor
 @Tag(name = "Articles-Controller", description = "API de gestion des articles")
+@SecurityRequirement(name = "bearerAuth")
 public class ArticleController {
 
     private final ArticleService articleService;
