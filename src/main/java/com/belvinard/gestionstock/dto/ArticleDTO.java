@@ -44,10 +44,10 @@ public class ArticleDTO {
     private BigDecimal prixUnitaireTtc;
     private String photo;
 
-    @Schema(hidden = true)
+    // Rendre visible dans Swagger et JSON
+    // @Schema(hidden = true) -> supprimer ou commenter
     private Long categoryId;
 
-    @Schema(hidden = true)
     private Long entrepriseId;
 
     @Schema(hidden = true)
@@ -61,7 +61,4 @@ public class ArticleDTO {
 
     @Schema(hidden = true)
     private LocalDateTime lastModifiedDate;
-
-
 }
-

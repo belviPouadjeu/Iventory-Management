@@ -38,15 +38,15 @@ public class ArticleController {
             @ApiResponse(responseCode = "201", description = "Article créé avec succès"),
             @ApiResponse(responseCode = "404", description = "Entreprise ou catégorie non trouvée")
     })
-    @PostMapping("/entreprises/{entrepriseId}/categories/{categoryId}/articles")
+    @PostMapping("/articles")
     public ResponseEntity<ArticleDTO> createArticle(
-            @PathVariable Long entrepriseId,
-            @PathVariable Long categoryId,
-            @RequestBody  @Valid ArticleDTO articleDTO
-    ) {
-        ArticleDTO createdArticle = articleService.createArticle(entrepriseId, categoryId, articleDTO);
-        return new ResponseEntity<>(createdArticle, HttpStatus.CREATED);
+            @RequestParam Long entrepriseId,
+            @Valid @RequestBody ArticleDTO articleDTO) {
+
+        ArticleDTO created = articleService.createArticle(entrepriseId, articleDTO);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
+
 
     /* ================== GET ALL ARTICLES ================== */
     @Operation(summary = "Récupérer la liste de tous les articles")

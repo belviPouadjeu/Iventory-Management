@@ -11,10 +11,7 @@ import com.belvinard.gestionstock.models.Article;
 import com.belvinard.gestionstock.models.Category;
 import com.belvinard.gestionstock.models.Entreprise;
 import com.belvinard.gestionstock.models.LigneCommandeClient;
-import com.belvinard.gestionstock.repositories.ArticleRepository;
-import com.belvinard.gestionstock.repositories.CategoryRepository;
-import com.belvinard.gestionstock.repositories.EntrepriseRepository;
-import com.belvinard.gestionstock.repositories.LigneCommandeClientRepository;
+import com.belvinard.gestionstock.repositories.*;
 import com.belvinard.gestionstock.service.ArticleService;
 import com.belvinard.gestionstock.service.MinioService;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +37,12 @@ public class ArticleServiceImpl implements ArticleService {
     //private final LigneVenteRepository ligneVenteRepository;
 
     @Override
-    public ArticleDTO createArticle(Long entrepriseId, Long categoryId, ArticleDTO articleDTO) {
+    public ArticleDTO createArticle(Long entrepriseId, ArticleDTO articleDTO) {
+        Long categoryId = articleDTO.getCategoryId();
+
+        if (entrepriseId == null || categoryId == null) {
+            throw new IllegalArgumentException("EntrepriseId et categoryId sont obligatoires");
+        }
 
         List<Article> existingArticles = articleRepository.findByCodeArticleAndEntrepriseId(
                 articleDTO.getCodeArticle(), entrepriseId
@@ -50,7 +52,6 @@ public class ArticleServiceImpl implements ArticleService {
             throw new DuplicateEntityException("Article avec le code '" + articleDTO.getCodeArticle()
                     + "' existe déjà pour cette entreprise.");
         }
-
 
         Entreprise entreprise = entrepriseRepository.findById(entrepriseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Entreprise", "id", entrepriseId));
@@ -64,7 +65,6 @@ public class ArticleServiceImpl implements ArticleService {
             article.setQuantiteEnStock(0L);
         }
 
-        // Calcul automatique du prix TTC
         if (article.getPrixUnitaireHt() != null && article.getTauxTva() != null) {
             BigDecimal ttc = article.getPrixUnitaireHt()
                     .add(article.getPrixUnitaireHt()
@@ -80,13 +80,12 @@ public class ArticleServiceImpl implements ArticleService {
         ArticleDTO responseDTO = modelMapper.map(articleSaved, ArticleDTO.class);
         responseDTO.setCategoryId(articleSaved.getCategory().getId());
         responseDTO.setEntrepriseId(articleSaved.getEntreprise().getId());
-
         responseDTO.setCategoryDesignation(articleSaved.getCategory().getDesignation());
         responseDTO.setEntrepriseName(articleSaved.getEntreprise().getNom());
 
         return responseDTO;
-
     }
+
 
     /* ================== GET ALL ARTICLES ================== */
     @Override
