@@ -138,17 +138,17 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         Utilisateur utilisateur = utilisateurRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
 
-        // Vérifier si l'utilisateur a déjà ce rôle
-        Optional<Roles> existingRole = rolesRepository.findByUtilisateurIdAndRoleType(userId, roleType);
-        if (existingRole.isPresent()) {
-            throw new IllegalStateException("L'utilisateur possède déjà ce rôle");
+        // Supprimer tous les rôles existants de l'utilisateur
+        List<Roles> existingRoles = rolesRepository.findByUtilisateurId(userId);
+        if (!existingRoles.isEmpty()) {
+            rolesRepository.deleteAll(existingRoles);
         }
 
         // Créer et assigner le nouveau rôle
         Roles nouveauRole = new Roles();
         nouveauRole.setRoleType(roleType);
         nouveauRole.setUtilisateur(utilisateur);
-        nouveauRole.setRoleName(roleType.name()); // Ajout du nom du rôle
+        nouveauRole.setRoleName(roleType.name());
 
         rolesRepository.save(nouveauRole);
 
