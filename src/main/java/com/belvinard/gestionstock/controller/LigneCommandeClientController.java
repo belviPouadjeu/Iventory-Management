@@ -21,7 +21,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/lignes-commandes")
+@RequestMapping("${api.prefix}/lignes-commandes")
 @Tag(name = "Lignes de commande client-Controller", description = "API pour la gestion des lignes de commande client")
 public class LigneCommandeClientController {
 

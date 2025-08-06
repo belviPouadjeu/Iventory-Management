@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/articles")
+@RequestMapping("${api.prefix}/articles")
 @RequiredArgsConstructor
 @Tag(name = "Articles-Controller", description = "API de gestion des articles")
 public class ArticleController {

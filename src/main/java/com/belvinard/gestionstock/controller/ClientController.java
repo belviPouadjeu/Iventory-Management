@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/clients")
+@RequestMapping("${api.prefix}/clients")
 @Tag(name = "Clients-Controller", description = "Opérations liées à la gestion des clients")
 @RequiredArgsConstructor
 public class ClientController {

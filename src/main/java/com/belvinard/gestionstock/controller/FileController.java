@@ -1,11 +1,13 @@
 package com.belvinard.gestionstock.controller;
 
-import com.belvinard.gestionstock.service.MinioService;
+import com.belvinard.gestionstock.dto.FileDTO;
+import com.belvinard.gestionstock.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
@@ -20,36 +22,41 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/files")
+@RequestMapping("${api.prefix}/files")
 @RequiredArgsConstructor
-@Tag(name = "File-Controller", description = "API de gestion des fichiers MinIO")
+@Tag(name = "File-Controller", description = "API de gestion des fichiers (via MinIO)")
 public class FileController {
 
-    private final MinioService minioService;
+    private final FileService fileService;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Uploader une image")
-    public ResponseEntity<Map<String, String>> uploadFile(
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Fichier uploadé avec succès",
+                    content = @Content(schema = @Schema(implementation = FileDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Erreur lors de l'upload", content = @Content)
+    })
+    public ResponseEntity<FileDTO> uploadFile(
             @Parameter(description = "Image à uploader") @RequestParam("file") MultipartFile file) {
         try {
-            String fileName = minioService.uploadImage(file);
-            return ResponseEntity.ok(Map.of(
-                    "fileName", fileName,
-                    "message", "Fichier uploadé avec succès",
-                    "url", minioService.getFileUrl(fileName)
-            ));
+            FileDTO result = fileService.uploadFile(file);
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Erreur lors de l'upload: " + e.getMessage()));
+            return ResponseEntity.badRequest().body(
+                    FileDTO.builder()
+                            .message("Erreur lors de l'upload : " + e.getMessage())
+                            .build()
+            );
         }
     }
+
 
     @GetMapping("/download/{fileName}")
     @Operation(summary = "Télécharger un fichier")
     public ResponseEntity<InputStreamResource> downloadFile(
             @Parameter(description = "Nom du fichier") @PathVariable String fileName) {
         try {
-            InputStream inputStream = minioService.downloadFile(fileName);
+            InputStream inputStream = fileService.downloadFile(fileName);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -64,11 +71,10 @@ public class FileController {
     public ResponseEntity<Map<String, String>> deleteFile(
             @Parameter(description = "Nom du fichier") @PathVariable String fileName) {
         try {
-            minioService.deleteFile(fileName);
+            fileService.deleteFile(fileName);
             return ResponseEntity.ok(Map.of("message", "Fichier supprimé avec succès"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Erreur lors de la suppression: " + e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -76,8 +82,7 @@ public class FileController {
     @Operation(summary = "Lister tous les fichiers")
     public ResponseEntity<List<String>> listFiles() {
         try {
-            List<String> files = minioService.listFiles();
-            return ResponseEntity.ok(files);
+            return ResponseEntity.ok(fileService.listFiles());
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -89,11 +94,10 @@ public class FileController {
             @Parameter(description = "Nom du fichier") @PathVariable String fileName,
             @Parameter(description = "Durée d'expiration en minutes") @RequestParam(defaultValue = "60") Integer expiryInMinutes) {
         try {
-            String url = minioService.getPreSignedUrl(fileName, expiryInMinutes);
+            String url = fileService.getPreSignedUrl(fileName, expiryInMinutes);
             return ResponseEntity.ok(Map.of("url", url));
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Erreur lors de la génération de l'URL: " + e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }
