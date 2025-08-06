@@ -16,10 +16,13 @@ import com.belvinard.gestionstock.repositories.CategoryRepository;
 import com.belvinard.gestionstock.repositories.EntrepriseRepository;
 import com.belvinard.gestionstock.repositories.LigneCommandeClientRepository;
 import com.belvinard.gestionstock.service.ArticleService;
+import com.belvinard.gestionstock.service.MinioService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +36,7 @@ public class ArticleServiceImpl implements ArticleService {
     private final CategoryRepository categoryRepository;
     private final ModelMapper modelMapper;
     private final LigneCommandeClientRepository ligneCommandeClientRepository;
+    private final MinioService minioService;
     //private final LigneVenteRepository ligneVenteRepository;
 
     @Override
@@ -204,6 +208,49 @@ public class ArticleServiceImpl implements ArticleService {
             return dto;
         }).collect(Collectors.toList());
     }
+
+    @Override
+    public ArticleDTO updateArticleImage(Long id, MultipartFile image) throws IOException {
+        // 1. Chercher l'article
+        Article articleFromDb = articleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Article with id " + id + " not found !!"));
+
+        // 2. Uploader l’image sur Minio
+        String fileName = minioService.uploadImage(image);
+
+        // 3. Sauvegarder le nom de l’image dans l’entité
+        articleFromDb.setPhoto(fileName);
+
+        // 4. Générer l’URL signée
+        String imageUrl = minioService.getPreSignedUrl(fileName, 15); // en secondes ou minutes selon ta config
+
+        // 5. Sauvegarder l'article modifié
+        Article updatedArticle = articleRepository.save(articleFromDb);
+
+        // 6. Mapper en DTO
+        ArticleDTO articleDTO = modelMapper.map(updatedArticle, ArticleDTO.class);
+        articleDTO.setPhoto(imageUrl);
+
+        return articleDTO;
+    }
+
+    @Override
+    public String getPresignedImageUrl(Long id) {
+        // 1. Chercher l’article
+        Article article = articleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Article with id " + id + " not found !!"));
+
+        // 2. Vérifier s’il y a une image
+        String fileName = article.getPhoto();
+
+        if (fileName == null || fileName.isBlank()) {
+            throw new APIException("No image found for this article");
+        }
+
+        // 3. Retourner l’URL signée
+        return minioService.getPreSignedUrl(fileName, 900); // 15 minutes
+    }
+
 
     @Override
     public List<LigneCommandeClientDTO> findHistoriqueCommandeClient(Long idArticle) {
