@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.List;
 
 public interface ArticleService {
-    ArticleDTO createArticle(Long entrepriseId, Long categoryId, ArticleDTO articleDTO);
+    ArticleDTO createArticle(Long entrepriseId, ArticleDTO articleDTO);
 
     List<ArticleDTO> getAllArticles();
 

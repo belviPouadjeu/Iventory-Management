@@ -22,7 +22,8 @@ public class LigneVenteController {
     private final LigneVenteService ligneVenteService;
 
     @PostMapping("/vente/{venteId}")
-    @Operation(summary = "Créer une ligne de vente")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('SALES_MANAGER')")
+    @Operation(summary = "Créer une ligne de vente (ADMIN ou SALES_MANAGER uniquement)")
     public ResponseEntity<LigneVenteDTO> save(
             @PathVariable Long venteId,
             @Valid @RequestBody LigneVenteDTO dto) {
@@ -31,45 +32,52 @@ public class LigneVenteController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Récupérer une ligne de vente par ID")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER', 'SALES_REP')")
+    @Operation(summary = "Récupérer une ligne de vente par ID (ADMIN, SALES_MANAGER ou SALES_REP)")
     public ResponseEntity<LigneVenteDTO> findById(@PathVariable Long id) {
         return ResponseEntity.ok(ligneVenteService.findById(id));
     }
 
     @GetMapping("/vente/{venteId}")
-    @Operation(summary = "Récupérer toutes les lignes d'une vente")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER', 'SALES_REP')")
+    @Operation(summary = "Récupérer toutes les lignes d'une vente (ADMIN, SALES_MANAGER ou SALES_REP)")
     public ResponseEntity<List<LigneVenteDTO>> findAllByVenteId(@PathVariable Long venteId) {
         return ResponseEntity.ok(ligneVenteService.findAllByVenteId(venteId));
     }
 
     @GetMapping("/article/{articleId}")
-    @Operation(summary = "Récupérer toutes les lignes d'un article")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER', 'SALES_REP')")
+    @Operation(summary = "Récupérer toutes les lignes d'un article (ADMIN, SALES_MANAGER ou SALES_REP)")
     public ResponseEntity<List<LigneVenteDTO>> findAllByArticleId(@PathVariable Long articleId) {
         return ResponseEntity.ok(ligneVenteService.findAllByArticleId(articleId));
     }
 
     @GetMapping
-    @Operation(summary = "Récupérer toutes les lignes de vente")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
+    @Operation(summary = "Récupérer toutes les lignes de vente (ADMIN ou SALES_MANAGER uniquement)")
     public ResponseEntity<List<LigneVenteDTO>> findAll() {
         return ResponseEntity.ok(ligneVenteService.findAll());
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Supprimer une ligne de vente")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('SALES_MANAGER')")
+    @Operation(summary = "Supprimer une ligne de vente (ADMIN ou SALES_MANAGER uniquement)")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         ligneVenteService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/vente/{venteId}")
-    @Operation(summary = "Supprimer toutes les lignes d'une vente")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('SALES_MANAGER')")
+    @Operation(summary = "Supprimer toutes les lignes d'une vente (ADMIN ou SALES_MANAGER uniquement)")
     public ResponseEntity<Void> deleteAllByVenteId(@PathVariable Long venteId) {
         ligneVenteService.deleteAllByVenteId(venteId);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/quantity")
-    @Operation(summary = "Modifier la quantité d'une ligne de vente")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('SALES_MANAGER')")
+    @Operation(summary = "Modifier la quantité d'une ligne de vente (ADMIN ou SALES_MANAGER uniquement)")
     public ResponseEntity<LigneVenteDTO> updateQuantity(
             @PathVariable Long id,
             @RequestParam BigDecimal quantity) {
@@ -77,13 +85,15 @@ public class LigneVenteController {
     }
 
     @GetMapping("/vente/{venteId}/total")
-    @Operation(summary = "Calculer le total d'une vente")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER', 'SALES_REP')")
+    @Operation(summary = "Calculer le total d'une vente (ADMIN, SALES_MANAGER ou SALES_REP)")
     public ResponseEntity<BigDecimal> calculateTotalForVente(@PathVariable Long venteId) {
         return ResponseEntity.ok(ligneVenteService.calculateTotalForVente(venteId));
     }
 
     @GetMapping("/check-stock/{articleId}")
-    @Operation(summary = "Vérifier le stock avant ajout")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER', 'SALES_REP')")
+    @Operation(summary = "Vérifier le stock avant ajout (ADMIN, SALES_MANAGER ou SALES_REP)")
     public ResponseEntity<Boolean> checkStock(
             @PathVariable Long articleId,
             @RequestParam BigDecimal quantite) {

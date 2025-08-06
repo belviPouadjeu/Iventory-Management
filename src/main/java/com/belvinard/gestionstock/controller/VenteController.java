@@ -24,33 +24,11 @@ public class VenteController {
 
     private final VenteService venteService;
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Récupérer une vente par ID")
-    public ResponseEntity<VenteDTO> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(venteService.findById(id));
-    }
+    // === ADMIN ou SALES ===
 
-    @GetMapping("/code/{code}")
-    @Operation(summary = "Récupérer une vente par code")
-    public ResponseEntity<VenteDTO> findByCode(@PathVariable String code) {
-        return ResponseEntity.ok(venteService.findByCode(code));
-    }
-
-    @GetMapping
-    @Operation(summary = "Récupérer toutes les ventes")
-    public ResponseEntity<List<VenteDTO>> findAll() {
-        return ResponseEntity.ok(venteService.findAll());
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Supprimer une vente")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        venteService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/entreprise/{entrepriseId}")
-    @Operation(summary = "Créer une vente pour une entreprise")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES')")
+    @PostMapping("/sales/entreprise/{entrepriseId}")
+    @Operation(summary = "[SALES/ADMIN] Créer une vente pour une entreprise")
     public ResponseEntity<VenteDTO> createVente(
             @PathVariable Long entrepriseId,
             @Valid @RequestBody VenteDTO venteDTO) {
@@ -58,50 +36,98 @@ public class VenteController {
                 .body(venteService.createVente(entrepriseId, venteDTO));
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Modifier une vente")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES')")
+    @PutMapping("/sales/{id}")
+    @Operation(summary = "[SALES/ADMIN] Modifier une vente")
     public ResponseEntity<VenteDTO> updateVente(
             @PathVariable Long id,
             @Valid @RequestBody VenteDTO venteDTO) {
         return ResponseEntity.ok(venteService.updateVente(id, venteDTO));
     }
 
-    @PutMapping("/{id}/finalize")
-    @Operation(summary = "Finaliser une vente")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES')")
+    @PutMapping("/sales/{id}/finalize")
+    @Operation(summary = "[SALES/ADMIN] Finaliser une vente")
     public ResponseEntity<VenteDTO> finalizeVente(@PathVariable Long id) {
         return ResponseEntity.ok(venteService.finalizeVente(id));
     }
 
-    @GetMapping("/entreprise/{entrepriseId}")
-    @Operation(summary = "Récupérer les ventes par entreprise")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES')")
+    @PostMapping("/sales/{venteId}/lignes")
+    @Operation(summary = "[SALES/ADMIN] Ajouter une ligne de vente")
+    public ResponseEntity<LigneVenteDTO> addLigneVente(
+            @PathVariable Long venteId,
+            @Valid @RequestBody LigneVenteDTO ligneVenteDTO) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(venteService.addLigneVente(venteId, ligneVenteDTO));
+    }
+
+    //@PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/admin/{id}")
+    @Operation(summary = "[ADMIN] Supprimer une vente")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        venteService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // === ACCESSIBLE AUX ADMIN/SALES/MANAGERS POUR CONSULTATION ===
+
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'MANAGER')")
+    @GetMapping("/public/{id}")
+    @Operation(summary = "[TOUS] Récupérer une vente par ID")
+    public ResponseEntity<VenteDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(venteService.findById(id));
+    }
+
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'MANAGER')")
+    @GetMapping("/public/code/{code}")
+    @Operation(summary = "[TOUS] Récupérer une vente par code")
+    public ResponseEntity<VenteDTO> findByCode(@PathVariable String code) {
+        return ResponseEntity.ok(venteService.findByCode(code));
+    }
+
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'MANAGER')")
+    @GetMapping("/public")
+    @Operation(summary = "[TOUS] Récupérer toutes les ventes")
+    public ResponseEntity<List<VenteDTO>> findAll() {
+        return ResponseEntity.ok(venteService.findAll());
+    }
+
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'MANAGER')")
+    @GetMapping("/public/entreprise/{entrepriseId}")
+    @Operation(summary = "[TOUS] Récupérer les ventes par entreprise")
     public ResponseEntity<List<VenteDTO>> findByEntreprise(@PathVariable Long entrepriseId) {
         return ResponseEntity.ok(venteService.findAllByEntreprise(entrepriseId));
     }
 
-    @GetMapping("/etat/{etatVente}")
-    @Operation(summary = "Récupérer les ventes par état")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'MANAGER')")
+    @GetMapping("/public/etat/{etatVente}")
+    @Operation(summary = "[TOUS] Récupérer les ventes par état")
     public ResponseEntity<List<VenteDTO>> findByEtatVente(@PathVariable EtatVente etatVente) {
         return ResponseEntity.ok(venteService.findByEtatVente(etatVente));
     }
 
-    @GetMapping("/entreprise/{entrepriseId}/etat/{etatVente}")
-    @Operation(summary = "Récupérer les ventes par entreprise et état")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'MANAGER')")
+    @GetMapping("/public/entreprise/{entrepriseId}/etat/{etatVente}")
+    @Operation(summary = "[TOUS] Récupérer les ventes par entreprise et état")
     public ResponseEntity<List<VenteDTO>> findByEntrepriseAndEtatVente(
             @PathVariable Long entrepriseId,
             @PathVariable EtatVente etatVente) {
         return ResponseEntity.ok(venteService.findByEntrepriseAndEtatVente(entrepriseId, etatVente));
     }
 
-    @GetMapping("/date-range")
-    @Operation(summary = "Récupérer les ventes par période")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'MANAGER')")
+    @GetMapping("/public/date-range")
+    @Operation(summary = "[TOUS] Récupérer les ventes par période")
     public ResponseEntity<List<VenteDTO>> findByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
         return ResponseEntity.ok(venteService.findByDateRange(startDate, endDate));
     }
 
-    @GetMapping("/entreprise/{entrepriseId}/date-range")
-    @Operation(summary = "Récupérer les ventes par entreprise et période")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'MANAGER')")
+    @GetMapping("/public/entreprise/{entrepriseId}/date-range")
+    @Operation(summary = "[TOUS] Récupérer les ventes par entreprise et période")
     public ResponseEntity<List<VenteDTO>> findByEntrepriseAndDateRange(
             @PathVariable Long entrepriseId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
@@ -109,18 +135,11 @@ public class VenteController {
         return ResponseEntity.ok(venteService.findByEntrepriseAndDateRange(entrepriseId, startDate, endDate));
     }
 
-    @GetMapping("/{venteId}/lignes")
-    @Operation(summary = "Récupérer les lignes de vente")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'MANAGER')")
+    @GetMapping("/public/{venteId}/lignes")
+    @Operation(summary = "[TOUS] Récupérer les lignes de vente")
     public ResponseEntity<List<LigneVenteDTO>> findLignesVente(@PathVariable Long venteId) {
         return ResponseEntity.ok(venteService.findAllLignesVenteByVenteId(venteId));
     }
-
-    @PostMapping("/{venteId}/lignes")
-    @Operation(summary = "Ajouter une ligne de vente")
-    public ResponseEntity<LigneVenteDTO> addLigneVente(
-            @PathVariable Long venteId,
-            @Valid @RequestBody LigneVenteDTO ligneVenteDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(venteService.addLigneVente(venteId, ligneVenteDTO));
-    }
 }
+

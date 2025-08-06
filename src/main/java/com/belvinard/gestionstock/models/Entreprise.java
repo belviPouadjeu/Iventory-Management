@@ -1,8 +1,8 @@
 package com.belvinard.gestionstock.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -12,6 +12,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -20,8 +21,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "entreprise")
 public class Entreprise extends AbstractEntity {
-
-  private Long id;
 
   @NotBlank(message = "Le nom de l'entreprise est obligatoire")
   @Size(min = 4, max = 100, message = "Le nom doit contenir entre 4 et 100 caractères")
@@ -49,6 +48,10 @@ public class Entreprise extends AbstractEntity {
 
   @Size(max = 150, message = "Le site web doit contenir au maximum 150 caractères")
   private String steWeb;
+
+  @OneToMany(mappedBy = "entreprise", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JsonIgnore
+  private List<Utilisateur> utilisateurs;
 
   @Schema(hidden = true)
   private LocalDateTime creationDate;

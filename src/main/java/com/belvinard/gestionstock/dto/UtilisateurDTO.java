@@ -18,6 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UtilisateurDTO {
+
     @Schema(hidden = true)
     private Long id;
 
@@ -45,7 +46,7 @@ public class UtilisateurDTO {
     private String photo;
 
     @NotNull(message = "L'entreprise est obligatoire")
-    private EntrepriseDTO entreprise;
+    private Long entrepriseId; // 👈 Nouvelle propriété
 
     private List<RolesDTO> roles;
 }

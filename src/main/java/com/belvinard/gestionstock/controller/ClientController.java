@@ -20,15 +20,15 @@ import java.util.List;
 
 @RestController
 @RequestMapping("${api.prefix}/clients")
-@Tag(name = "Clients-Controller", description = "Opérations liées à la gestion des clients")
+@Tag(name = "Clients Controller", description = "Opérations liées à la gestion des clients")
 @RequiredArgsConstructor
 public class ClientController {
 
     private final ClientService clientService;
 
     @Operation(
-            summary = "Créer un client",
-            description = "Cette opération permet d'enregistrer un nouveau client pour une entreprise donnée.",
+            summary = "ADMIN: Créer un client",
+            description = "Permet d'enregistrer un nouveau client pour une entreprise donnée. Accessible uniquement aux ADMIN.",
             parameters = {
                     @Parameter(
                             name = "entrepriseId",
@@ -70,7 +70,8 @@ public class ClientController {
             @ApiResponse(responseCode = "400", description = "Données de validation invalides"),
             @ApiResponse(responseCode = "404", description = "Entreprise non trouvée")
     })
-    @PostMapping("/entreprises/{entrepriseId}")
+    //@PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/entreprises/{entrepriseId}")
     public ResponseEntity<ClientDTO> createClient(
             @PathVariable Long entrepriseId,
             @Valid @RequestBody ClientDTO clientDTO
@@ -79,40 +80,47 @@ public class ClientController {
         return new ResponseEntity<>(savedClient, HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Rechercher un client par ID",
-            description = "Cette opération permet de rechercher un client grâce à son identifiant.")
+    @Operation(
+            summary = "MANAGER ou ADMIN: Rechercher un client par ID",
+            description = "Recherche un client à partir de son identifiant. Accessible aux MANAGER ou ADMIN."
+    )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Client trouvé"),
-        @ApiResponse(responseCode = "404", description = "Client non trouvé")
+            @ApiResponse(responseCode = "200", description = "Client trouvé"),
+            @ApiResponse(responseCode = "404", description = "Client non trouvé")
     })
-    @GetMapping("/{id}")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @GetMapping("/manager/{id}")
     public ResponseEntity<ClientDTO> getClientById(@PathVariable Long id) {
         ClientDTO clientDTO = clientService.findByClientId(id);
         return ResponseEntity.ok(clientDTO);
     }
 
-    @Operation(summary = "Liste des clients", description = "Cette opération retourne tous les clients enregistrés.")
+    @Operation(
+            summary = "MANAGER ou ADMIN: Liste des clients",
+            description = "Retourne tous les clients enregistrés. Accessible aux MANAGER ou ADMIN."
+    )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Liste des clients récupérée avec succès")
+            @ApiResponse(responseCode = "200", description = "Liste des clients récupérée avec succès")
     })
-    @GetMapping
+    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @GetMapping("/manager")
     public ResponseEntity<List<ClientDTO>> getAllClients() {
         List<ClientDTO> clients = clientService.getAllClients();
         return ResponseEntity.ok(clients);
     }
 
-    @Operation(summary = "Supprimer un client",
-            description = "Cette opération permet de supprimer un client grâce à son ID.")
+    @Operation(
+            summary = "ADMIN: Supprimer un client",
+            description = "Permet de supprimer un client grâce à son ID. Accessible uniquement aux ADMIN."
+    )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Client supprimé avec succès"),
-        @ApiResponse(responseCode = "404", description = "Client non trouvé")
+            @ApiResponse(responseCode = "200", description = "Client supprimé avec succès"),
+            @ApiResponse(responseCode = "404", description = "Client non trouvé")
     })
-    @DeleteMapping("admin/client/{id}")
+    //@PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/admin/client/{id}")
     public ResponseEntity<ClientDTO> deleteClient(@PathVariable Long id) {
         ClientDTO deletedClient = clientService.deleteClient(id);
         return ResponseEntity.ok(deletedClient);
     }
-
-
-
 }

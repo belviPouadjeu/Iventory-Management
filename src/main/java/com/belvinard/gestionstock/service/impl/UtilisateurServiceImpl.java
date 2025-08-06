@@ -29,26 +29,31 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     private final ModelMapper modelMapper;
 
     @Override
-    public UtilisateurDTO save(UtilisateurDTO dto) {
-        if (dto == null) {
-            throw new IllegalArgumentException("UtilisateurDTO ne peut pas être null");
+    public UtilisateurDTO save(UtilisateurDTO dto, Long entrepriseId) {
+        if (entrepriseId == null) {
+            throw new IllegalArgumentException("L'id de l'entreprise ne doit pas être null");
         }
 
-        // Vérifier si l'email existe déjà
-        if (utilisateurRepository.existsByEmail(dto.getEmail())) {
-            throw new IllegalStateException("Un utilisateur avec cet email existe déjà");
-        }
+        // Récupération de l'entreprise
+        Entreprise entreprise = entrepriseRepository.findById(entrepriseId)
+                .orElseThrow(() -> new EntityNotFoundException("Aucune entreprise trouvée avec l'id " + entrepriseId));
 
-        // Vérifier que l'entreprise existe
-        Entreprise entreprise = entrepriseRepository.findById(dto.getEntreprise().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Entreprise non trouvée"));
-
+        // Mapping DTO -> Entity
         Utilisateur utilisateur = modelMapper.map(dto, Utilisateur.class);
         utilisateur.setEntreprise(entreprise);
 
-        utilisateur = utilisateurRepository.save(utilisateur);
-        return modelMapper.map(utilisateur, UtilisateurDTO.class);
+        // Sauvegarde de l'utilisateur
+        Utilisateur savedUser = utilisateurRepository.save(utilisateur);
+
+        // Assignation du rôle par défaut
+        assignRole(savedUser.getId(), RoleType.SALES_REP);
+
+        // Mapping Entity -> DTO
+        UtilisateurDTO utilisateurDTO = modelMapper.map(savedUser, UtilisateurDTO.class);
+        utilisateurDTO.setEntrepriseId(entrepriseId); // pour que le champ soit bien renseigné
+        return utilisateurDTO;
     }
+
 
     @Override
     public UtilisateurDTO findById(Long id) {
@@ -133,22 +138,23 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         Utilisateur utilisateur = utilisateurRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
 
-        // Vérifier si l'utilisateur a déjà ce rôle
-        Optional<Roles> existingRole = rolesRepository.findByUtilisateurIdAndRoleType(userId, roleType);
-        if (existingRole.isPresent()) {
-            throw new IllegalStateException("L'utilisateur possède déjà ce rôle");
+        // Supprimer tous les rôles existants de l'utilisateur
+        List<Roles> existingRoles = rolesRepository.findByUtilisateurId(userId);
+        if (!existingRoles.isEmpty()) {
+            rolesRepository.deleteAll(existingRoles);
         }
 
         // Créer et assigner le nouveau rôle
         Roles nouveauRole = new Roles();
         nouveauRole.setRoleType(roleType);
         nouveauRole.setUtilisateur(utilisateur);
-        nouveauRole.setRoleName(roleType.name()); // Ajout du nom du rôle
+        nouveauRole.setRoleName(roleType.name());
 
         rolesRepository.save(nouveauRole);
 
         return modelMapper.map(utilisateur, UtilisateurDTO.class);
     }
+
     @Override
     public UtilisateurDTO removeRole(Long userId, RoleType roleType) {
         if (userId == null || roleType == null) {
