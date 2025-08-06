@@ -30,7 +30,8 @@ public class FileController {
     private final FileService fileService;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Uploader une image")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @Operation(summary = "Uploader une image (ADMIN ou MANAGER)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Fichier uploadé avec succès",
                     content = @Content(schema = @Schema(implementation = FileDTO.class))),
@@ -50,9 +51,9 @@ public class FileController {
         }
     }
 
-
     @GetMapping("/download/{fileName}")
-    @Operation(summary = "Télécharger un fichier")
+    //@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @Operation(summary = "Télécharger un fichier (ADMIN ou MANAGER)")
     public ResponseEntity<InputStreamResource> downloadFile(
             @Parameter(description = "Nom du fichier") @PathVariable String fileName) {
         try {
@@ -67,7 +68,8 @@ public class FileController {
     }
 
     @DeleteMapping("/{fileName}")
-    @Operation(summary = "Supprimer un fichier")
+    //@PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Supprimer un fichier (ADMIN)")
     public ResponseEntity<Map<String, String>> deleteFile(
             @Parameter(description = "Nom du fichier") @PathVariable String fileName) {
         try {
@@ -79,7 +81,8 @@ public class FileController {
     }
 
     @GetMapping("/list")
-    @Operation(summary = "Lister tous les fichiers")
+    //@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @Operation(summary = "Lister tous les fichiers (ADMIN ou MANAGER)")
     public ResponseEntity<List<String>> listFiles() {
         try {
             return ResponseEntity.ok(fileService.listFiles());
@@ -89,7 +92,8 @@ public class FileController {
     }
 
     @GetMapping("/url/{fileName}")
-    @Operation(summary = "Obtenir l'URL pré-signée d'un fichier")
+    //@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @Operation(summary = "Obtenir l'URL pré-signée d'un fichier (ADMIN ou MANAGER)")
     public ResponseEntity<Map<String, String>> getPreSignedUrl(
             @Parameter(description = "Nom du fichier") @PathVariable String fileName,
             @Parameter(description = "Durée d'expiration en minutes") @RequestParam(defaultValue = "60") Integer expiryInMinutes) {

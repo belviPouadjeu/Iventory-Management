@@ -29,10 +29,12 @@ import java.io.IOException;
 @Tag(name = "Entreprise-Controller", description = "API pour la gestion des entreprises")
 @RequiredArgsConstructor
 public class EntrepriseControllers {
+
     private final EntrepriseService entrepriseService;
     private final MinioService minioService;
-    
 
+    @PostMapping("/admin/create")
+    //@PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "Ajouter une entreprise",
             description = "Ajoute une nouvelle entreprise à la base de données"
@@ -43,38 +45,26 @@ public class EntrepriseControllers {
             @ApiResponse(responseCode = "400", description = "Requête invalide", content = @Content),
             @ApiResponse(responseCode = "500", description = "Erreur interne du serveur", content = @Content)
     })
-    @PostMapping("/admin/create")
     public ResponseEntity<EntrepriseDTO> createEntreprise(@Valid @RequestBody EntrepriseDTO entrepriseDTO) {
         EntrepriseDTO savedEntrepriseDTO = entrepriseService.createEntreprise(entrepriseDTO);
         return new ResponseEntity<>(savedEntrepriseDTO, HttpStatus.CREATED);
     }
 
-    // ==================== GET ALL ENTREPRIS
+    @GetMapping("/public/entreprises")
     @Operation(
-            summary = "Retourne la liste des entreprise",
-            description = """
-       Retourne la liste des categories""
-    """
+            summary = "Retourne la liste des entreprises",
+            description = "Retourne la liste complète des entreprises"
     )
     @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "List of entreprise successfully retrieved",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = EntrepriseResponse.class),
-                            examples = @ExampleObject(value = """
-                        """)
-                    )
-            )
+            @ApiResponse(responseCode = "200", description = "Liste des entreprises récupérée avec succès",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = EntrepriseResponse.class)))
     })
-    @GetMapping("/public/entreprises")
-    public ResponseEntity<EntrepriseResponse> getAllEntreprises(){
-        EntrepriseResponse entreprises = entrepriseService.
-                getAllEntreprises();
-        return new ResponseEntity<>(entreprises, HttpStatus.OK);
+    public ResponseEntity<EntrepriseResponse> getAllEntreprises() {
+        EntrepriseResponse entreprises = entrepriseService.getAllEntreprises();
+        return ResponseEntity.ok(entreprises);
     }
 
+    @GetMapping("/public/{id}")
     @Operation(summary = "Récupère une entreprise par son ID",
             description = "Cette méthode permet de récupérer une entreprise en fonction de son ID")
     @ApiResponses(value = {
@@ -82,53 +72,52 @@ public class EntrepriseControllers {
             @ApiResponse(responseCode = "404", description = "Entreprise non trouvée"),
             @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")
     })
-    @GetMapping("public/{entrepriseId}")
     public ResponseEntity<EntrepriseDTO> getEntrepriseById(
             @Parameter(description = "ID de l'entreprise à récupérer", required = true) @PathVariable Long id) {
         EntrepriseDTO entreprise = entrepriseService.findEntrepriseById(id);
         return ResponseEntity.ok(entreprise);
     }
 
+    @DeleteMapping("/admin/delete/{id}")
+    //@PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Supprimer une entreprise par son ID",
             description = "Cette méthode permet de supprimer une entreprise en fonction de son ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Entreprise trouvée avec succès"),
+            @ApiResponse(responseCode = "200", description = "Entreprise supprimée avec succès"),
             @ApiResponse(responseCode = "404", description = "Entreprise non trouvée"),
             @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")
     })
-    @DeleteMapping("/admin/delete/{EntrepriseId}")
     public ResponseEntity<EntrepriseDTO> deleteEntrepriseById(@PathVariable Long id) {
         EntrepriseDTO deletedEntreprise = entrepriseService.deleteEntrepriseById(id);
-
         return ResponseEntity.ok(deletedEntreprise);
     }
 
-    @Operation(summary = "Update entreprise image",
-            description = "Uploads a new product image to MinIO and returns a URL to access it")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Product image updated successfully",
-                    content = @Content(schema = @Schema(implementation = EntrepriseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid image file", content = @Content)
-    })
     @PutMapping(value = "/entreprise/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    //@PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Mettre à jour l'image de l'entreprise",
+            description = "Uploader une nouvelle image pour l'entreprise via MinIO")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Image mise à jour avec succès",
+                    content = @Content(schema = @Schema(implementation = EntrepriseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Fichier image invalide", content = @Content)
+    })
     public ResponseEntity<EntrepriseDTO> updateEntrepriseImage(
-            @Parameter(description = "ID of the entreprise") @PathVariable Long id,
-            @Parameter(description = "Image file", required = true) @RequestParam("image") MultipartFile image) throws IOException {
-
-        EntrepriseDTO updatedProduct = entrepriseService.updateEntrepriseImage(id, image);
-        return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
+            @Parameter(description = "ID de l'entreprise") @PathVariable Long id,
+            @Parameter(description = "Fichier image", required = true) @RequestParam("image") MultipartFile image) throws IOException {
+        EntrepriseDTO updatedEntreprise = entrepriseService.updateEntrepriseImage(id, image);
+        return ResponseEntity.ok(updatedEntreprise);
     }
 
-    @Operation(summary = "Get presigned image URL",
-            description = "Returns a presigned URL to access the entreprise image")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Presigned URL generated successfully"),
-            @ApiResponse(responseCode = "404", description = "Entreprise not found"),
-            @ApiResponse(responseCode = "400", description = "No image found for this entreprise")
-    })
     @GetMapping("/public/{id}/image-url")
+    @Operation(summary = "Obtenir l'URL pré-signée de l'image d'une entreprise",
+            description = "Retourne une URL pré-signée pour accéder à l'image de l'entreprise")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "URL pré-signée générée avec succès"),
+            @ApiResponse(responseCode = "404", description = "Entreprise non trouvée"),
+            @ApiResponse(responseCode = "400", description = "Aucune image trouvée pour cette entreprise")
+    })
     public ResponseEntity<String> getPresignedImageUrl(
-            @Parameter(description = "ID of the entreprise") @PathVariable Long id) {
+            @Parameter(description = "ID de l'entreprise") @PathVariable Long id) {
         String presignedUrl = entrepriseService.getPresignedImageUrl(id);
         return ResponseEntity.ok(presignedUrl);
     }

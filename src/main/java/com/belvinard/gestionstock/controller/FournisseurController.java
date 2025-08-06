@@ -27,9 +27,9 @@ public class FournisseurController {
 
     private final FournisseurService fournisseurService;
 
-
     @PostMapping("/entreprise/{entrepriseId}")
-    @Operation(summary = "Créer un fournisseur", description = "Ajoute un nouveau fournisseur lié à une entreprise")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @Operation(summary = "Créer un fournisseur (ADMIN ou MANAGER)", description = "Ajoute un nouveau fournisseur lié à une entreprise")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Fournisseur créé avec succès"),
             @ApiResponse(responseCode = "404", description = "Entreprise non trouvée"),
@@ -42,14 +42,10 @@ public class FournisseurController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    /**
-     * Récupère la liste de tous les fournisseurs
-     *
-     * @return Liste des fournisseurs avec leurs informations d'entreprise
-     */
     @GetMapping
+    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(
-            summary = "Récupérer tous les fournisseurs",
+            summary = "Récupérer tous les fournisseurs (ADMIN ou MANAGER)",
             description = "Récupère la liste complète des fournisseurs avec leurs informations d'entreprise",
             responses = {
                     @ApiResponse(
@@ -76,7 +72,8 @@ public class FournisseurController {
     }
 
     @GetMapping("/{fournisseurId}")
-    @Operation(summary = "Rechercher un fournisseur par ID",
+    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Rechercher un fournisseur par ID (ADMIN ou MANAGER)",
             description = "Cette opération permet de rechercher un fournisseur à partir de son identifiant.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Fournisseur trouvé"),
@@ -89,26 +86,21 @@ public class FournisseurController {
     }
 
     @DeleteMapping("/{fournisseurId}")
-    @Operation(summary = "Supprimer un fournisseur",
+    //@PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Supprimer un fournisseur (ADMIN)",
             description = "Cette opération permet de supprimer un fournisseur à partir de son identifiant.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Fournisseur supprimé avec succès"),
             @ApiResponse(responseCode = "404", description = "Fournisseur non trouvé")
     })
-    public ResponseEntity<FournisseurDTO> deleteFourniseur(@PathVariable Long id) {
-        return ResponseEntity.ok(fournisseurService.deleteFournisseur(id));
+    public ResponseEntity<FournisseurDTO> deleteFourniseur(@PathVariable Long fournisseurId) {
+        return ResponseEntity.ok(fournisseurService.deleteFournisseur(fournisseurId));
     }
 
-    /**
-     * Met à jour un fournisseur existant
-     *
-     * @param fournisseurId L'identifiant du fournisseur à mettre à jour
-     * @param fournisseurDTO Les nouvelles données du fournisseur
-     * @return Le fournisseur mis à jour
-     */
     @PutMapping("/{fournisseurId}")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     @Operation(
-            summary = "Mettre à jour un fournisseur",
+            summary = "Mettre à jour un fournisseur (ADMIN ou MANAGER)",
             description = "Met à jour les informations d'un fournisseur existant",
             responses = {
                     @ApiResponse(
@@ -143,6 +135,5 @@ public class FournisseurController {
         FournisseurDTO updatedFournisseur = fournisseurService.updateFournisseur(fournisseurId, fournisseurDTO);
         return ResponseEntity.ok(updatedFournisseur);
     }
-
 
 }

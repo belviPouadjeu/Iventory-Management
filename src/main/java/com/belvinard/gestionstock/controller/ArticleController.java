@@ -33,12 +33,13 @@ public class ArticleController {
     private final LigneCommandeClientService ligneCommandeClientService;
 
     /* ================== CREATE ARTICLE ================== */
-    @Operation(summary = "Créer un nouvel article")
-    @ApiResponses(value = {
+    @Operation(summary = "ADMIN: Créer un nouvel article")
+    @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Article créé avec succès"),
             @ApiResponse(responseCode = "404", description = "Entreprise ou catégorie non trouvée")
     })
-    @PostMapping("/articles")
+    //@PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/articles")
     public ResponseEntity<ArticleDTO> createArticle(
             @RequestParam Long entrepriseId,
             @Valid @RequestBody ArticleDTO articleDTO) {
@@ -47,126 +48,89 @@ public class ArticleController {
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
-
     /* ================== GET ALL ARTICLES ================== */
-    @Operation(summary = "Récupérer la liste de tous les articles")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Liste des articles récupérée avec succès")
+    @Operation(summary = "USER, MANAGER ou ADMIN: Récupérer tous les articles")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
     })
-    @GetMapping("/articles")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @GetMapping("/manager/articles")
     public ResponseEntity<List<ArticleDTO>> getAllArticles() {
         List<ArticleDTO> articles = articleService.getAllArticles();
         return ResponseEntity.ok(articles);
     }
 
-    /* ================== GET ARTICLES BY ID ================== */
-
-    @Operation(summary = "Récupérer un article par son ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Article trouvé avec succès"),
+    /* ================== GET ARTICLE BY ID ================== */
+    @Operation(summary = "USER, MANAGER ou ADMIN: Récupérer un article par ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Article trouvé"),
             @ApiResponse(responseCode = "404", description = "Article non trouvé")
     })
-    @GetMapping("/{id}")
-    public ResponseEntity<ArticleDTO> getArticleById(
-            @Parameter(description = "ID de l'article à récupérer", required = true)
-            @PathVariable Long id) {
+    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @GetMapping("/manager/{id}")
+    public ResponseEntity<ArticleDTO> getArticleById(@PathVariable Long id) {
         ArticleDTO articleDTO = articleService.findAllByArticleId(id);
         return ResponseEntity.ok(articleDTO);
     }
 
     /* ================== DELETE ARTICLE ================== */
-    @Operation(summary = "Supprimer un article par son ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Article supprimé avec succès"),
+    @Operation(summary = "ADMIN: Supprimer un article par ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Article supprimé"),
             @ApiResponse(responseCode = "404", description = "Article non trouvé")
     })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ArticleDTO> deleteArticle(
-            @Parameter(description = "ID de l'article à supprimer", required = true)
-            @PathVariable Long id) {
+    //@PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/admin/{id}")
+    public ResponseEntity<ArticleDTO> deleteArticle(@PathVariable Long id) {
         ArticleDTO deleted = articleService.deleteArticle(id);
         return ResponseEntity.ok(deleted);
     }
 
-
-    @GetMapping("/code/{codeArticle}")
-    @Operation(summary = "Rechercher un article par code",
-            description = "Retourne un article à partir de son code article (insensible à la casse)")
+    /* ================== GET BY CODE ================== */
+    @Operation(summary = "USER, MANAGER ou ADMIN: Rechercher un article par code")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @GetMapping("/manager/code/{codeArticle}")
     public ResponseEntity<ArticleDTO> findByCodeArticle(@PathVariable String codeArticle) {
         ArticleDTO articleDTO = articleService.findByCodeArticle(codeArticle);
         return ResponseEntity.ok(articleDTO);
     }
 
-
-    @GetMapping("/category/{idCategory}")
-    @Operation(summary = "Lister les articles d'une catégorie",
-            description = "Retourne la liste des articles appartenant à la catégorie donnée")
+    /* ================== GET BY CATEGORY ================== */
+    @Operation(summary = "USER, MANAGER ou ADMIN: Lister les articles d'une catégorie")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @GetMapping("/manager/category/{idCategory}")
     public ResponseEntity<List<ArticleDTO>> findAllByCategory(@PathVariable Long idCategory) {
         List<ArticleDTO> articles = articleService.findAllArticleByIdCategory(idCategory);
         return ResponseEntity.ok(articles);
     }
 
-    @Operation(
-            summary = "Historique des commandes pour un article",
-            description = "Récupère toutes les lignes de commandes clients liées à un article spécifique via son ID"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Historique des lignes de commande récupéré avec succès"),
-            @ApiResponse(responseCode = "404", description = "Article non trouvé")
-    })
-    @GetMapping("/historique/article/{idArticle}")
-    public ResponseEntity<List<LigneCommandeClientDTO>> findHistoriqueCommandeClient(
-            @Parameter(description = "ID de l'article") @PathVariable Long idArticle) {
-
+    /* ================== HISTORIQUE DES COMMANDES ================== */
+    @Operation(summary = "MANAGER ou ADMIN: Historique des commandes d’un article")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @GetMapping("/manager/historique/article/{idArticle}")
+    public ResponseEntity<List<LigneCommandeClientDTO>> findHistoriqueCommandeClient(@PathVariable Long idArticle) {
         List<LigneCommandeClientDTO> lignes = ligneCommandeClientService.findHistoriqueCommandeClient(idArticle);
         return ResponseEntity.ok(lignes);
     }
 
-    @Operation(
-            summary = "Update article image",
-            description = "Uploads a new article image to MinIO and returns a URL to access it"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Article image updated successfully",
-                    content = @Content(schema = @Schema(implementation = ArticleDTO.class))
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid image file",
-                    content = @Content
-            )
-    })
-    @PutMapping(value = "/article/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    /* ================== UPDATE IMAGE ================== */
+    @Operation(summary = "ADMIN ou MANAGER: Modifier l’image d’un article")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PutMapping(value = "/manager/article/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ArticleDTO> updateArticleImage(
-            @Parameter(description = "ID of the article") @PathVariable Long id,
-            @Parameter(description = "Image file", required = true) @RequestParam("image") MultipartFile image
-    ) throws IOException {
+            @PathVariable Long id,
+            @RequestParam("image") MultipartFile image) throws IOException {
 
         ArticleDTO updatedArticle = articleService.updateArticleImage(id, image);
         return new ResponseEntity<>(updatedArticle, HttpStatus.OK);
     }
 
-    @Operation(
-            summary = "Get presigned article image URL",
-            description = "Returns a presigned URL to access the article image"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Presigned URL generated successfully"),
-            @ApiResponse(responseCode = "404", description = "Article not found"),
-            @ApiResponse(responseCode = "400", description = "No image found for this article")
-    })
+    /* ================== GET IMAGE PRESIGNED URL ================== */
+    @Operation(summary = "PUBLIC: Obtenir le lien temporaire de l’image d’un article")
     @GetMapping("/public/article/{id}/image-url")
-    public ResponseEntity<String> getPresignedArticleImageUrl(
-            @Parameter(description = "ID of the article") @PathVariable Long id
-    ) {
+    public ResponseEntity<String> getPresignedArticleImageUrl(@PathVariable Long id) {
         String presignedUrl = articleService.getPresignedImageUrl(id);
         return ResponseEntity.ok(presignedUrl);
     }
-
-
-
-
 
 }

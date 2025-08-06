@@ -23,120 +23,122 @@ public class UtilisateurController {
 
     private final UtilisateurService utilisateurService;
 
-    @PostMapping
-    @Operation(summary = "Créer un nouvel utilisateur")
+    // === ADMIN ONLY ===
+
+    //@PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin")
+    @Operation(summary = "[ADMIN] Créer un nouvel utilisateur")
     public ResponseEntity<UtilisateurDTO> save(@RequestBody @Valid UtilisateurDTO dto) {
         UtilisateurDTO saved = utilisateurService.save(dto, dto.getEntrepriseId());
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Récupérer un utilisateur par son ID")
-    public ResponseEntity<UtilisateurDTO> findById(
-            @Parameter(description = "ID de l'utilisateur") @PathVariable Long id) {
+    //@PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/{id}")
+    @Operation(summary = "[ADMIN] Récupérer un utilisateur par son ID")
+    public ResponseEntity<UtilisateurDTO> findById(@PathVariable Long id) {
         return ResponseEntity.ok(utilisateurService.findById(id));
     }
 
-    @GetMapping("/long/{id}")
-    @Operation(summary = "Récupérer un utilisateur par son ID (Long)")
-    public ResponseEntity<UtilisateurDTO> findByIdLonge(
-            @Parameter(description = "ID de l'utilisateur") @PathVariable Long id) {
+    //@PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/long/{id}")
+    @Operation(summary = "[ADMIN] Récupérer un utilisateur par son ID (Long)")
+    public ResponseEntity<UtilisateurDTO> findByIdLonge(@PathVariable Long id) {
         return ResponseEntity.ok(utilisateurService.findByIdLonge(id));
     }
 
-    @GetMapping
-    @Operation(summary = "Récupérer tous les utilisateurs")
+    //@PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/all")
+    @Operation(summary = "[ADMIN] Récupérer tous les utilisateurs")
     public ResponseEntity<List<UtilisateurDTO>> findAll() {
         return ResponseEntity.ok(utilisateurService.findAll());
     }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Supprimer un utilisateur")
-    public ResponseEntity<Void> delete(
-            @Parameter(description = "ID de l'utilisateur à supprimer") @PathVariable Long id) {
+    //@PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/admin/{id}")
+    @Operation(summary = "[ADMIN] Supprimer un utilisateur")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         utilisateurService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/email/{email}")
-    @Operation(summary = "Récupérer un utilisateur par son email")
-    public ResponseEntity<UtilisateurDTO> findByEmail(
-            @Parameter(description = "Email de l'utilisateur") @PathVariable String email) {
+    //@PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/email/{email}")
+    @Operation(summary = "[ADMIN] Récupérer un utilisateur par son email")
+    public ResponseEntity<UtilisateurDTO> findByEmail(@PathVariable String email) {
         return ResponseEntity.ok(utilisateurService.findByEmail(email));
     }
 
-    @PutMapping("/changer-mot-de-passe")
-    @Operation(summary = "Changer le mot de passe d'un utilisateur")
-    public ResponseEntity<UtilisateurDTO> changerMotDePasse(
-            @RequestBody ChangerMotDePasseUtilisateurDTO dto) {
-        return ResponseEntity.ok(utilisateurService.changerMotDePasse(dto));
-    }
-
-    // === NOUVELLES MÉTHODES ===
-
-    // Gestion des rôles
-    @PostMapping("/{id}/roles/{roleType}")
-    @Operation(summary = "Assigner un rôle à un utilisateur")
-    public ResponseEntity<UtilisateurDTO> assignRole(
-            @Parameter(description = "ID de l'utilisateur") @PathVariable Long id,
-            @Parameter(description = "Type de rôle") @PathVariable RoleType roleType) {
+    //@PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/{id}/roles/{roleType}")
+    @Operation(summary = "[ADMIN] Assigner un rôle à un utilisateur")
+    public ResponseEntity<UtilisateurDTO> assignRole(@PathVariable Long id, @PathVariable RoleType roleType) {
         return ResponseEntity.ok(utilisateurService.assignRole(id, roleType));
     }
 
-    @DeleteMapping("/{id}/roles/{roleType}")
-    @Operation(summary = "Retirer un rôle d'un utilisateur")
-    public ResponseEntity<UtilisateurDTO> removeRole(
-            @Parameter(description = "ID de l'utilisateur") @PathVariable Long id,
-            @Parameter(description = "Type de rôle") @PathVariable RoleType roleType) {
+    //@PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/admin/{id}/roles/{roleType}")
+    @Operation(summary = "[ADMIN] Retirer un rôle d'un utilisateur")
+    public ResponseEntity<UtilisateurDTO> removeRole(@PathVariable Long id, @PathVariable RoleType roleType) {
         return ResponseEntity.ok(utilisateurService.removeRole(id, roleType));
     }
 
-    @GetMapping("/roles/{roleType}")
-    @Operation(summary = "Récupérer tous les utilisateurs ayant un rôle spécifique")
-    public ResponseEntity<List<UtilisateurDTO>> findByRole(
-            @Parameter(description = "Type de rôle") @PathVariable RoleType roleType) {
+    //@PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/roles/{roleType}")
+    @Operation(summary = "[ADMIN] Récupérer tous les utilisateurs ayant un rôle spécifique")
+    public ResponseEntity<List<UtilisateurDTO>> findByRole(@PathVariable RoleType roleType) {
         return ResponseEntity.ok(utilisateurService.findByRole(roleType));
     }
 
-    // Gestion d'état
-    @PutMapping("/{id}/activate")
-    @Operation(summary = "Activer un utilisateur")
-    public ResponseEntity<UtilisateurDTO> activateUser(
-            @Parameter(description = "ID de l'utilisateur") @PathVariable Long id) {
+    //@PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/admin/{id}/activate")
+    @Operation(summary = "[ADMIN] Activer un utilisateur")
+    public ResponseEntity<UtilisateurDTO> activateUser(@PathVariable Long id) {
         return ResponseEntity.ok(utilisateurService.activateUser(id));
     }
 
-    @PutMapping("/{id}/deactivate")
-    @Operation(summary = "Désactiver un utilisateur")
-    public ResponseEntity<UtilisateurDTO> deactivateUser(
-            @Parameter(description = "ID de l'utilisateur") @PathVariable Long id) {
+    //@PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/admin/{id}/deactivate")
+    @Operation(summary = "[ADMIN] Désactiver un utilisateur")
+    public ResponseEntity<UtilisateurDTO> deactivateUser(@PathVariable Long id) {
         return ResponseEntity.ok(utilisateurService.deactivateUser(id));
     }
 
-    // Filtrage
-    @GetMapping("/entreprise/{entrepriseId}")
-    @Operation(summary = "Récupérer tous les utilisateurs d'une entreprise")
-    public ResponseEntity<List<UtilisateurDTO>> findByEntreprise(
-            @Parameter(description = "ID de l'entreprise") @PathVariable Long entrepriseId) {
+    //@PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/entreprise/{entrepriseId}")
+    @Operation(summary = "[ADMIN] Récupérer tous les utilisateurs d'une entreprise")
+    public ResponseEntity<List<UtilisateurDTO>> findByEntreprise(@PathVariable Long entrepriseId) {
         return ResponseEntity.ok(utilisateurService.findByEntreprise(entrepriseId));
     }
 
-    @GetMapping("/actifs")
-    @Operation(summary = "Récupérer tous les utilisateurs actifs")
+    //@PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/actifs")
+    @Operation(summary = "[ADMIN] Récupérer tous les utilisateurs actifs")
     public ResponseEntity<List<UtilisateurDTO>> findActiveUsers() {
         return ResponseEntity.ok(utilisateurService.findActiveUsers());
     }
 
-    @GetMapping("/inactifs")
-    @Operation(summary = "Récupérer tous les utilisateurs inactifs")
+    //@PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/inactifs")
+    @Operation(summary = "[ADMIN] Récupérer tous les utilisateurs inactifs")
     public ResponseEntity<List<UtilisateurDTO>> findInactiveUsers() {
         return ResponseEntity.ok(utilisateurService.findInactiveUsers());
     }
 
-    @GetMapping("/entreprise/{entrepriseId}/actifs")
-    @Operation(summary = "Récupérer tous les utilisateurs actifs d'une entreprise")
-    public ResponseEntity<List<UtilisateurDTO>> findActiveUsersByEntreprise(
-            @Parameter(description = "ID de l'entreprise") @PathVariable Long entrepriseId) {
+    //@PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/entreprise/{entrepriseId}/actifs")
+    @Operation(summary = "[ADMIN] Récupérer tous les utilisateurs actifs d'une entreprise")
+    public ResponseEntity<List<UtilisateurDTO>> findActiveUsersByEntreprise(@PathVariable Long entrepriseId) {
         return ResponseEntity.ok(utilisateurService.findActiveUsersByEntreprise(entrepriseId));
     }
+
+    // === ACCESSIBLE À TOUS LES UTILISATEURS ===
+
+    //@PreAuthorize("isAuthenticated()")
+    @PutMapping("/changer-mot-de-passe")
+    @Operation(summary = "[TOUS] Changer le mot de passe de l'utilisateur connecté")
+    public ResponseEntity<UtilisateurDTO> changerMotDePasse(@RequestBody ChangerMotDePasseUtilisateurDTO dto) {
+        return ResponseEntity.ok(utilisateurService.changerMotDePasse(dto));
+    }
 }
+

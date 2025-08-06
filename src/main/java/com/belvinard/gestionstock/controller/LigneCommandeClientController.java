@@ -27,8 +27,10 @@ public class LigneCommandeClientController {
 
     private final LigneCommandeClientService ligneCommandeClientService;
 
+    @PostMapping("/commande/{commandeId}/article/{articleId}")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('SALES_MANAGER')")
     @Operation(
-            summary = "Créer une ligne de commande client",
+            summary = "Créer une ligne de commande client (ADMIN ou SALES_MANAGER)",
             description = "Crée une ligne de commande pour un article donné et décrémente automatiquement le stock"
     )
     @ApiResponses(value = {
@@ -36,7 +38,6 @@ public class LigneCommandeClientController {
             @ApiResponse(responseCode = "404", description = "Commande ou article non trouvé"),
             @ApiResponse(responseCode = "400", description = "Stock insuffisant ou données invalides")
     })
-    @PostMapping("/commande/{commandeId}/article/{articleId}")
     public ResponseEntity<LigneCommandeClientDTO> createLigneCommande(
             @Parameter(description = "ID de la commande client", required = true)
             @PathVariable Long commandeId,
@@ -50,21 +51,23 @@ public class LigneCommandeClientController {
         return ResponseEntity.ok(createdLigne);
     }
 
-    @Operation(summary = "Récupérer toutes les lignes de commande client",
+    @GetMapping
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
+    @Operation(summary = "Récupérer toutes les lignes de commande client (ADMIN ou SALES_MANAGER)",
             description = "Retourne la liste de toutes les lignes de commande client avec les détails enrichis")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Liste retournée avec succès"),
             @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")
     })
-    @GetMapping
     public ResponseEntity<List<LigneCommandeClientDTO>> getAllLigneCommandeClients() {
         List<LigneCommandeClientDTO> lignes = ligneCommandeClientService.getAllLigneCommandeClients();
         return ResponseEntity.ok(lignes);
     }
 
     @GetMapping("/{ligneId}")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
     @Operation(
-            summary = "Récupérer une ligne de commande client par ID",
+            summary = "Récupérer une ligne de commande client par ID (ADMIN ou SALES_MANAGER)",
             description = "Retourne une ligne de commande client en fonction de son identifiant unique."
     )
     @ApiResponses(value = {
@@ -79,9 +82,9 @@ public class LigneCommandeClientController {
         return ResponseEntity.ok(ligneCommandeClientDTO);
     }
 
-
     @PutMapping("/{ligneId}")
-    @Operation(summary = "Mettre à jour une ligne de commande client",
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('SALES_MANAGER')")
+    @Operation(summary = "Mettre à jour une ligne de commande client (ADMIN ou SALES_MANAGER)",
             description = "Impossible si la commande est déjà livrée.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Ligne mise à jour",
@@ -89,7 +92,7 @@ public class LigneCommandeClientController {
             @ApiResponse(responseCode = "409", description = "Commande déjà livrée")
     })
     public ResponseEntity<LigneCommandeClientDTO> updateLigneCommandeClient(
-            @PathVariable Long id,
+            @PathVariable Long ligneId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Données mises à jour pour la ligne de commande",
                     required = true,
@@ -97,12 +100,14 @@ public class LigneCommandeClientController {
             )
             @RequestBody LigneCommandeClientDTO ligneDTO) {
 
-        LigneCommandeClientDTO updatedLigne = ligneCommandeClientService.updateLigneCommandeClient(id, ligneDTO);
+        LigneCommandeClientDTO updatedLigne = ligneCommandeClientService.updateLigneCommandeClient(ligneId, ligneDTO);
         return ResponseEntity.ok(updatedLigne);
     }
 
+    @DeleteMapping("/{ligneId}")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('SALES_MANAGER')")
     @Operation(
-            summary = "Supprimer une ligne de commande client",
+            summary = "Supprimer une ligne de commande client (ADMIN ou SALES_MANAGER)",
             description = "Cette opération permet de supprimer une ligne de commande client sauf si la commande est déjà livrée."
     )
     @ApiResponses(value = {
@@ -110,21 +115,21 @@ public class LigneCommandeClientController {
             @ApiResponse(responseCode = "409", description = "Impossible de supprimer la ligne car la commande est livrée"),
             @ApiResponse(responseCode = "404", description = "Ligne de commande non trouvée")
     })
-    @DeleteMapping("/{ligneId}")
     public ResponseEntity<LigneCommandeClientDTO> deleteLigneCommandeClient(@PathVariable Long ligneId) {
         LigneCommandeClientDTO deletedLigne = ligneCommandeClientService.deleteLigneCommandeClient(ligneId);
         return ResponseEntity.ok(deletedLigne);
     }
 
+    @GetMapping("/article/{idArticle}/historique")
+    //@PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
     @Operation(
-            summary = "Historique des commandes d'un article",
+            summary = "Historique des commandes d'un article (ADMIN ou SALES_MANAGER)",
             description = "Récupère la liste des lignes de commande client pour un article donné"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Liste des lignes de commande récupérée avec succès"),
             @ApiResponse(responseCode = "404", description = "Article non trouvé")
     })
-    @GetMapping("/article/{idArticle}/historique")
     public ResponseEntity<List<LigneCommandeClientDTO>> getHistoriqueCommandeClient(
             @Parameter(description = "ID de l'article concerné", example = "2")
             @PathVariable Long idArticle
@@ -132,6 +137,5 @@ public class LigneCommandeClientController {
         List<LigneCommandeClientDTO> historique = ligneCommandeClientService.findHistoriqueCommandeClient(idArticle);
         return ResponseEntity.ok(historique);
     }
-
-
 }
+

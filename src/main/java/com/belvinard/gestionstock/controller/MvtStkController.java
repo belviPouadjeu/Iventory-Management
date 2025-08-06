@@ -24,101 +24,104 @@ public class MvtStkController {
 
     private final MvtStkService mvtStkService;
 
-    @PostMapping("/entree")
-    @Operation(summary = "Créer un mouvement d'entrée de stock")
+    @PostMapping("/manager/entree")
+    //@PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Créer un mouvement d'entrée de stock (Manager uniquement)")
     public ResponseEntity<MvtStkDTO> entreeStock(
-            @Parameter(description = "ID de l'article") @RequestParam Long articleId,
-            @Parameter(description = "Quantité à ajouter") @RequestParam BigDecimal quantite,
-            @Parameter(description = "Source du mouvement") @RequestParam SourceMvtStk source,
-            @Parameter(description = "ID de l'entreprise") @RequestParam Long entrepriseId) {
+            @RequestParam Long articleId,
+            @RequestParam BigDecimal quantite,
+            @RequestParam SourceMvtStk source,
+            @RequestParam Long entrepriseId) {
         return ResponseEntity.ok(mvtStkService.entreeStock(articleId, quantite, source, entrepriseId));
     }
 
-    @PostMapping("/sortie")
-    @Operation(summary = "Créer un mouvement de sortie de stock")
+    @PostMapping("/manager/sortie")
+    //@PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Créer un mouvement de sortie de stock (Manager uniquement)")
     public ResponseEntity<MvtStkDTO> sortieStock(
-            @Parameter(description = "ID de l'article") @RequestParam Long articleId,
-            @Parameter(description = "Quantité à retirer") @RequestParam BigDecimal quantite,
-            @Parameter(description = "Source du mouvement") @RequestParam SourceMvtStk source,
-            @Parameter(description = "ID de l'entreprise") @RequestParam Long entrepriseId) {
+            @RequestParam Long articleId,
+            @RequestParam BigDecimal quantite,
+            @RequestParam SourceMvtStk source,
+            @RequestParam Long entrepriseId) {
         return ResponseEntity.ok(mvtStkService.sortieStock(articleId, quantite, source, entrepriseId));
     }
 
-    @PostMapping("/correction")
-    @Operation(summary = "Créer un mouvement de correction de stock")
+    @PostMapping("/manager/correction")
+    //@PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Créer un mouvement de correction de stock (Manager uniquement)")
     public ResponseEntity<MvtStkDTO> correctionStock(
-            @Parameter(description = "ID de l'article") @RequestParam Long articleId,
-            @Parameter(description = "Quantité de correction") @RequestParam BigDecimal quantite,
-            @Parameter(description = "Type de mouvement") @RequestParam TypeMvtStk typeMvt,
-            @Parameter(description = "ID de l'entreprise") @RequestParam Long entrepriseId) {
+            @RequestParam Long articleId,
+            @RequestParam BigDecimal quantite,
+            @RequestParam TypeMvtStk typeMvt,
+            @RequestParam Long entrepriseId) {
         return ResponseEntity.ok(mvtStkService.correctionStock(articleId, quantite, typeMvt, entrepriseId));
     }
 
-    @GetMapping("/article/{articleId}")
-    @Operation(summary = "Récupérer les mouvements de stock d'un article")
-    public ResponseEntity<List<MvtStkDTO>> findByArticleId(
-            @Parameter(description = "ID de l'article") @PathVariable Long articleId) {
+    @GetMapping("/admin/article/{articleId}")
+    //@PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Récupérer les mouvements de stock d'un article (Admin uniquement)")
+    public ResponseEntity<List<MvtStkDTO>> findByArticleId(@PathVariable Long articleId) {
         return ResponseEntity.ok(mvtStkService.findByArticleId(articleId));
     }
 
-    @GetMapping("/entreprise/{entrepriseId}")
-    @Operation(summary = "Récupérer les mouvements de stock d'une entreprise")
-    public ResponseEntity<List<MvtStkDTO>> findByEntrepriseId(
-            @Parameter(description = "ID de l'entreprise") @PathVariable Long entrepriseId) {
+    @GetMapping("/manager/entreprise/{entrepriseId}")
+    //@PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Récupérer les mouvements de stock d'une entreprise (Manager uniquement)")
+    public ResponseEntity<List<MvtStkDTO>> findByEntrepriseId(@PathVariable Long entrepriseId) {
         return ResponseEntity.ok(mvtStkService.findByEntrepriseId(entrepriseId));
     }
 
-    @GetMapping("/type/{typeMvt}")
-    @Operation(summary = "Récupérer les mouvements par type")
-    public ResponseEntity<List<MvtStkDTO>> findByTypeMvt(
-            @Parameter(description = "Type de mouvement") @PathVariable TypeMvtStk typeMvt) {
+    @GetMapping("/manager/type/{typeMvt}")
+    //@PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Récupérer les mouvements par type (Manager uniquement)")
+    public ResponseEntity<List<MvtStkDTO>> findByTypeMvt(@PathVariable TypeMvtStk typeMvt) {
         return ResponseEntity.ok(mvtStkService.findByTypeMvt(typeMvt));
     }
 
-    @GetMapping("/source/{sourceMvt}")
-    @Operation(summary = "Récupérer les mouvements par source")
-    public ResponseEntity<List<MvtStkDTO>> findBySourceMvt(
-            @Parameter(description = "Source du mouvement") @PathVariable SourceMvtStk sourceMvt) {
+    @GetMapping("/manager/source/{sourceMvt}")
+    //@PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Récupérer les mouvements par source (Manager uniquement)")
+    public ResponseEntity<List<MvtStkDTO>> findBySourceMvt(@PathVariable SourceMvtStk sourceMvt) {
         return ResponseEntity.ok(mvtStkService.findBySourceMvt(sourceMvt));
     }
 
-    @GetMapping("/date-range")
-    @Operation(summary = "Récupérer les mouvements dans une période")
+    @GetMapping("/manager/date-range")
+    //@PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Récupérer les mouvements dans une période (Manager uniquement)")
     public ResponseEntity<List<MvtStkDTO>> findByDateRange(
-            @Parameter(description = "Date de début") 
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @Parameter(description = "Date de fin") 
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
         return ResponseEntity.ok(mvtStkService.findByDateRange(startDate, endDate));
     }
 
-    @GetMapping("/stock-actuel/{articleId}")
-    @Operation(summary = "Calculer le stock actuel d'un article")
-    public ResponseEntity<BigDecimal> calculateCurrentStock(
-            @Parameter(description = "ID de l'article") @PathVariable Long articleId) {
+    @GetMapping("/admin/stock-actuel/{articleId}")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @Operation(summary = "Calculer le stock actuel d'un article (Admin ou Manager)")
+    public ResponseEntity<BigDecimal> calculateCurrentStock(@PathVariable Long articleId) {
         return ResponseEntity.ok(mvtStkService.calculateCurrentStock(articleId));
     }
 
-    @GetMapping("/historique/{articleId}")
-    @Operation(summary = "Récupérer l'historique des mouvements d'un article")
-    public ResponseEntity<List<MvtStkDTO>> getStockHistory(
-            @Parameter(description = "ID de l'article") @PathVariable Long articleId) {
+    @GetMapping("/admin/historique/{articleId}")
+    //@PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @Operation(summary = "Récupérer l'historique des mouvements d'un article (Admin ou Manager)")
+    public ResponseEntity<List<MvtStkDTO>> getStockHistory(@PathVariable Long articleId) {
         return ResponseEntity.ok(mvtStkService.getStockHistory(articleId));
     }
 
-    @PostMapping("/vente/{venteId}")
-    @Operation(summary = "Créer les mouvements de stock pour une vente")
-    public ResponseEntity<Void> createMvtStkForVente(
-            @Parameter(description = "ID de la vente") @PathVariable Long venteId) {
+    @PostMapping("/manager/vente/{venteId}")
+    //@PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Créer les mouvements de stock pour une vente (Manager uniquement)")
+    public ResponseEntity<Void> createMvtStkForVente(@PathVariable Long venteId) {
         mvtStkService.createMvtStkForVente(venteId);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/commande-fournisseur/{commandeId}")
-    @Operation(summary = "Créer les mouvements de stock pour une commande fournisseur")
-    public ResponseEntity<Void> createMvtStkForCommandeFournisseur(
-            @Parameter(description = "ID de la commande") @PathVariable Long commandeId) {
+    @PostMapping("/manager/commande-fournisseur/{commandeId}")
+    //@PreAuthorize("hasRole('MANAGER')")
+    @Operation(summary = "Créer les mouvements de stock pour une commande fournisseur (Manager uniquement)")
+    public ResponseEntity<Void> createMvtStkForCommandeFournisseur(@PathVariable Long commandeId) {
         mvtStkService.createMvtStkForCommandeFournisseur(commandeId);
         return ResponseEntity.ok().build();
     }
 }
+
