@@ -9,7 +9,7 @@ import java.util.List;
 public interface UtilisateurService {
 
   // Méthodes existantes
-  UtilisateurDTO save(UtilisateurDTO DTO);
+  UtilisateurDTO save(UtilisateurDTO DTO, Long entrepriseId);
   UtilisateurDTO findByIdLonge(Long id);
   UtilisateurDTO findById(Long id);
   List<UtilisateurDTO> findAll();

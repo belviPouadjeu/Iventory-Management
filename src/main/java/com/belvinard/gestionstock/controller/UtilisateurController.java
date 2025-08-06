@@ -7,6 +7,7 @@ import com.belvinard.gestionstock.service.UtilisateurService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +25,9 @@ public class UtilisateurController {
 
     @PostMapping
     @Operation(summary = "Créer un nouvel utilisateur")
-    public ResponseEntity<UtilisateurDTO> save(@RequestBody UtilisateurDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(utilisateurService.save(dto));
+    public ResponseEntity<UtilisateurDTO> save(@RequestBody @Valid UtilisateurDTO dto) {
+        UtilisateurDTO saved = utilisateurService.save(dto, dto.getEntrepriseId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping("/{id}")

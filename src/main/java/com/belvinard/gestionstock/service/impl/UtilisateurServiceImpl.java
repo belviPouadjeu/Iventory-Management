@@ -29,26 +29,31 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     private final ModelMapper modelMapper;
 
     @Override
-    public UtilisateurDTO save(UtilisateurDTO dto) {
-        if (dto == null) {
-            throw new IllegalArgumentException("UtilisateurDTO ne peut pas être null");
+    public UtilisateurDTO save(UtilisateurDTO dto, Long entrepriseId) {
+        if (entrepriseId == null) {
+            throw new IllegalArgumentException("L'id de l'entreprise ne doit pas être null");
         }
 
-        // Vérifier si l'email existe déjà
-        if (utilisateurRepository.existsByEmail(dto.getEmail())) {
-            throw new IllegalStateException("Un utilisateur avec cet email existe déjà");
-        }
+        // Récupération de l'entreprise
+        Entreprise entreprise = entrepriseRepository.findById(entrepriseId)
+                .orElseThrow(() -> new EntityNotFoundException("Aucune entreprise trouvée avec l'id " + entrepriseId));
 
-        // Vérifier que l'entreprise existe
-        Entreprise entreprise = entrepriseRepository.findById(dto.getEntreprise().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Entreprise non trouvée"));
-
+        // Mapping DTO -> Entity
         Utilisateur utilisateur = modelMapper.map(dto, Utilisateur.class);
         utilisateur.setEntreprise(entreprise);
 
-        utilisateur = utilisateurRepository.save(utilisateur);
-        return modelMapper.map(utilisateur, UtilisateurDTO.class);
+        // Sauvegarde de l'utilisateur
+        Utilisateur savedUser = utilisateurRepository.save(utilisateur);
+
+        // Assignation du rôle par défaut
+        assignRole(savedUser.getId(), RoleType.SALES_REP);
+
+        // Mapping Entity -> DTO
+        UtilisateurDTO utilisateurDTO = modelMapper.map(savedUser, UtilisateurDTO.class);
+        utilisateurDTO.setEntrepriseId(entrepriseId); // pour que le champ soit bien renseigné
+        return utilisateurDTO;
     }
+
 
     @Override
     public UtilisateurDTO findById(Long id) {
@@ -149,6 +154,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
 
         return modelMapper.map(utilisateur, UtilisateurDTO.class);
     }
+
     @Override
     public UtilisateurDTO removeRole(Long userId, RoleType roleType) {
         if (userId == null || roleType == null) {
