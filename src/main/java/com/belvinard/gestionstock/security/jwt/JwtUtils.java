@@ -2,6 +2,7 @@ package com.belvinard.gestionstock.security.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,12 @@ public class JwtUtils {
     private int jwtExpirationMs;
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        byte[] keyBytes = jwtSecret.getBytes();
+        if (keyBytes.length < 32) { // 256 bits = 32 bytes
+            // Générer une clé sécurisée si celle du fichier est trop courte
+            return Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        }
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateTokenFromUsername(String username) {

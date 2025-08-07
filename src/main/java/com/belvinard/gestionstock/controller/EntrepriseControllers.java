@@ -34,7 +34,7 @@ public class EntrepriseControllers {
     private final EntrepriseService entrepriseService;
     private final MinioService minioService;
 
-    @PostMapping("/admin/create")
+    @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "Ajouter une entreprise",
@@ -51,7 +51,7 @@ public class EntrepriseControllers {
         return new ResponseEntity<>(savedEntrepriseDTO, HttpStatus.CREATED);
     }
 
-    @GetMapping("/public/entreprises")
+    @GetMapping("/all")
     @Operation(
             summary = "Retourne la liste des entreprises",
             description = "Retourne la liste complète des entreprises"
@@ -65,7 +65,7 @@ public class EntrepriseControllers {
         return ResponseEntity.ok(entreprises);
     }
 
-    @GetMapping("/public/{id}")
+    @GetMapping("/{id}")
     @Operation(summary = "Récupère une entreprise par son ID",
             description = "Cette méthode permet de récupérer une entreprise en fonction de son ID")
     @ApiResponses(value = {
@@ -93,7 +93,7 @@ public class EntrepriseControllers {
         return ResponseEntity.ok(deletedEntreprise);
     }
 
-    @PutMapping(value = "/entreprise/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Mettre à jour l'image de l'entreprise",
             description = "Uploader une nouvelle image pour l'entreprise via MinIO")
@@ -109,7 +109,7 @@ public class EntrepriseControllers {
         return ResponseEntity.ok(updatedEntreprise);
     }
 
-    @GetMapping("/public/{id}/image-url")
+    @GetMapping("/{id}/image-url")
     @Operation(summary = "Obtenir l'URL pré-signée de l'image d'une entreprise",
             description = "Retourne une URL pré-signée pour accéder à l'image de l'entreprise")
     @ApiResponses(value = {

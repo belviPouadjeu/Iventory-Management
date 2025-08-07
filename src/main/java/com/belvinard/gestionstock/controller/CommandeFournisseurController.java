@@ -29,7 +29,7 @@ public class CommandeFournisseurController {
 
     private final CommandeFournisseurService commandeFournisseurService;
 
-    @PostMapping("/admin/fournisseur/{fournisseurId}")
+    @PostMapping("/fournisseur/{fournisseurId}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "ADMIN: Créer une nouvelle commande fournisseur",
@@ -43,7 +43,7 @@ public class CommandeFournisseurController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedCommande);
     }
 
-    @GetMapping("/manager/{fournisseurId}")
+    @GetMapping("/{fournisseurId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(
             summary = "MANAGER ou ADMIN: Rechercher une commande fournisseur par ID",
@@ -55,7 +55,7 @@ public class CommandeFournisseurController {
         return ResponseEntity.ok(commande);
     }
 
-    @GetMapping("/manager")
+    @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(
             summary = "MANAGER ou ADMIN: Lister toutes les commandes fournisseurs",
@@ -66,7 +66,7 @@ public class CommandeFournisseurController {
         return ResponseEntity.ok(commandes);
     }
 
-    @DeleteMapping("/admin/{fournisseurId}")
+    @DeleteMapping("/{fournisseurId}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "ADMIN: Supprimer une commande fournisseur",
@@ -77,7 +77,7 @@ public class CommandeFournisseurController {
         return new ResponseEntity<>(deletedCommande, HttpStatus.OK);
     }
 
-    @PutMapping("/admin/{idCommande}/etat")
+    @PutMapping("/{idCommande}/etat")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "ADMIN: Mettre à jour l'état d'une commande fournisseur",
@@ -90,7 +90,7 @@ public class CommandeFournisseurController {
         return ResponseEntity.ok(updatedCommande);
     }
 
-    @GetMapping("/manager/code/{code}")
+    @GetMapping("/code/{code}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(
             summary = "MANAGER ou ADMIN: Rechercher une commande fournisseur par code",

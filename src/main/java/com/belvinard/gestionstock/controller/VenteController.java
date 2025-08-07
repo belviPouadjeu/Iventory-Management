@@ -74,21 +74,21 @@ public class VenteController {
     // === ACCESSIBLE AUX ADMIN/SALES/MANAGERS POUR CONSULTATION ===
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'MANAGER')")
-    @GetMapping("/public/{id}")
+    @GetMapping("/{id}")
     @Operation(summary = "[ 'ADMIN', 'SALES', 'MANAGER'] Récupérer une vente par ID")
     public ResponseEntity<VenteDTO> findById(@PathVariable Long id) {
         return ResponseEntity.ok(venteService.findById(id));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'MANAGER')")
-    @GetMapping("/public/code/{code}")
+    @GetMapping("/code/{code}")
     @Operation(summary = "[ 'ADMIN', 'SALES', 'MANAGER'] Récupérer une vente par code")
     public ResponseEntity<VenteDTO> findByCode(@PathVariable String code) {
         return ResponseEntity.ok(venteService.findByCode(code));
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'MANAGER')")
-    @GetMapping("/public")
+    @GetMapping("/all")
     @Operation(summary = "[ 'ADMIN', 'SALES', 'MANAGER'] Récupérer toutes les ventes")
     public ResponseEntity<List<VenteDTO>> findAll() {
         return ResponseEntity.ok(venteService.findAll());

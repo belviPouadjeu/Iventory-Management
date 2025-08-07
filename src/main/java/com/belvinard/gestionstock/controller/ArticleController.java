@@ -42,7 +42,7 @@ public class ArticleController {
             @ApiResponse(responseCode = "404", description = "Entreprise ou catégorie non trouvée")
     })
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/admin/articles")
+    @PostMapping("/create")
     public ResponseEntity<ArticleDTO> createArticle(
             @RequestParam Long entrepriseId,
             @Valid @RequestBody ArticleDTO articleDTO) {
@@ -57,7 +57,7 @@ public class ArticleController {
             @ApiResponse(responseCode = "200", description = "Liste récupérée avec succès")
     })
     @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER', 'SALES_MANAGER')")
-    @GetMapping("/manager/articles")
+    @GetMapping("/all")
     public ResponseEntity<List<ArticleDTO>> getAllArticles() {
         List<ArticleDTO> articles = articleService.getAllArticles();
         return ResponseEntity.ok(articles);
@@ -70,7 +70,7 @@ public class ArticleController {
             @ApiResponse(responseCode = "404", description = "Article non trouvé")
     })
     @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER', 'SALES_MANAGER')")
-    @GetMapping("/manager/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ArticleDTO> getArticleById(@PathVariable Long id) {
         ArticleDTO articleDTO = articleService.findAllByArticleId(id);
         return ResponseEntity.ok(articleDTO);
@@ -101,7 +101,7 @@ public class ArticleController {
     /* ================== GET BY CATEGORY ================== */
     @Operation(summary = "USER, MANAGER ou ADMIN: Lister les articles d'une catégorie")
     @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER', 'SALES_MANAGER')")
-    @GetMapping("/manager/category/{idCategory}")
+    @GetMapping("/category/{idCategory}")
     public ResponseEntity<List<ArticleDTO>> findAllByCategory(@PathVariable Long idCategory) {
         List<ArticleDTO> articles = articleService.findAllArticleByIdCategory(idCategory);
         return ResponseEntity.ok(articles);
@@ -110,7 +110,7 @@ public class ArticleController {
     /* ================== HISTORIQUE DES COMMANDES ================== */
     @Operation(summary = "MANAGER ou ADMIN: Historique des commandes d’un article")
     @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
-    @GetMapping("/manager/historique/article/{idArticle}")
+    @GetMapping("/historique/article/{idArticle}")
     public ResponseEntity<List<LigneCommandeClientDTO>> findHistoriqueCommandeClient(@PathVariable Long idArticle) {
         List<LigneCommandeClientDTO> lignes = ligneCommandeClientService.findHistoriqueCommandeClient(idArticle);
         return ResponseEntity.ok(lignes);
@@ -119,7 +119,7 @@ public class ArticleController {
     /* ================== UPDATE IMAGE ================== */
     @Operation(summary = "ADMIN ou MANAGER: Modifier l’image d’un article")
     @PreAuthorize("hasAnyRole('ADMIN', 'STOCK_MANAGER')")
-    @PutMapping(value = "/manager/article/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ArticleDTO> updateArticleImage(
             @PathVariable Long id,
             @RequestParam("image") MultipartFile image) throws IOException {
@@ -130,7 +130,7 @@ public class ArticleController {
 
     /* ================== GET IMAGE PRESIGNED URL ================== */
     @Operation(summary = "PUBLIC: Obtenir le lien temporaire de l’image d’un article")
-    @GetMapping("/public/article/{id}/image-url")
+    @GetMapping("/{id}/image-url")
     public ResponseEntity<String> getPresignedArticleImageUrl(@PathVariable Long id) {
         String presignedUrl = articleService.getPresignedImageUrl(id);
         return ResponseEntity.ok(presignedUrl);

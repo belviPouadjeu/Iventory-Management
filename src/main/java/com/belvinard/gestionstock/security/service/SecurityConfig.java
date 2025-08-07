@@ -23,9 +23,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-
-import static org.springframework.security.config.Customizer.withDefaults;
 import java.time.LocalDateTime;
 
 @Configuration
@@ -45,33 +42,32 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf ->
-                csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers("/api/auth/public/**")
-        );
+        http.csrf(csrf -> csrf.disable());
+        http.sessionManagement(session -> session.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS));
 
         http.authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/public/**",
-                                "/api/csrf-token",
+                                "/api/v1/auth/public/**",
+                                "/api/v1/categories/public/**",
+                                "/api/v1/articles/*/image-url",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/stock/**").hasAnyRole("ADMIN", "STOCK_MANAGER")
-                        .requestMatchers("/api/v1/sales/**").hasAnyRole("ADMIN", "SALES_MANAGER")
-                        .requestMatchers("/api/v1/operator/**").hasAnyRole("ADMIN", "STOCK_MANAGER", "OPERATOR")
-                        .requestMatchers("/api/v1/salesrep/**").hasAnyRole("ADMIN", "SALES_MANAGER", "SALES_REP")
-                        .requestMatchers("/api/v1/public/**").permitAll()
+                        .requestMatchers("/api/v1/utilisateurs/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/categories/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/clients/create/**", "/api/v1/clients/*/delete").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/fournisseurs/*/delete").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/articles/create", "/api/v1/articles/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/articles/**").hasAnyRole("ADMIN", "STOCK_MANAGER", "SALES_MANAGER")
+                        .requestMatchers("/api/v1/categories/manager/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/v1/clients/**", "/api/v1/fournisseurs/**").hasAnyRole("ADMIN", "MANAGER")
                         .anyRequest().authenticated());
-        http.exceptionHandling(exception
-                -> exception.authenticationEntryPoint(unauthorizedHandler));
-        http.addFilterBefore(authenticationJwtTokenFilter(),
-                UsernamePasswordAuthenticationFilter.class);
-        http.formLogin(withDefaults());
-        http.httpBasic(withDefaults());
+        
+        http.exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler));
+        http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+        
         return http.build();
     }
 
@@ -111,31 +107,46 @@ public class SecurityConfig {
             if (!userRepository.existsByEmail("admin@gestionstock.com")) {
                 Utilisateur admin = createUser("admin@gestionstock.com", "admin123", "Admin", "System", "admin", defaultEntreprise, passwordEncoder);
                 Utilisateur savedAdmin = userRepository.save(admin);
-                roleRepository.save(createRole(RoleType.ADMIN, "ROLE_ADMIN", savedAdmin));
+                Roles adminRole = createRole(RoleType.ADMIN, "ROLE_ADMIN", savedAdmin);
+                roleRepository.save(adminRole);
+                savedAdmin.setRole(adminRole);
+                userRepository.save(savedAdmin);
             }
             
             if (!userRepository.existsByEmail("stock@gestionstock.com")) {
                 Utilisateur stockManager = createUser("stock@gestionstock.com", "stock123", "Manager", "Stock", "stockmanager", defaultEntreprise, passwordEncoder);
                 Utilisateur savedStockManager = userRepository.save(stockManager);
-                roleRepository.save(createRole(RoleType.STOCK_MANAGER, "ROLE_STOCK_MANAGER", savedStockManager));
+                Roles stockRole = createRole(RoleType.STOCK_MANAGER, "ROLE_STOCK_MANAGER", savedStockManager);
+                roleRepository.save(stockRole);
+                savedStockManager.setRole(stockRole);
+                userRepository.save(savedStockManager);
             }
             
             if (!userRepository.existsByEmail("sales@gestionstock.com")) {
                 Utilisateur salesManager = createUser("sales@gestionstock.com", "sales123", "Manager", "Sales", "salesmanager", defaultEntreprise, passwordEncoder);
                 Utilisateur savedSalesManager = userRepository.save(salesManager);
-                roleRepository.save(createRole(RoleType.SALES_MANAGER, "ROLE_SALES_MANAGER", savedSalesManager));
+                Roles salesRole = createRole(RoleType.SALES_MANAGER, "ROLE_SALES_MANAGER", savedSalesManager);
+                roleRepository.save(salesRole);
+                savedSalesManager.setRole(salesRole);
+                userRepository.save(savedSalesManager);
             }
             
             if (!userRepository.existsByEmail("operator@gestionstock.com")) {
                 Utilisateur operator = createUser("operator@gestionstock.com", "operator123", "Operator", "Warehouse", "operator", defaultEntreprise, passwordEncoder);
                 Utilisateur savedOperator = userRepository.save(operator);
-                roleRepository.save(createRole(RoleType.OPERATOR, "ROLE_OPERATOR", savedOperator));
+                Roles operatorRole = createRole(RoleType.OPERATOR, "ROLE_OPERATOR", savedOperator);
+                roleRepository.save(operatorRole);
+                savedOperator.setRole(operatorRole);
+                userRepository.save(savedOperator);
             }
             
             if (!userRepository.existsByEmail("salesrep@gestionstock.com")) {
                 Utilisateur salesRep = createUser("salesrep@gestionstock.com", "salesrep123", "Rep", "Sales", "salesrep", defaultEntreprise, passwordEncoder);
                 Utilisateur savedSalesRep = userRepository.save(salesRep);
-                roleRepository.save(createRole(RoleType.SALES_REP, "ROLE_SALES_REP", savedSalesRep));
+                Roles salesRepRole = createRole(RoleType.SALES_REP, "ROLE_SALES_REP", savedSalesRep);
+                roleRepository.save(salesRepRole);
+                savedSalesRep.setRole(salesRepRole);
+                userRepository.save(savedSalesRep);
             }
         };
     }
@@ -153,10 +164,18 @@ public class SecurityConfig {
         return user;
     }
     
+    private Roles createRole(RoleType roleType, String roleName, Utilisateur utilisateur) {
+        Roles role = new Roles();
+        role.setRoleType(roleType);
+        role.setRoleName(roleName);
+        role.setUtilisateur(utilisateur);
+        return role;
+    }
+    
     private Entreprise createDefaultEntreprise(EntrepriseRepository entrepriseRepository) {
-        Entreprise existingEntreprise = entrepriseRepository.findByNom("Système");
-        if (existingEntreprise != null) {
-            return existingEntreprise;
+        Entreprise existing = entrepriseRepository.findByNom("Système");
+        if (existing != null) {
+            return existing;
         }
         
         Entreprise entreprise = new Entreprise();
@@ -164,16 +183,7 @@ public class SecurityConfig {
         entreprise.setDescription("Entreprise système par défaut");
         entreprise.setCodeFiscal("SYS001");
         entreprise.setEmail("system@gestionstock.com");
-        entreprise.setNumTel("0000000000");
-        entreprise.setSteWeb("https://gestionstock.com");
+        entreprise.setNumTel("+1234567890");
         return entrepriseRepository.save(entreprise);
-    }
-    
-    private Roles createRole(RoleType roleType, String roleName, Utilisateur utilisateur) {
-        return Roles.builder()
-                .roleType(roleType)
-                .roleName(roleName)
-                .utilisateur(utilisateur)
-                .build();
     }
 }

@@ -27,7 +27,7 @@ public class UtilisateurController {
     // === ADMIN ONLY ===
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/admin")
+    @PostMapping("/create")
     @Operation(summary = "[ADMIN] Créer un nouvel utilisateur")
     public ResponseEntity<UtilisateurDTO> save(@RequestBody @Valid UtilisateurDTO dto) {
         UtilisateurDTO saved = utilisateurService.save(dto, dto.getEntrepriseId());
@@ -35,28 +35,21 @@ public class UtilisateurController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/{id}")
+    @GetMapping("/{id}")
     @Operation(summary = "[ADMIN] Récupérer un utilisateur par son ID")
     public ResponseEntity<UtilisateurDTO> findById(@PathVariable Long id) {
         return ResponseEntity.ok(utilisateurService.findById(id));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/long/{id}")
-    @Operation(summary = "[ADMIN] Récupérer un utilisateur par son ID (Long)")
-    public ResponseEntity<UtilisateurDTO> findByIdLonge(@PathVariable Long id) {
-        return ResponseEntity.ok(utilisateurService.findByIdLonge(id));
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/all")
+    @GetMapping("/all")
     @Operation(summary = "[ADMIN] Récupérer tous les utilisateurs")
     public ResponseEntity<List<UtilisateurDTO>> findAll() {
         return ResponseEntity.ok(utilisateurService.findAll());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/admin/{id}")
+    @DeleteMapping("/{id}")
     @Operation(summary = "[ADMIN] Supprimer un utilisateur")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         utilisateurService.delete(id);
@@ -64,70 +57,70 @@ public class UtilisateurController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/email/{email}")
+    @GetMapping("/email/{email}")
     @Operation(summary = "[ADMIN] Récupérer un utilisateur par son email")
     public ResponseEntity<UtilisateurDTO> findByEmail(@PathVariable String email) {
         return ResponseEntity.ok(utilisateurService.findByEmail(email));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/admin/{id}/roles/{roleType}")
+    @PostMapping("/{id}/roles/{roleType}")
     @Operation(summary = "[ADMIN] Assigner un rôle à un utilisateur")
     public ResponseEntity<UtilisateurDTO> assignRole(@PathVariable Long id, @PathVariable RoleType roleType) {
         return ResponseEntity.ok(utilisateurService.assignRole(id, roleType));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/admin/{id}/roles/{roleType}")
+    @DeleteMapping("/{id}/roles/{roleType}")
     @Operation(summary = "[ADMIN] Retirer un rôle d'un utilisateur")
     public ResponseEntity<UtilisateurDTO> removeRole(@PathVariable Long id, @PathVariable RoleType roleType) {
         return ResponseEntity.ok(utilisateurService.removeRole(id, roleType));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/roles/{roleType}")
+    @GetMapping("/roles/{roleType}")
     @Operation(summary = "[ADMIN] Récupérer tous les utilisateurs ayant un rôle spécifique")
     public ResponseEntity<List<UtilisateurDTO>> findByRole(@PathVariable RoleType roleType) {
         return ResponseEntity.ok(utilisateurService.findByRole(roleType));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/admin/{id}/activate")
+    @PutMapping("/{id}/activate")
     @Operation(summary = "[ADMIN] Activer un utilisateur")
     public ResponseEntity<UtilisateurDTO> activateUser(@PathVariable Long id) {
         return ResponseEntity.ok(utilisateurService.activateUser(id));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/admin/{id}/deactivate")
+    @PutMapping("/{id}/deactivate")
     @Operation(summary = "[ADMIN] Désactiver un utilisateur")
     public ResponseEntity<UtilisateurDTO> deactivateUser(@PathVariable Long id) {
         return ResponseEntity.ok(utilisateurService.deactivateUser(id));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/entreprise/{entrepriseId}")
+    @GetMapping("/entreprise/{entrepriseId}")
     @Operation(summary = "[ADMIN] Récupérer tous les utilisateurs d'une entreprise")
     public ResponseEntity<List<UtilisateurDTO>> findByEntreprise(@PathVariable Long entrepriseId) {
         return ResponseEntity.ok(utilisateurService.findByEntreprise(entrepriseId));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/actifs")
+    @GetMapping("/actifs")
     @Operation(summary = "[ADMIN] Récupérer tous les utilisateurs actifs")
     public ResponseEntity<List<UtilisateurDTO>> findActiveUsers() {
         return ResponseEntity.ok(utilisateurService.findActiveUsers());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/inactifs")
+    @GetMapping("/inactifs")
     @Operation(summary = "[ADMIN] Récupérer tous les utilisateurs inactifs")
     public ResponseEntity<List<UtilisateurDTO>> findInactiveUsers() {
         return ResponseEntity.ok(utilisateurService.findInactiveUsers());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/entreprise/{entrepriseId}/actifs")
+    @GetMapping("/entreprise/{entrepriseId}/actifs")
     @Operation(summary = "[ADMIN] Récupérer tous les utilisateurs actifs d'une entreprise")
     public ResponseEntity<List<UtilisateurDTO>> findActiveUsersByEntreprise(@PathVariable Long entrepriseId) {
         return ResponseEntity.ok(utilisateurService.findActiveUsersByEntreprise(entrepriseId));

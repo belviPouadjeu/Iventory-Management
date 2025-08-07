@@ -3,6 +3,8 @@ package com.belvinard.gestionstock.controller;
 import com.belvinard.gestionstock.dto.AdresseDTO;
 import com.belvinard.gestionstock.dto.EntrepriseDTO;
 import com.belvinard.gestionstock.dto.RolesDTO;
+import com.belvinard.gestionstock.dto.UtilisateurDTO;
+import com.belvinard.gestionstock.models.RoleType;
 import com.belvinard.gestionstock.models.Roles;
 import com.belvinard.gestionstock.models.Utilisateur;
 import com.belvinard.gestionstock.repositories.RolesRepository;
@@ -37,15 +39,10 @@ import java.util.stream.Collectors;
 public class AuthController {
 
     private final JwtUtils jwtUtils;
-
     private final AuthenticationManager authenticationManager;
-
     private final UtilisateurRepository utilisateurRepository;
-
     private final RolesRepository roleRepository;
-
     private final PasswordEncoder encoder;
-
     private final UtilisateurService utilisateurService;
 
     @PostMapping("/public/signin")
@@ -53,7 +50,7 @@ public class AuthController {
         Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())); // utiliser email ici
         } catch (AuthenticationException exception) {
             Map<String, Object> map = new HashMap<>();
             map.put("message", "Bad credentials");
@@ -78,40 +75,48 @@ public class AuthController {
 
     @PostMapping("/public/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+        // Vérifications d'existence username et email
         if (utilisateurRepository.existsByUserName(signUpRequest.getUsername())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
         }
-
         if (utilisateurRepository.existsByEmail(signUpRequest.getEmail())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
         }
 
-        Utilisateur user = new Utilisateur();
-        user.setUserName(signUpRequest.getUsername());
-        user.setEmail(signUpRequest.getEmail());
-        user.setMoteDePasse(encoder.encode(signUpRequest.getPassword()));
+        // Création du DTO utilisateur à partir de la requête signup
+        UtilisateurDTO utilisateurDTO = new UtilisateurDTO();
+        utilisateurDTO.setNom(signUpRequest.getNom());
+        utilisateurDTO.setPrenom(signUpRequest.getPrenom());
+        utilisateurDTO.setEmail(signUpRequest.getEmail());
+        utilisateurDTO.setMoteDePasse(encoder.encode(signUpRequest.getPassword())); // encode le mdp ici
+        utilisateurDTO.setDateDeNaissance(signUpRequest.getDateDeNaissance());
+        utilisateurDTO.setUserName(signUpRequest.getUsername());
+        // tu peux gérer adresse, photo, etc. ici aussi si nécessaire
 
+        // Sauvegarde via ton service, qui récupère l'entreprise par entrepriseId
+        UtilisateurDTO savedUser = utilisateurService.save(utilisateurDTO, signUpRequest.getEntrepriseId());
+
+        // Assignation du rôle : récupère la String rôle et transforme en enum RoleType
         Set<String> strRoles = signUpRequest.getRole();
-        Roles role;
-
-        if (strRoles == null || strRoles.isEmpty()) {
-            role = roleRepository.findByRoleName("ROLE_SALES_REP")
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+        if (strRoles != null && !strRoles.isEmpty()) {
+            String roleStr = strRoles.iterator().next().toUpperCase();
+            RoleType roleType;
+            try {
+                roleType = RoleType.valueOf(roleStr);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().body(new MessageResponse("Error: Role not found."));
+            }
+            utilisateurService.assignRole(savedUser.getId(), roleType);
         } else {
-            String roleStr = strRoles.iterator().next();
-            role = roleRepository.findByRoleName("ROLE_" + roleStr.toUpperCase())
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+            // Si aucun rôle demandé, assigner un rôle par défaut (ex SALES_REP)
+            utilisateurService.assignRole(savedUser.getId(), RoleType.SALES_REP);
         }
-
-        user.setRole(role);
-
-        utilisateurRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 
     @GetMapping("/user")
-    public ResponseEntity<?> getUserDetails(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<UserInfoResponse> getUserDetails(@AuthenticationPrincipal UserDetails userDetails) {
         Utilisateur user = utilisateurRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 

@@ -35,7 +35,7 @@ public class CommandeClientController {
             @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")
     })
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/admin/client/{clientId}/entreprise/{entrepriseId}")
+    @PostMapping("create/client/{clientId}/entreprise/{entrepriseId}")
     public ResponseEntity<CommandeClientDTO> createCommandeClient(
             @PathVariable Long clientId,
             @PathVariable Long entrepriseId,
@@ -57,7 +57,7 @@ public class CommandeClientController {
             @ApiResponse(responseCode = "404", description = "Commande non trouvée")
     })
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/admin/{idCommande}/etat/{etatCommande}")
+    @PatchMapping("/{idCommande}/etat/{etatCommande}")
     public ResponseEntity<CommandeClientDTO> updateEtatCommande(
             @PathVariable Long idCommande,
             @PathVariable EtatCommande etatCommande
@@ -71,7 +71,7 @@ public class CommandeClientController {
             description = "Retourne toutes les commandes clients enregistrées. Accessible aux MANAGER ou ADMIN."
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @GetMapping("/manager")
+    @GetMapping
     public ResponseEntity<List<CommandeClientDTO>> findAll() {
         return ResponseEntity.ok(commandeClientService.findAll());
     }
@@ -81,7 +81,7 @@ public class CommandeClientController {
             description = "Retourne une commande client à partir de son identifiant. Accessible aux MANAGER ou ADMIN."
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @GetMapping("/manager/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<CommandeClientDTO> findById(@PathVariable Long id) {
         return ResponseEntity.ok(commandeClientService.findById(id));
     }
@@ -91,7 +91,7 @@ public class CommandeClientController {
             description = "Retourne toutes les lignes de commande associées à une commande client. Accessible aux MANAGER ou ADMIN."
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @GetMapping("/manager/{commandeId}/lignes")
+    @GetMapping("/{commandeId}/lignes")
     public ResponseEntity<List<LigneCommandeClientDTO>> findAllLignesCommandesClientByCommandeClientId(
             @PathVariable Long commandeId) {
         return ResponseEntity.ok(commandeClientService.findAllLignesCommandesClientByCommandeClientId(commandeId));
@@ -102,7 +102,7 @@ public class CommandeClientController {
             description = "Supprime une commande client par son identifiant. Accessible uniquement aux ADMIN."
     )
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/admin/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<CommandeClientDTO> deleteCommandeClient(@PathVariable Long id) {
         return ResponseEntity.ok(commandeClientService.deleteCommandeClient(id));
     }

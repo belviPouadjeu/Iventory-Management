@@ -72,7 +72,7 @@ public class ClientController {
             @ApiResponse(responseCode = "404", description = "Entreprise non trouvée")
     })
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/admin/entreprises/{entrepriseId}")
+    @PostMapping("/create/entreprises/{entrepriseId}")
     public ResponseEntity<ClientDTO> createClient(
             @PathVariable Long entrepriseId,
             @Valid @RequestBody ClientDTO clientDTO
@@ -90,7 +90,7 @@ public class ClientController {
             @ApiResponse(responseCode = "404", description = "Client non trouvé")
     })
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @GetMapping("/manager/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ClientDTO> getClientById(@PathVariable Long id) {
         ClientDTO clientDTO = clientService.findByClientId(id);
         return ResponseEntity.ok(clientDTO);
@@ -104,7 +104,7 @@ public class ClientController {
             @ApiResponse(responseCode = "200", description = "Liste des clients récupérée avec succès")
     })
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @GetMapping("/manager")
+    @GetMapping("/all")
     public ResponseEntity<List<ClientDTO>> getAllClients() {
         List<ClientDTO> clients = clientService.getAllClients();
         return ResponseEntity.ok(clients);
@@ -119,7 +119,7 @@ public class ClientController {
             @ApiResponse(responseCode = "404", description = "Client non trouvé")
     })
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/admin/client/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ClientDTO> deleteClient(@PathVariable Long id) {
         ClientDTO deletedClient = clientService.deleteClient(id);
         return ResponseEntity.ok(deletedClient);

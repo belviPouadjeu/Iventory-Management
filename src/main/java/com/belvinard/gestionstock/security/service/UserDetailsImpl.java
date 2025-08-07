@@ -1,5 +1,6 @@
 package com.belvinard.gestionstock.security.service;
 
+import com.belvinard.gestionstock.models.Utilisateur;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,8 +12,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-@NoArgsConstructor
 @Data
+@NoArgsConstructor
 public class UserDetailsImpl implements UserDetails {
 
     private static final long serialVersionUID = 1L;
@@ -38,15 +39,19 @@ public class UserDetailsImpl implements UserDetails {
         this.authorities = authorities;
     }
 
-    public static UserDetailsImpl build(com.belvinard.gestionstock.models.Utilisateur user) {
-        List<GrantedAuthority> authorities = List.of(
-                new SimpleGrantedAuthority(user.getRole().getRoleName())
-        );
+    public static UserDetailsImpl build(Utilisateur user) {
+        List<GrantedAuthority> authorities;
+
+        if (user.getRole() != null) {
+            authorities = List.of(new SimpleGrantedAuthority(user.getRole().getRoleName()));
+        } else {
+            authorities = List.of(new SimpleGrantedAuthority("USER")); // fallback
+        }
 
         return new UserDetailsImpl(
                 user.getId(),
-                user.getEmail(),
-                user.getEmail(),
+                user.getEmail(),      // username
+                user.getEmail(),      // email
                 user.getMoteDePasse(),
                 user.getActif(),
                 authorities
@@ -58,14 +63,6 @@ public class UserDetailsImpl implements UserDetails {
         return authorities;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
     @Override
     public String getPassword() {
         return password;
@@ -74,6 +71,17 @@ public class UserDetailsImpl implements UserDetails {
     @Override
     public String getUsername() {
         return username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true; // Optionally customize
+    }
+
+
+    @Override
+    public boolean isEnabled() {
+        return actif;
     }
 
     @Override

@@ -26,7 +26,9 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
                          AuthenticationException authException)
             throws IOException, ServletException {
 
-        logger.error("Unauthorized error [{}]: {}", authException.getClass().getSimpleName(), authException.getMessage());
+        logger.error("Unauthorized error [{}]: {}",
+                authException.getClass().getSimpleName(),
+                authException.getMessage());
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -34,7 +36,9 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
         Map<String, Object> body = new HashMap<>();
         body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
         body.put("error", "Unauthorized");
-        body.put("message", authException.getMessage() != null ? authException.getMessage() : "Access Denied");
+        body.put("message", authException.getMessage() != null && !authException.getMessage().isBlank()
+                ? authException.getMessage()
+                : "Access denied due to authentication failure.");
         body.put("path", request.getServletPath());
 
         new ObjectMapper().writeValue(response.getOutputStream(), body);

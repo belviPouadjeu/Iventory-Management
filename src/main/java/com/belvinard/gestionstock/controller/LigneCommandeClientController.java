@@ -52,7 +52,7 @@ public class LigneCommandeClientController {
         return ResponseEntity.ok(createdLigne);
     }
 
-    @GetMapping
+    @GetMapping("/all")
     @PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
     @Operation(summary = "Récupérer toutes les lignes de commande client (ADMIN ou SALES_MANAGER)",
             description = "Retourne la liste de toutes les lignes de commande client avec les détails enrichis")
