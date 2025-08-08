@@ -1,5 +1,6 @@
 package com.belvinard.gestionstock.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,7 @@ public class AdresseDTO {
 
     @NotBlank(message = "Le code postal est obligatoire")
     @Size(min = 4, max = 10, message = "Le code postal doit contenir entre 4 et 10 caractères")
+    @JsonProperty("codePostal") // Accepte "codePostal" dans le JSON
     private String codePostale;
 
     @NotBlank(message = "Le pays est obligatoire")

@@ -7,6 +7,8 @@ import com.belvinard.gestionstock.models.Utilisateur;
 import com.belvinard.gestionstock.repositories.EntrepriseRepository;
 import com.belvinard.gestionstock.repositories.RolesRepository;
 import com.belvinard.gestionstock.repositories.UtilisateurRepository;
+import com.belvinard.gestionstock.security.CustomAccessDeniedHandler;
+import com.belvinard.gestionstock.security.CustomAuthenticationEntryPoint;
 import com.belvinard.gestionstock.security.jwt.AuthEntryPointJwt;
 import com.belvinard.gestionstock.security.jwt.AuthTokenFilter;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,8 @@ public class SecurityConfig {
 
     private final AuthEntryPointJwt unauthorizedHandler;
     private final UtilisateurRepository utilisateurRepository;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -188,7 +192,9 @@ public class SecurityConfig {
 
                         // Tout le reste nécessite une authentification
                         .anyRequest().authenticated())
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler))
                 .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

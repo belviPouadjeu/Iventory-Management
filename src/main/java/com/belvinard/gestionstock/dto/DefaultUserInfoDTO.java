@@ -1,6 +1,7 @@
 package com.belvinard.gestionstock.dto;
 
 import com.belvinard.gestionstock.models.RoleType;
+import com.belvinard.gestionstock.utils.RoleUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -45,6 +46,21 @@ public class DefaultUserInfoDTO {
 
     @Schema(description = "Nom d'affichage du rôle", example = "Administrateur")
     public String getRoleDisplayName() {
-        return roleType.getDisplayName();
+        return RoleUtils.getDisplayName(roleType);
+    }
+
+    @Schema(description = "Emoji du rôle", example = "🔴")
+    public String getRoleEmoji() {
+        return RoleUtils.getEmoji(roleType);
+    }
+
+    @Schema(description = "Permissions détaillées du rôle")
+    public String getRolePermissions() {
+        return RoleUtils.getPermissions(roleType);
+    }
+
+    @Schema(description = "Endpoints accessibles pour ce rôle")
+    public String getRoleEndpoints() {
+        return RoleUtils.getEndpoints(roleType);
     }
 }
