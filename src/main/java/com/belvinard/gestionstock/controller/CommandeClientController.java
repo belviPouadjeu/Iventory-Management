@@ -5,6 +5,8 @@ import com.belvinard.gestionstock.dto.LigneCommandeClientDTO;
 import com.belvinard.gestionstock.models.EtatCommande;
 import com.belvinard.gestionstock.service.CommandeClientService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,22 +27,33 @@ public class CommandeClientController {
 
         private final CommandeClientService commandeClientService;
 
-        @Operation(summary = "ADMIN: Créer une commande client", description = "Crée une commande pour un client donné dans une entreprise spécifique. Accessible uniquement aux ADMIN.")
+        @Operation(summary = "ADMIN ou MANAGERS: Créer une commande client", description = "Crée une commande pour un client donné. L'ID de l'entreprise doit être fourni dans le JSON. Accessible aux ADMIN et MANAGERS.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Données de la commande client avec l'ID de l'entreprise", required = true, content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Exemple commande client", summary = "Commande client avec entreprise dans le JSON", value = """
+                        {
+                          "entrepriseId": 1,
+                          "dateCommande": "2026-02-10",
+                          "etatCommande": "EN_PREPARATION",
+                          "commentaire": "Commande urgente"
+                        }
+                        """))))
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "201", description = "Commande client créée avec succès"),
-                        @ApiResponse(responseCode = "400", description = "Données invalides ou client/entreprise introuvable"),
+                        @ApiResponse(responseCode = "400", description = "Données invalides, client/entreprise introuvable ou entrepriseId manquant"),
                         @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")
         })
-        @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-        @PostMapping("create/client/{clientId}/entreprise/{entrepriseId}")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
+        @PostMapping("create/client/{clientId}")
         public ResponseEntity<CommandeClientDTO> createCommandeClient(
                         @PathVariable Long clientId,
-                        @PathVariable Long entrepriseId,
                         @Valid @RequestBody CommandeClientDTO commandeClientDTO) {
-                commandeClientDTO.setClientId(clientId);
-                commandeClientDTO.setEntrepriseId(entrepriseId);
 
-                CommandeClientDTO createdCommande = commandeClientService.createCommandeClient(clientId, entrepriseId,
+                // Validation que l'entrepriseId est fourni dans le JSON
+                if (commandeClientDTO.getEntrepriseId() == null) {
+                        throw new IllegalArgumentException("L'ID de l'entreprise doit être fourni dans le JSON");
+                }
+
+                commandeClientDTO.setClientId(clientId);
+
+                CommandeClientDTO createdCommande = commandeClientService.createCommandeClient(clientId,
                                 commandeClientDTO);
                 return new ResponseEntity<>(createdCommande, HttpStatus.CREATED);
         }

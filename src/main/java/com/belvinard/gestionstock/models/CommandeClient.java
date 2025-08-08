@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -19,9 +20,14 @@ import java.util.List;
 public class CommandeClient extends AbstractEntity {
 
   @NotBlank(message = "Le code de la commande est obligatoire")
-  @Size(min = 4, max = 50,
-          message = "Le code de la commande doit contenir entre 4 et 50 caractères")
+  @Size(min = 4, max = 50, message = "Le code de la commande doit contenir entre 4 et 50 caractères")
   private String code;
+
+  @Column(name = "date_commande")
+  private LocalDate dateCommande;
+
+  private String commentaire;
+
   @Enumerated(EnumType.STRING)
   private EtatCommande etatCommande;
 

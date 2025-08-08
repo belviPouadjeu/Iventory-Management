@@ -7,7 +7,7 @@ import com.belvinard.gestionstock.models.EtatCommande;
 import java.util.List;
 
 public interface CommandeClientService {
-    CommandeClientDTO createCommandeClient(Long clientId, Long entrepriseId, CommandeClientDTO commandeClientDTO);
+    CommandeClientDTO createCommandeClient(Long clientId, CommandeClientDTO commandeClientDTO);
 
     CommandeClientDTO updateEtatCommande(Long idCommande, EtatCommande etatCommande);
 

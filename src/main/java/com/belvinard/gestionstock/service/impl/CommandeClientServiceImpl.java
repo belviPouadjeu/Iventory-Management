@@ -1,4 +1,5 @@
 package com.belvinard.gestionstock.service.impl;
+
 import com.belvinard.gestionstock.dto.CommandeClientDTO;
 import com.belvinard.gestionstock.dto.LigneCommandeClientDTO;
 import com.belvinard.gestionstock.exceptions.BusinessRuleException;
@@ -31,13 +32,25 @@ public class CommandeClientServiceImpl implements CommandeClientService {
     private static final Logger log = LoggerFactory.getLogger(CommandeClientServiceImpl.class);
 
     @Override
-    public CommandeClientDTO createCommandeClient(Long clientId, Long entrepriseId, CommandeClientDTO commandeClientDTO) {
+    public CommandeClientDTO createCommandeClient(Long clientId, CommandeClientDTO commandeClientDTO) {
+        // Validation des paramètres obligatoires
+        if (commandeClientDTO.getEntrepriseId() == null) {
+            throw new IllegalArgumentException("L'ID de l'entreprise est obligatoire dans le JSON");
+        }
+
+        // Validation de la date de commande
+        if (commandeClientDTO.getDateCommande() == null) {
+            throw new IllegalArgumentException("La date de commande est obligatoire");
+        }
+
         Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Client", "id", clientId));
 
-        Entreprise entreprise = entrepriseRepository.findById(entrepriseId)
-                .orElseThrow(() -> new ResourceNotFoundException("Entreprise", "id", entrepriseId));
+        Entreprise entreprise = entrepriseRepository.findById(commandeClientDTO.getEntrepriseId())
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Entreprise", "id", commandeClientDTO.getEntrepriseId()));
 
+        // Vérifier que le client appartient bien à cette entreprise
         if (!client.getEntreprise().getId().equals(entreprise.getId())) {
             throw new BusinessRuleException("Ce client n'appartient pas à cette entreprise.");
         }
@@ -46,14 +59,16 @@ public class CommandeClientServiceImpl implements CommandeClientService {
         commandeClient.setClient(client);
         commandeClient.setEntreprise(entreprise);
 
+        // Générer un code automatique si non fourni
         if (commandeClient.getCode() == null || commandeClient.getCode().isEmpty()) {
             commandeClient.setCode("CMD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         }
 
         CommandeClient savedCommande = commandeClientRepository.save(commandeClient);
 
+        // Mapper vers DTO avec toutes les informations
         CommandeClientDTO savedDTO = modelMapper.map(savedCommande, CommandeClientDTO.class);
-        savedDTO.setClientName(client.getNom());
+        savedDTO.setClientName(client.getNom() + " " + client.getPrenom());
         savedDTO.setClientId(client.getId());
         savedDTO.setEntrepriseId(entreprise.getId());
 
@@ -65,8 +80,7 @@ public class CommandeClientServiceImpl implements CommandeClientService {
 
         CommandeClient commande = commandeClientRepository.findById(idCommande)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "CommandeClient", "id", idCommande
-                ));
+                        "CommandeClient", "id", idCommande));
 
         if (commande.getEtatCommande() == EtatCommande.LIVREE) {
             throw new BusinessRuleException("Impossible de modifier une commande déjà livrée.");
@@ -81,19 +95,17 @@ public class CommandeClientServiceImpl implements CommandeClientService {
         return convertToDTO(updatedCommande);
     }
 
-
     @Override
     public CommandeClientDTO findById(Long id) {
         CommandeClient commandeClient = commandeClientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Aucune commande client trouvée avec l'ID : " + id
-                ));
+                        "Aucune commande client trouvée avec l'ID : " + id));
 
         log.info("Commande client trouvée avec ID: {}", id);
 
-
         return convertToDTO(commandeClient);
     }
+
     @Override
     public List<LigneCommandeClientDTO> findAllLignesCommandesClientByCommandeClientId(Long idCommande) {
         return List.of();
@@ -114,7 +126,6 @@ public class CommandeClientServiceImpl implements CommandeClientService {
         return modelMapper.map(commande, CommandeClientDTO.class);
     }
 
-
     @Override
     public CommandeClientDTO findByCode(String code) {
         CommandeClient commandeClient = commandeClientRepository.findByCode(code)
@@ -134,7 +145,6 @@ public class CommandeClientServiceImpl implements CommandeClientService {
                 .collect(Collectors.toList());
     }
 
-
     private CommandeClientDTO convertToDTO(CommandeClient commandeClient) {
         CommandeClientDTO dto = modelMapper.map(commandeClient, CommandeClientDTO.class);
         dto.setClientName(commandeClient.getClient().getNom());
@@ -143,6 +153,5 @@ public class CommandeClientServiceImpl implements CommandeClientService {
 
         return dto;
     }
-
 
 }
