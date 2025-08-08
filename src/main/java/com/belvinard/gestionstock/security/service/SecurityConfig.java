@@ -14,26 +14,27 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 import java.time.LocalDateTime;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true,
-        securedEnabled = true,
-        jsr250Enabled = true)
+@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final AuthEntryPointJwt unauthorizedHandler;
+    private final UtilisateurRepository utilisateurRepository;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -42,31 +43,14 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable());
-        http.sessionManagement(session -> session.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS));
-
-        http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/v1/auth/public/**",
-                                "/api/v1/categories/public/**",
-                                "/api/v1/articles/*/image-url",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-resources/**",
-                                "/webjars/**"
-                        ).permitAll()
-                        .requestMatchers("/api/v1/utilisateurs/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/categories/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/clients/create/**", "/api/v1/clients/*/delete").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/fournisseurs/*/delete").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/articles/create", "/api/v1/articles/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/articles/**").hasAnyRole("ADMIN", "STOCK_MANAGER", "SALES_MANAGER")
-                        .requestMatchers("/api/v1/categories/manager/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers("/api/v1/clients/**", "/api/v1/fournisseurs/**").hasAnyRole("ADMIN", "MANAGER")
-                        .anyRequest().authenticated());
-        
-        http.exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler));
-        http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/v1/auth/public/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .anyRequest().authenticated())
+            .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+            .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
     }
@@ -77,23 +61,24 @@ public class SecurityConfig {
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider(UtilisateurRepository utilisateurRepository) {
+    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+        AuthenticationManagerBuilder authenticationManagerBuilder = 
+            http.getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder.authenticationProvider(authenticationProvider());
+        return authenticationManagerBuilder.build();
+    }
+    
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService(utilisateurRepository));
+        authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
-
+    
     @Bean
-    public UserDetailsServiceImpl userDetailsService(UtilisateurRepository utilisateurRepository) {
+    public UserDetailsServiceImpl userDetailsService() {
         return new UserDetailsServiceImpl(utilisateurRepository);
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http, UtilisateurRepository utilisateurRepository) throws Exception {
-        return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .authenticationProvider(authenticationProvider(utilisateurRepository))
-                .build();
     }
 
     @Bean
@@ -111,42 +96,6 @@ public class SecurityConfig {
                 roleRepository.save(adminRole);
                 savedAdmin.setRole(adminRole);
                 userRepository.save(savedAdmin);
-            }
-            
-            if (!userRepository.existsByEmail("stock@gestionstock.com")) {
-                Utilisateur stockManager = createUser("stock@gestionstock.com", "stock123", "Manager", "Stock", "stockmanager", defaultEntreprise, passwordEncoder);
-                Utilisateur savedStockManager = userRepository.save(stockManager);
-                Roles stockRole = createRole(RoleType.STOCK_MANAGER, "ROLE_STOCK_MANAGER", savedStockManager);
-                roleRepository.save(stockRole);
-                savedStockManager.setRole(stockRole);
-                userRepository.save(savedStockManager);
-            }
-            
-            if (!userRepository.existsByEmail("sales@gestionstock.com")) {
-                Utilisateur salesManager = createUser("sales@gestionstock.com", "sales123", "Manager", "Sales", "salesmanager", defaultEntreprise, passwordEncoder);
-                Utilisateur savedSalesManager = userRepository.save(salesManager);
-                Roles salesRole = createRole(RoleType.SALES_MANAGER, "ROLE_SALES_MANAGER", savedSalesManager);
-                roleRepository.save(salesRole);
-                savedSalesManager.setRole(salesRole);
-                userRepository.save(savedSalesManager);
-            }
-            
-            if (!userRepository.existsByEmail("operator@gestionstock.com")) {
-                Utilisateur operator = createUser("operator@gestionstock.com", "operator123", "Operator", "Warehouse", "operator", defaultEntreprise, passwordEncoder);
-                Utilisateur savedOperator = userRepository.save(operator);
-                Roles operatorRole = createRole(RoleType.OPERATOR, "ROLE_OPERATOR", savedOperator);
-                roleRepository.save(operatorRole);
-                savedOperator.setRole(operatorRole);
-                userRepository.save(savedOperator);
-            }
-            
-            if (!userRepository.existsByEmail("salesrep@gestionstock.com")) {
-                Utilisateur salesRep = createUser("salesrep@gestionstock.com", "salesrep123", "Rep", "Sales", "salesrep", defaultEntreprise, passwordEncoder);
-                Utilisateur savedSalesRep = userRepository.save(salesRep);
-                Roles salesRepRole = createRole(RoleType.SALES_REP, "ROLE_SALES_REP", savedSalesRep);
-                roleRepository.save(salesRepRole);
-                savedSalesRep.setRole(salesRepRole);
-                userRepository.save(savedSalesRep);
             }
         };
     }

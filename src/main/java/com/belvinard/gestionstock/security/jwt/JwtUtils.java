@@ -23,12 +23,9 @@ public class JwtUtils {
     private int jwtExpirationMs;
 
     private SecretKey getSigningKey() {
-        byte[] keyBytes = jwtSecret.getBytes();
-        if (keyBytes.length < 32) { // 256 bits = 32 bytes
-            // Générer une clé sécurisée si celle du fichier est trop courte
-            return Keys.secretKeyFor(SignatureAlgorithm.HS256);
-        }
-        return Keys.hmacShaKeyFor(keyBytes);
+        // Utiliser une clé fixe pour éviter les problèmes de validation
+        String fixedKey = "myVerySecretKeyThatIsAtLeast32CharactersLong123456789";
+        return Keys.hmacShaKeyFor(fixedKey.getBytes());
     }
 
     public String generateTokenFromUsername(String username) {

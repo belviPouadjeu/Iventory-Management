@@ -90,7 +90,7 @@ public class AuthController {
         utilisateurDTO.setEmail(signUpRequest.getEmail());
         utilisateurDTO.setMoteDePasse(encoder.encode(signUpRequest.getPassword())); // encode le mdp ici
         utilisateurDTO.setDateDeNaissance(signUpRequest.getDateDeNaissance());
-        utilisateurDTO.setUserName(signUpRequest.getUsername());
+
         // tu peux gérer adresse, photo, etc. ici aussi si nécessaire
 
         // Sauvegarde via ton service, qui récupère l'entreprise par entrepriseId
