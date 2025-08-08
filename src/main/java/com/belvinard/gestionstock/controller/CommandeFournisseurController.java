@@ -50,7 +50,7 @@ public class CommandeFournisseurController {
         }
 
         @GetMapping
-        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
         @Operation(summary = "MANAGER ou ADMIN: Lister toutes les commandes fournisseurs", description = "Retourne la liste de toutes les commandes fournisseurs. Accès réservé aux MANAGER ou ADMIN.")
         public ResponseEntity<List<CommandeFournisseurDTO>> getAllCommandesFournisseurs() {
                 List<CommandeFournisseurDTO> commandes = commandeFournisseurService.findAll();
@@ -77,7 +77,7 @@ public class CommandeFournisseurController {
         }
 
         @GetMapping("/code/{code}")
-        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
         @Operation(summary = "MANAGER ou ADMIN: Rechercher une commande fournisseur par code", description = "Recherche une commande fournisseur à partir de son code unique. Accès réservé aux MANAGER ou ADMIN.")
         public ResponseEntity<CommandeFournisseurDTO> findByCode(@PathVariable("code") String code) {
                 return ResponseEntity.ok(commandeFournisseurService.findByCode(code));

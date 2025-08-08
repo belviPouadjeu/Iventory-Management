@@ -29,7 +29,7 @@ public class FournisseurController {
         private final FournisseurService fournisseurService;
 
         @PostMapping("/entreprise/{entrepriseId}")
-        @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
         @Operation(summary = "Créer un fournisseur (ADMIN ou MANAGER)", description = "Ajoute un nouveau fournisseur lié à une entreprise")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "201", description = "Fournisseur créé avec succès"),
@@ -78,7 +78,7 @@ public class FournisseurController {
         }
 
         @PutMapping("/{fournisseurId}")
-        @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
         @Operation(summary = "Mettre à jour un fournisseur (ADMIN ou MANAGER)", description = "Met à jour les informations d'un fournisseur existant", responses = {
                         @ApiResponse(responseCode = "200", description = "Fournisseur mis à jour avec succès", content = @Content(mediaType = "application/json", schema = @Schema(implementation = FournisseurDTO.class))),
                         @ApiResponse(responseCode = "404", description = "Fournisseur non trouvé", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),

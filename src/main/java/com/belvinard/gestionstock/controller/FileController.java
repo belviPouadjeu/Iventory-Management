@@ -31,7 +31,7 @@ public class FileController {
     private final FileService fileService;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
     @Operation(summary = "Uploader une image (ADMIN ou MANAGER)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Fichier uploadé avec succès", content = @Content(schema = @Schema(implementation = FileDTO.class))),
@@ -51,8 +51,8 @@ public class FileController {
     }
 
     @GetMapping("/download/{fileName}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    @Operation(summary = "Télécharger un fichier (ADMIN ou MANAGER)")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
+    @Operation(summary = "Télécharger un fichier (ADMIN ou MANAGERS)")
     public ResponseEntity<InputStreamResource> downloadFile(
             @Parameter(description = "Nom du fichier") @PathVariable String fileName) {
         try {
@@ -80,8 +80,8 @@ public class FileController {
     }
 
     @GetMapping("/list")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    @Operation(summary = "Lister tous les fichiers (ADMIN ou MANAGER)")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
+    @Operation(summary = "Lister tous les fichiers (ADMIN ou MANAGERS)")
     public ResponseEntity<List<String>> listFiles() {
         try {
             return ResponseEntity.ok(fileService.listFiles());
@@ -91,8 +91,8 @@ public class FileController {
     }
 
     @GetMapping("/url/{fileName}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    @Operation(summary = "Obtenir l'URL pré-signée d'un fichier (ADMIN ou MANAGER)")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
+    @Operation(summary = "Obtenir l'URL pré-signée d'un fichier (ADMIN ou MANAGERS)")
     public ResponseEntity<Map<String, String>> getPreSignedUrl(
             @Parameter(description = "Nom du fichier") @PathVariable String fileName,
             @Parameter(description = "Durée d'expiration en minutes") @RequestParam(defaultValue = "60") Integer expiryInMinutes) {

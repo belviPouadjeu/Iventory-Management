@@ -56,7 +56,7 @@ public class CategoryController {
                         @ApiResponse(responseCode = "200", description = "Liste retournée avec succès"),
                         @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")
         })
-        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
         @GetMapping("/manager/with-entreprise")
         public ResponseEntity<List<CategoryDTO>> getAllWithEntreprise() {
                 List<CategoryDTO> categories = categoryService.getAllCategoriesWithEntreprise();

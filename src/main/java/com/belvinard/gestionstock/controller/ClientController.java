@@ -63,7 +63,7 @@ public class ClientController {
                         @ApiResponse(responseCode = "200", description = "Client trouvé"),
                         @ApiResponse(responseCode = "404", description = "Client non trouvé")
         })
-        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
         @GetMapping("/{id}")
         public ResponseEntity<ClientDTO> getClientById(@PathVariable Long id) {
                 ClientDTO clientDTO = clientService.findByClientId(id);

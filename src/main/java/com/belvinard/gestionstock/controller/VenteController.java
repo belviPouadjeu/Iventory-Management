@@ -73,30 +73,30 @@ public class VenteController {
 
     // === ACCESSIBLE AUX ADMIN/SALES/MANAGERS POUR CONSULTATION ===
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES_REP', 'ROLE_SALES_MANAGER')")
     @GetMapping("/{id}")
-    @Operation(summary = "[ 'ADMIN', 'SALES', 'MANAGER'] Récupérer une vente par ID")
+    @Operation(summary = "[ 'ADMIN', 'SALES_REP', 'SALES_MANAGER'] Récupérer une vente par ID")
     public ResponseEntity<VenteDTO> findById(@PathVariable Long id) {
         return ResponseEntity.ok(venteService.findById(id));
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES_REP', 'ROLE_SALES_MANAGER')")
     @GetMapping("/code/{code}")
-    @Operation(summary = "[ 'ADMIN', 'SALES', 'MANAGER'] Récupérer une vente par code")
+    @Operation(summary = "[ 'ADMIN', 'SALES_REP', 'SALES_MANAGER'] Récupérer une vente par code")
     public ResponseEntity<VenteDTO> findByCode(@PathVariable String code) {
         return ResponseEntity.ok(venteService.findByCode(code));
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES_REP', 'ROLE_SALES_MANAGER')")
     @GetMapping("/all")
-    @Operation(summary = "[ 'ADMIN', 'SALES', 'MANAGER'] Récupérer toutes les ventes")
+    @Operation(summary = "[ 'ADMIN', 'SALES_REP', 'SALES_MANAGER'] Récupérer toutes les ventes")
     public ResponseEntity<List<VenteDTO>> findAll() {
         return ResponseEntity.ok(venteService.findAll());
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES_REP', 'ROLE_SALES_MANAGER')")
     @GetMapping("/entreprise/{entrepriseId}")
-    @Operation(summary = "[ 'ADMIN', 'SALES', 'MANAGER'] Récupérer les ventes par entreprise")
+    @Operation(summary = "[ 'ADMIN', 'SALES_REP', 'SALES_MANAGER'] Récupérer les ventes par entreprise")
     public ResponseEntity<List<VenteDTO>> findByEntreprise(@PathVariable Long entrepriseId) {
         return ResponseEntity.ok(venteService.findAllByEntreprise(entrepriseId));
     }
