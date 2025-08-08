@@ -34,3 +34,6 @@
 docker-compose --env-file .env.prod up -d
 
 
+eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhZG1pbkBnZXN0aW9uc3RvY2suY29tIiwiaWF0IjoxNzU0NjUwMDEwLCJleHAiOjE3NTQ3MzY0MTB9.vTCKwTbHq2kJpJTZaM8Gq5XVg7zY56CKU-zvMNVunMNJxIeU8HB4BAUpyzozcwMH
+
+
