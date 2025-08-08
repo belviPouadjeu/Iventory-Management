@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -44,17 +45,61 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/public/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .anyRequest().authenticated())
-            .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-            .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-        
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // Endpoints publics
+                        .requestMatchers("/api/v1/auth/public/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                        // Endpoints ADMIN uniquement
+                        .requestMatchers("/api/v1/utilisateurs/create").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/entreprise/create").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/articles/create").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/articles/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/categories/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/commandes-fournisseurs/**").hasRole("ADMIN")
+
+                        // Endpoints ADMIN ou MANAGER
+                        .requestMatchers("/api/v1/fournisseurs/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/v1/clients/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/v1/commandes-clients/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/v1/categories/manager/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/v1/files/**").hasAnyRole("ADMIN", "MANAGER")
+
+                        // Endpoints SALES
+                        .requestMatchers("/api/v1/ventes/sales/**").hasAnyRole("ADMIN", "SALES")
+                        .requestMatchers("/api/v1/lignes-commandes/**").hasAnyRole("ADMIN", "SALES_MANAGER")
+
+                        // Endpoints consultation (ADMIN, MANAGER, SALES)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/articles/**").hasAnyRole("ADMIN", "STOCK_MANAGER", "SALES_MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ventes/**").hasAnyRole("ADMIN", "SALES", "MANAGER")
+
+                        // Stock management
+                        .requestMatchers("/api/v1/mouvements-stock/**").hasAnyRole("ADMIN", "MANAGER", "STOCK_MANAGER")
+                        .requestMatchers("/api/v1/lignes-commande-fournisseur/**").hasAnyRole("ADMIN", "STOCK_MANAGER")
+
+                        // Articles - ADMIN uniquement
+                        .requestMatchers(HttpMethod.POST, "/api/v1/articles/create").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/articles/admin/**").hasRole("ADMIN")
+
+                        // Articles - ADMIN ou STOCK_MANAGER
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/articles/*/image").hasAnyRole("ADMIN", "STOCK_MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/articles/historique/article/**").hasAnyRole("ADMIN", "STOCK_MANAGER")
+
+                        // Articles - ADMIN, STOCK_MANAGER ou SALES_MANAGER (consultation)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/articles/all").hasAnyRole("ADMIN", "STOCK_MANAGER", "SALES_MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/articles/*").hasAnyRole("ADMIN", "STOCK_MANAGER", "SALES_MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/articles/manager/code/**").hasAnyRole("ADMIN", "STOCK_MANAGER", "SALES_MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/articles/category/**").hasAnyRole("ADMIN", "STOCK_MANAGER", "SALES_MANAGER")
+
+
+                        // Tout le reste nécessite une authentification
+                        .anyRequest().authenticated())
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
