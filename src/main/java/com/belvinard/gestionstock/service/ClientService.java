@@ -12,4 +12,8 @@ public interface ClientService {
     List<ClientDTO> getAllClients();
 
     ClientDTO deleteClient(Long id);
+
+    ClientDTO updateClient(Long id, ClientDTO clientDTO);
+    
+    List<ClientDTO> findByEntreprise(Long entrepriseId);
 }
