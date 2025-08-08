@@ -5,7 +5,7 @@ import com.belvinard.gestionstock.dto.LigneCommandeClientDTO;
 import java.util.List;
 
 public interface LigneCommandeClientService {
-    LigneCommandeClientDTO createLigneCommandeClient(Long commandeId, Long articleId, LigneCommandeClientDTO ligneDTO);
+    LigneCommandeClientDTO createLigneCommandeClient(Long commandeId, LigneCommandeClientDTO ligneDTO);
 
     List<LigneCommandeClientDTO> getAllLigneCommandeClients();
 

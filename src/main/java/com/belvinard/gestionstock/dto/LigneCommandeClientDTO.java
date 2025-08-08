@@ -27,18 +27,17 @@ public class LigneCommandeClientDTO {
     @Schema(description = "Quantité commandée", required = true, example = "5.0")
     private BigDecimal quantite;
 
-    @Schema(description = "Prix unitaire HT de l'article",example = "1500.00", hidden = true)
+    @Schema(description = "Prix unitaire HT de l'article", example = "1500.00", hidden = true)
     private BigDecimal prixUnitaireHt;
 
-    @Schema(description = "Taux de TVA en pourcentage",example = "18.0", hidden = true)
+    @Schema(description = "Taux de TVA en pourcentage", example = "18.0", hidden = true)
     private BigDecimal tauxTva;
 
-    @Schema(description = "Prix unitaire TTC",example = "1770.00", hidden = true)
+    @Schema(description = "Prix unitaire TTC", example = "1770.00", hidden = true)
     private BigDecimal prixUnitaireTtc;
 
     @Schema(description = "Prix total TTC pour cette ligne de commande", example = "8850.00", hidden = true)
     private BigDecimal prixTotal;
-
 
     @Schema(hidden = true)
     private Long commandeClientId;
@@ -46,9 +45,11 @@ public class LigneCommandeClientDTO {
     @Schema(description = "Détails de la commande client (utilisé en interne, non exposé)")
     private String commandeClientName;
 
-    @Schema(hidden = true)
+    @NotNull(message = "L'ID de l'article est obligatoire")
+    @Schema(description = "ID de l'article à commander", required = true, example = "1")
     private Long articleId;
-    @Schema(description = "Détails de l'article associé à la ligne",hidden = true)
+
+    @Schema(description = "Détails de l'article associé à la ligne", hidden = true)
     private String articleName;
 
     @CreationTimestamp

@@ -5,6 +5,7 @@ import com.belvinard.gestionstock.service.LigneCommandeClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -12,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,22 +27,30 @@ public class LigneCommandeClientController {
 
         private final LigneCommandeClientService ligneCommandeClientService;
 
-        @PostMapping("/commande/{commandeId}/article/{articleId}")
-        @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_SALES_MANAGER')")
-        @Operation(summary = "Créer une ligne de commande client (ADMIN ou SALES_MANAGER)", description = "Crée une ligne de commande pour un article donné et décrémente automatiquement le stock")
+        @PostMapping("/commande/{commandeId}")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
+        @Operation(summary = "Créer une ligne de commande client (ADMIN ou MANAGERS)", description = "Crée une ligne de commande pour un article donné. L'ID de l'article doit être fourni dans le JSON. Décrémente automatiquement le stock.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Données de la ligne de commande avec l'ID de l'article", required = true, content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Exemple ligne de commande", summary = "Ligne de commande avec article dans le JSON", value = """
+                        {
+                          "articleId": 1,
+                          "quantite": 5.0
+                        }
+                        """))))
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Ligne de commande créée avec succès"),
                         @ApiResponse(responseCode = "404", description = "Commande ou article non trouvé"),
-                        @ApiResponse(responseCode = "400", description = "Stock insuffisant ou données invalides")
+                        @ApiResponse(responseCode = "400", description = "Stock insuffisant, données invalides ou articleId manquant")
         })
         public ResponseEntity<LigneCommandeClientDTO> createLigneCommande(
                         @Parameter(description = "ID de la commande client", required = true) @PathVariable Long commandeId,
-
-                        @Parameter(description = "ID de l'article", required = true) @PathVariable Long articleId,
-
                         @Valid @RequestBody LigneCommandeClientDTO ligneDTO) {
+
+                // Validation que l'articleId est fourni dans le JSON
+                if (ligneDTO.getArticleId() == null) {
+                        throw new IllegalArgumentException("L'ID de l'article doit être fourni dans le JSON");
+                }
+
                 LigneCommandeClientDTO createdLigne = ligneCommandeClientService.createLigneCommandeClient(commandeId,
-                                articleId, ligneDTO);
+                                ligneDTO);
                 return ResponseEntity.ok(createdLigne);
         }
 
