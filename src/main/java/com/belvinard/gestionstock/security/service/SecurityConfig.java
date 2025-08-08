@@ -52,6 +52,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/public/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/v1/categories/public/**").permitAll()
+                        .requestMatchers("/api/v1/default-users/**").permitAll() // Endpoints des utilisateurs par
+                                                                                 // défaut
                         .requestMatchers(HttpMethod.GET, "/api/v1/articles/*/image-url").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/entreprise/*/image-url").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/entreprise/all").permitAll()
@@ -222,26 +224,8 @@ public class SecurityConfig {
 
             Entreprise defaultEntreprise = createDefaultEntreprise(entrepriseRepository);
 
-            if (!userRepository.existsByEmail("admin@gestionstock.com")) {
-                Utilisateur admin = createUser("admin@gestionstock.com", "admin123", "Admin", "System", "admin",
-                        defaultEntreprise, passwordEncoder);
-                Utilisateur savedAdmin = userRepository.save(admin);
-
-                // Récupérer le rôle ADMIN existant
-                Roles adminRole = roleRepository.findByRoleType(RoleType.ADMIN).get(0);
-                savedAdmin.setRole(adminRole);
-                userRepository.save(savedAdmin);
-            } else {
-                // Vérifier et corriger le rôle de l'admin existant si nécessaire
-                Utilisateur existingAdmin = userRepository.findByEmail("admin@gestionstock.com").orElse(null);
-                if (existingAdmin != null && existingAdmin.getRole() != null) {
-                    String currentRoleName = existingAdmin.getRole().getRoleName();
-                    if (!"ROLE_ADMIN".equals(currentRoleName)) {
-                        existingAdmin.getRole().setRoleName("ROLE_ADMIN");
-                        roleRepository.save(existingAdmin.getRole());
-                    }
-                }
-            }
+            // Créer les utilisateurs par défaut pour chaque rôle
+            createDefaultUsers(userRepository, roleRepository, passwordEncoder, defaultEntreprise);
         };
     }
 
@@ -259,6 +243,45 @@ public class SecurityConfig {
         return user;
     }
 
+    private void createDefaultUsers(UtilisateurRepository userRepository,
+            RolesRepository roleRepository,
+            PasswordEncoder passwordEncoder,
+            Entreprise defaultEntreprise) {
+
+        // Définition des utilisateurs par défaut avec leurs informations
+        DefaultUserInfo[] defaultUsers = {
+                new DefaultUserInfo("admin@gestionstock.com", "admin123", "Admin", "System", "admin", RoleType.ADMIN),
+                new DefaultUserInfo("stock.manager@gestionstock.com", "stock123", "Stock", "Manager", "stockmanager",
+                        RoleType.STOCK_MANAGER),
+                new DefaultUserInfo("sales.manager@gestionstock.com", "sales123", "Sales", "Manager", "salesmanager",
+                        RoleType.SALES_MANAGER),
+                new DefaultUserInfo("operator@gestionstock.com", "operator123", "Operator", "Warehouse", "operator",
+                        RoleType.OPERATOR),
+                new DefaultUserInfo("sales.rep@gestionstock.com", "salesrep123", "Sales", "Representative", "salesrep",
+                        RoleType.SALES_REP),
+                new DefaultUserInfo("user@gestionstock.com", "user123", "User", "Base", "userbase", RoleType.USER_BASE)
+        };
+
+        // Créer chaque utilisateur s'il n'existe pas
+        for (DefaultUserInfo userInfo : defaultUsers) {
+            if (!userRepository.existsByEmail(userInfo.email)) {
+                // Créer l'utilisateur
+                Utilisateur user = createUser(userInfo.email, userInfo.password, userInfo.nom,
+                        userInfo.prenom, userInfo.userName, defaultEntreprise, passwordEncoder);
+                Utilisateur savedUser = userRepository.save(user);
+
+                // Assigner le rôle
+                Roles role = roleRepository.findByRoleType(userInfo.roleType).get(0);
+                savedUser.setRole(role);
+                userRepository.save(savedUser);
+
+                System.out.println("✅ Utilisateur créé: " + userInfo.email + " avec le rôle " + userInfo.roleType);
+            } else {
+                System.out.println("ℹ️ Utilisateur existe déjà: " + userInfo.email);
+            }
+        }
+    }
+
     private void createDefaultRoles(RolesRepository roleRepository) {
         // Créer tous les rôles par défaut s'ils n'existent pas
         for (RoleType roleType : RoleType.values()) {
@@ -268,6 +291,7 @@ public class SecurityConfig {
                 role.setRoleType(roleType);
                 role.setRoleName("ROLE_" + roleType.name());
                 roleRepository.save(role);
+                System.out.println("✅ Rôle créé: " + roleType.name());
             }
         }
     }
@@ -288,5 +312,26 @@ public class SecurityConfig {
             throw new RuntimeException("Entreprise par défaut non trouvée");
         }
         return entreprise;
+    }
+
+    /**
+     * Classe helper pour définir les informations des utilisateurs par défaut
+     */
+    private static class DefaultUserInfo {
+        final String email;
+        final String password;
+        final String nom;
+        final String prenom;
+        final String userName;
+        final RoleType roleType;
+
+        DefaultUserInfo(String email, String password, String nom, String prenom, String userName, RoleType roleType) {
+            this.email = email;
+            this.password = password;
+            this.nom = nom;
+            this.prenom = prenom;
+            this.userName = userName;
+            this.roleType = roleType;
+        }
     }
 }
