@@ -36,7 +36,7 @@ public class EntrepriseControllers {
 
         @PostMapping("/create")
         @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-        @Operation(summary = "Ajouter une entreprise", description = "Ajoute une nouvelle entreprise à la base de données")
+        @Operation(summary = "¨[ADMIN] Ajouter une entreprise", description = "Ajoute une nouvelle entreprise à la base de données")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "201", description = "Entreprise créée avec succès", content = @Content(mediaType = "application/json", schema = @Schema(implementation = EntrepriseDTO.class))),
                         @ApiResponse(responseCode = "400", description = "Requête invalide", content = @Content),
@@ -68,6 +68,22 @@ public class EntrepriseControllers {
                         @Parameter(description = "ID de l'entreprise à récupérer", required = true) @PathVariable Long id) {
                 EntrepriseDTO entreprise = entrepriseService.findEntrepriseById(id);
                 return ResponseEntity.ok(entreprise);
+        }
+
+        @PutMapping("/{id}")
+        @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+        @Operation(summary = "Mettre à jour une entreprise", description = "Cette méthode permet de mettre à jour les informations d'une entreprise")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Entreprise mise à jour avec succès"),
+                        @ApiResponse(responseCode = "404", description = "Entreprise non trouvée"),
+                        @ApiResponse(responseCode = "400", description = "Données invalides ou nom d'entreprise déjà utilisé"),
+                        @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")
+        })
+        public ResponseEntity<EntrepriseDTO> updateEntreprise(
+                        @Parameter(description = "ID de l'entreprise à mettre à jour", required = true) @PathVariable Long id,
+                        @Valid @RequestBody EntrepriseDTO entrepriseDTO) {
+                EntrepriseDTO updatedEntreprise = entrepriseService.updateEntreprise(id, entrepriseDTO);
+                return ResponseEntity.ok(updatedEntreprise);
         }
 
         @DeleteMapping("/admin/delete/{id}")

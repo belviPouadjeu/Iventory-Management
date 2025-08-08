@@ -21,9 +21,16 @@ public class RolesDTO {
     @Size(min = 4, max = 50, message = "Le nom du rôle doit contenir entre 5 et 50 caractères")
     private String roleName;
 
-    @JsonIgnore
-    private UtilisateurDTO utilisateur;
+    // Suppression de la référence utilisateur - relation gérée côté Utilisateur
 
-    public void setRoleType(@NotNull(message = "Le type de rôle est obligatoire") RoleType roleType) {
+    @NotNull(message = "Le type de rôle est obligatoire")
+    private RoleType roleType;
+
+    public void setRoleType(RoleType roleType) {
+        this.roleType = roleType;
+    }
+
+    public RoleType getRoleType() {
+        return roleType;
     }
 }

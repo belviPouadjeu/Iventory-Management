@@ -1,6 +1,5 @@
 package com.belvinard.gestionstock.repositories;
 
-
 import com.belvinard.gestionstock.models.RoleType;
 import com.belvinard.gestionstock.models.Utilisateur;
 import jakarta.validation.constraints.NotBlank;
@@ -16,10 +15,11 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
 
     // Méthodes existantes
     Optional<Utilisateur> findByEmail(String email);
+
     boolean existsByEmail(String email);
 
-    // Recherche par rôle (via la table roles)
-    @Query("SELECT u FROM Utilisateur u JOIN Roles r ON r.utilisateur.id = u.id WHERE r.roleType = :roleType")
+    // Recherche par rôle (via la relation directe)
+    @Query("SELECT u FROM Utilisateur u WHERE u.role.roleType = :roleType")
     List<Utilisateur> findByRoleType(@Param("roleType") RoleType roleType);
 
     // Recherche par entreprise
@@ -27,10 +27,12 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
 
     // Recherche par statut actif
     List<Utilisateur> findByActifTrue();
+
     List<Utilisateur> findByActifFalse();
 
     // Recherche combinée entreprise + statut
     List<Utilisateur> findByEntrepriseIdAndActifTrue(Long entrepriseId);
+
     List<Utilisateur> findByEntrepriseIdAndActifFalse(Long entrepriseId);
 
     boolean existsByUserName(@NotBlank @Size(min = 3, max = 20) String username);

@@ -27,6 +27,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -216,14 +217,18 @@ public class SecurityConfig {
             PasswordEncoder passwordEncoder,
             EntrepriseRepository entrepriseRepository) {
         return args -> {
+            // Créer les rôles par défaut
+            createDefaultRoles(roleRepository);
+
             Entreprise defaultEntreprise = createDefaultEntreprise(entrepriseRepository);
 
             if (!userRepository.existsByEmail("admin@gestionstock.com")) {
                 Utilisateur admin = createUser("admin@gestionstock.com", "admin123", "Admin", "System", "admin",
                         defaultEntreprise, passwordEncoder);
                 Utilisateur savedAdmin = userRepository.save(admin);
-                Roles adminRole = createRole(RoleType.ADMIN, "ROLE_ADMIN", savedAdmin);
-                roleRepository.save(adminRole);
+
+                // Récupérer le rôle ADMIN existant
+                Roles adminRole = roleRepository.findByRoleType(RoleType.ADMIN).get(0);
                 savedAdmin.setRole(adminRole);
                 userRepository.save(savedAdmin);
             } else {
@@ -254,12 +259,17 @@ public class SecurityConfig {
         return user;
     }
 
-    private Roles createRole(RoleType roleType, String roleName, Utilisateur utilisateur) {
-        Roles role = new Roles();
-        role.setRoleType(roleType);
-        role.setRoleName(roleName);
-        role.setUtilisateur(utilisateur);
-        return role;
+    private void createDefaultRoles(RolesRepository roleRepository) {
+        // Créer tous les rôles par défaut s'ils n'existent pas
+        for (RoleType roleType : RoleType.values()) {
+            List<Roles> existingRoles = roleRepository.findByRoleType(roleType);
+            if (existingRoles.isEmpty()) {
+                Roles role = new Roles();
+                role.setRoleType(roleType);
+                role.setRoleName("ROLE_" + roleType.name());
+                roleRepository.save(role);
+            }
+        }
     }
 
     private Entreprise createDefaultEntreprise(EntrepriseRepository entrepriseRepository) {

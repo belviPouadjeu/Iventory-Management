@@ -23,7 +23,7 @@ public class Roles extends AbstractEntity {
   @Size(min = 4, max = 50, message = "Le nom du rôle doit contenir entre 4 et 50 caractères")
   private String roleName;
 
-  @ManyToOne
-  @JoinColumn(name = "idutilisateur")
-  private Utilisateur utilisateur;
+  // Suppression de la relation inverse - un rôle peut être utilisé par plusieurs
+  // utilisateurs
+  // La relation est gérée côté Utilisateur
 }
