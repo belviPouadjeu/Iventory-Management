@@ -54,7 +54,6 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         return utilisateurDTO;
     }
 
-
     @Override
     public UtilisateurDTO findById(Long id) {
         if (id == null) {
@@ -99,7 +98,8 @@ public class UtilisateurServiceImpl implements UtilisateurService {
 
     @Override
     public UtilisateurDTO changerMotDePasse(ChangerMotDePasseUtilisateurDTO dto) {
-        if (dto == null || dto.getId() == null || dto.getMotDePasseActuel() == null || dto.getNouveauMotDePasse() == null) {
+        if (dto == null || dto.getId() == null || dto.getMotDePasseActuel() == null
+                || dto.getNouveauMotDePasse() == null) {
             throw new IllegalArgumentException("Les informations de changement de mot de passe sont incomplètes");
         }
 
@@ -148,7 +148,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         Roles nouveauRole = new Roles();
         nouveauRole.setRoleType(roleType);
         nouveauRole.setUtilisateur(utilisateur);
-        nouveauRole.setRoleName(roleType.name());
+        nouveauRole.setRoleName("ROLE_" + roleType.name());
 
         rolesRepository.save(nouveauRole);
 

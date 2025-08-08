@@ -1,6 +1,5 @@
 package com.belvinard.gestionstock.controller;
 
-
 import com.belvinard.gestionstock.dto.ClientDTO;
 import com.belvinard.gestionstock.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,103 +24,72 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ClientController {
 
-    private final ClientService clientService;
+        private final ClientService clientService;
 
-    @Operation(
-            summary = "ADMIN: Créer un client",
-            description = "Permet d'enregistrer un nouveau client pour une entreprise donnée. Accessible uniquement aux ADMIN.",
-            parameters = {
-                    @Parameter(
-                            name = "entrepriseId",
-                            description = "Identifiant de l'entreprise à laquelle le client sera rattaché",
-                            required = true,
-                            example = "1"
-                    )
-            },
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Représentation JSON du client à créer",
-                    required = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            examples = {
-                                    @ExampleObject(
-                                            name = "Exemple Cameroun",
-                                            summary = "Client situé au Cameroun",
-                                            value = "{\n" +
-                                                    "  \"nom\": \"Mbarga\",\n" +
-                                                    "  \"prenom\": \"Clarisse\",\n" +
-                                                    "  \"adresse\": {\n" +
-                                                    "    \"adresse1\": \"Quartier Bastos\",\n" +
-                                                    "    \"adresse2\": \"Immeuble Socrate\",\n" +
-                                                    "    \"ville\": \"Yaoundé\",\n" +
-                                                    "    \"codePostal\": \"237\",\n" +
-                                                    "    \"pays\": \"Cameroun\"\n" +
-                                                    "  },\n" +
-                                                    "  \"photo\": \"clarisse.jpg\",\n" +
-                                                    "  \"mail\": \"clarisse.mbarga@exemple.cm\",\n" +
-                                                    "  \"numTel\": \"+237 670123456\"\n" +
-                                                    "}"
-                                    )
-                            }
-                    )
-            )
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Client créé avec succès"),
-            @ApiResponse(responseCode = "400", description = "Données de validation invalides"),
-            @ApiResponse(responseCode = "404", description = "Entreprise non trouvée")
-    })
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/create/entreprises/{entrepriseId}")
-    public ResponseEntity<ClientDTO> createClient(
-            @PathVariable Long entrepriseId,
-            @Valid @RequestBody ClientDTO clientDTO
-    ) {
-        ClientDTO savedClient = clientService.createClient(entrepriseId, clientDTO);
-        return new ResponseEntity<>(savedClient, HttpStatus.CREATED);
-    }
+        @Operation(summary = "ADMIN: Créer un client", description = "Permet d'enregistrer un nouveau client pour une entreprise donnée. Accessible uniquement aux ADMIN.", parameters = {
+                        @Parameter(name = "entrepriseId", description = "Identifiant de l'entreprise à laquelle le client sera rattaché", required = true, example = "1")
+        }, requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Représentation JSON du client à créer", required = true, content = @Content(mediaType = "application/json", examples = {
+                        @ExampleObject(name = "Exemple Cameroun", summary = "Client situé au Cameroun", value = "{\n" +
+                                        "  \"nom\": \"Mbarga\",\n" +
+                                        "  \"prenom\": \"Clarisse\",\n" +
+                                        "  \"adresse\": {\n" +
+                                        "    \"adresse1\": \"Quartier Bastos\",\n" +
+                                        "    \"adresse2\": \"Immeuble Socrate\",\n" +
+                                        "    \"ville\": \"Yaoundé\",\n" +
+                                        "    \"codePostal\": \"237\",\n" +
+                                        "    \"pays\": \"Cameroun\"\n" +
+                                        "  },\n" +
+                                        "  \"photo\": \"clarisse.jpg\",\n" +
+                                        "  \"mail\": \"clarisse.mbarga@exemple.cm\",\n" +
+                                        "  \"numTel\": \"+237 670123456\"\n" +
+                                        "}")
+        })))
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "201", description = "Client créé avec succès"),
+                        @ApiResponse(responseCode = "400", description = "Données de validation invalides"),
+                        @ApiResponse(responseCode = "404", description = "Entreprise non trouvée")
+        })
+        @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+        @PostMapping("/create/entreprises/{entrepriseId}")
+        public ResponseEntity<ClientDTO> createClient(
+                        @PathVariable Long entrepriseId,
+                        @Valid @RequestBody ClientDTO clientDTO) {
+                ClientDTO savedClient = clientService.createClient(entrepriseId, clientDTO);
+                return new ResponseEntity<>(savedClient, HttpStatus.CREATED);
+        }
 
-    @Operation(
-            summary = "MANAGER ou ADMIN: Rechercher un client par ID",
-            description = "Recherche un client à partir de son identifiant. Accessible aux MANAGER ou ADMIN."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Client trouvé"),
-            @ApiResponse(responseCode = "404", description = "Client non trouvé")
-    })
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @GetMapping("/{id}")
-    public ResponseEntity<ClientDTO> getClientById(@PathVariable Long id) {
-        ClientDTO clientDTO = clientService.findByClientId(id);
-        return ResponseEntity.ok(clientDTO);
-    }
+        @Operation(summary = "MANAGER ou ADMIN: Rechercher un client par ID", description = "Recherche un client à partir de son identifiant. Accessible aux MANAGER ou ADMIN.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Client trouvé"),
+                        @ApiResponse(responseCode = "404", description = "Client non trouvé")
+        })
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+        @GetMapping("/{id}")
+        public ResponseEntity<ClientDTO> getClientById(@PathVariable Long id) {
+                ClientDTO clientDTO = clientService.findByClientId(id);
+                return ResponseEntity.ok(clientDTO);
+        }
 
-    @Operation(
-            summary = "MANAGER ou ADMIN: Liste des clients",
-            description = "Retourne tous les clients enregistrés. Accessible aux MANAGER ou ADMIN."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Liste des clients récupérée avec succès")
-    })
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @GetMapping("/all")
-    public ResponseEntity<List<ClientDTO>> getAllClients() {
-        List<ClientDTO> clients = clientService.getAllClients();
-        return ResponseEntity.ok(clients);
-    }
+        @Operation(summary = "MANAGER ou ADMIN: Liste des clients", description = "Retourne tous les clients enregistrés. Accessible aux MANAGER ou ADMIN.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Liste des clients récupérée avec succès")
+        })
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+        @GetMapping("/all")
+        public ResponseEntity<List<ClientDTO>> getAllClients() {
+                List<ClientDTO> clients = clientService.getAllClients();
+                return ResponseEntity.ok(clients);
+        }
 
-    @Operation(
-            summary = "ADMIN: Supprimer un client",
-            description = "Permet de supprimer un client grâce à son ID. Accessible uniquement aux ADMIN."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Client supprimé avec succès"),
-            @ApiResponse(responseCode = "404", description = "Client non trouvé")
-    })
-    @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ClientDTO> deleteClient(@PathVariable Long id) {
-        ClientDTO deletedClient = clientService.deleteClient(id);
-        return ResponseEntity.ok(deletedClient);
-    }
+        @Operation(summary = "ADMIN: Supprimer un client", description = "Permet de supprimer un client grâce à son ID. Accessible uniquement aux ADMIN.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Client supprimé avec succès"),
+                        @ApiResponse(responseCode = "404", description = "Client non trouvé")
+        })
+        @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+        @DeleteMapping("/{id}")
+        public ResponseEntity<ClientDTO> deleteClient(@PathVariable Long id) {
+                ClientDTO deletedClient = clientService.deleteClient(id);
+                return ResponseEntity.ok(deletedClient);
+        }
 }

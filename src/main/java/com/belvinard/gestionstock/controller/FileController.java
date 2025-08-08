@@ -31,11 +31,10 @@ public class FileController {
     private final FileService fileService;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_MANAGER')")
     @Operation(summary = "Uploader une image (ADMIN ou MANAGER)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Fichier uploadé avec succès",
-                    content = @Content(schema = @Schema(implementation = FileDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Fichier uploadé avec succès", content = @Content(schema = @Schema(implementation = FileDTO.class))),
             @ApiResponse(responseCode = "400", description = "Erreur lors de l'upload", content = @Content)
     })
     public ResponseEntity<FileDTO> uploadFile(
@@ -47,8 +46,7 @@ public class FileController {
             return ResponseEntity.badRequest().body(
                     FileDTO.builder()
                             .message("Erreur lors de l'upload : " + e.getMessage())
-                            .build()
-            );
+                            .build());
         }
     }
 
