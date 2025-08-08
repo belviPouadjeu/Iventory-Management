@@ -47,51 +47,94 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints publics
+                        // ========== ENDPOINTS PUBLICS ==========
                         .requestMatchers("/api/v1/auth/public/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/v1/categories/public/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/articles/*/image-url").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/entreprise/*/image-url").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/entreprise/all").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/entreprise/*").permitAll()
 
-                        // Endpoints ADMIN uniquement
-                        .requestMatchers("/api/v1/utilisateurs/create").hasRole("ADMIN")
+                        // ========== ADMIN UNIQUEMENT ==========
+                        .requestMatchers("/api/v1/utilisateurs/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/entreprise/create").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/articles/create").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/articles/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/categories/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/commandes-fournisseurs/**").hasRole("ADMIN")
-
-                        // Endpoints ADMIN ou MANAGER
-                        .requestMatchers("/api/v1/fournisseurs/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers("/api/v1/clients/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers("/api/v1/commandes-clients/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers("/api/v1/categories/manager/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers("/api/v1/files/**").hasAnyRole("ADMIN", "MANAGER")
-
-                        // Endpoints SALES
-                        .requestMatchers("/api/v1/ventes/sales/**").hasAnyRole("ADMIN", "SALES")
-                        .requestMatchers("/api/v1/lignes-commandes/**").hasAnyRole("ADMIN", "SALES_MANAGER")
-
-                        // Endpoints consultation (ADMIN, MANAGER, SALES)
-                        .requestMatchers(HttpMethod.GET, "/api/v1/articles/**").hasAnyRole("ADMIN", "STOCK_MANAGER", "SALES_MANAGER")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/ventes/**").hasAnyRole("ADMIN", "SALES", "MANAGER")
-
-                        // Stock management
-                        .requestMatchers("/api/v1/mouvements-stock/**").hasAnyRole("ADMIN", "MANAGER", "STOCK_MANAGER")
-                        .requestMatchers("/api/v1/lignes-commande-fournisseur/**").hasAnyRole("ADMIN", "STOCK_MANAGER")
-
-                        // Articles - ADMIN uniquement
+                        .requestMatchers("/api/v1/entreprise/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/entreprise/*/image").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/articles/create").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/articles/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/categories/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/clients/create/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/clients/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/commande-clients/create/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/commande-clients/*/etat/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/commande-clients/*").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/commandes-fournisseurs/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/fournisseurs/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/files/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/mouvements-stock/article/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/ventes/admin/*").hasRole("ADMIN")
 
-                        // Articles - ADMIN ou STOCK_MANAGER
+                        // ========== ADMIN OU STOCK_MANAGER ==========
                         .requestMatchers(HttpMethod.PUT, "/api/v1/articles/*/image").hasAnyRole("ADMIN", "STOCK_MANAGER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/articles/historique/article/**").hasAnyRole("ADMIN", "STOCK_MANAGER")
+                        .requestMatchers("/api/v1/lignes-commande-fournisseur/**").hasAnyRole("ADMIN", "STOCK_MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/mouvements-stock/entree").hasAnyRole("ADMIN", "STOCK_MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/mouvements-stock/sortie").hasAnyRole("ADMIN", "STOCK_MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/mouvements-stock/correction").hasAnyRole("ADMIN", "STOCK_MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/mouvements-stock/vente/*").hasAnyRole("ADMIN", "STOCK_MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/mouvements-stock/commande-fournisseur/*").hasAnyRole("ADMIN", "STOCK_MANAGER")
 
-                        // Articles - ADMIN, STOCK_MANAGER ou SALES_MANAGER (consultation)
+                        // ========== ADMIN OU SALES_MANAGER ==========
+                        .requestMatchers("/api/v1/lignes-commandes/**").hasAnyRole("ADMIN", "SALES_MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/lignes-vente/vente/*").hasAnyRole("ADMIN", "SALES_MANAGER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/lignes-vente/*").hasAnyRole("ADMIN", "SALES_MANAGER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/lignes-vente/vente/*").hasAnyRole("ADMIN", "SALES_MANAGER")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/lignes-vente/*/quantity").hasAnyRole("ADMIN", "SALES_MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/lignes-vente").hasAnyRole("ADMIN", "SALES_MANAGER")
+
+                        // ========== ADMIN OU MANAGER (legacy) ==========
+                        .requestMatchers("/api/v1/categories/manager/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/v1/files/upload").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/v1/files/download/*").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/v1/files/list").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/v1/files/url/*").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/clients/*").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/clients/all").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/commande-clients").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/commande-clients/*").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/commande-clients/*/lignes").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/api/v1/fournisseurs/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/mouvements-stock/entreprise/*").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/mouvements-stock/type/*").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/mouvements-stock/source/*").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/mouvements-stock/date-range").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/mouvements-stock/stock-actuel/*").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/mouvements-stock/historique/*").hasAnyRole("ADMIN", "MANAGER")
+
+                        // ========== ADMIN OU SALES ==========
+                        .requestMatchers("/api/v1/ventes/sales/**").hasAnyRole("ADMIN", "SALES")
+
+                        // ========== CONSULTATION ARTICLES (ADMIN, STOCK_MANAGER, SALES_MANAGER) ==========
                         .requestMatchers(HttpMethod.GET, "/api/v1/articles/all").hasAnyRole("ADMIN", "STOCK_MANAGER", "SALES_MANAGER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/articles/*").hasAnyRole("ADMIN", "STOCK_MANAGER", "SALES_MANAGER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/articles/manager/code/**").hasAnyRole("ADMIN", "STOCK_MANAGER", "SALES_MANAGER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/articles/category/**").hasAnyRole("ADMIN", "STOCK_MANAGER", "SALES_MANAGER")
 
+                        // ========== CONSULTATION VENTES (ADMIN, SALES, MANAGER) ==========
+                        .requestMatchers(HttpMethod.GET, "/api/v1/ventes/**").hasAnyRole("ADMIN", "SALES", "MANAGER")
+
+                        // ========== LIGNES VENTE CONSULTATION (ADMIN, SALES_MANAGER, SALES_REP) ==========
+                        .requestMatchers(HttpMethod.GET, "/api/v1/lignes-vente/*").hasAnyRole("ADMIN", "SALES_MANAGER", "SALES_REP")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/lignes-vente/vente/*").hasAnyRole("ADMIN", "SALES_MANAGER", "SALES_REP")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/lignes-vente/article/*").hasAnyRole("ADMIN", "SALES_MANAGER", "SALES_REP")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/lignes-vente/vente/*/total").hasAnyRole("ADMIN", "SALES_MANAGER", "SALES_REP")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/lignes-vente/check-stock/*").hasAnyRole("ADMIN", "SALES_MANAGER", "SALES_REP")
+
+                        // ========== AUTHENTIFICATION REQUISE POUR LE RESTE ==========
+                        .requestMatchers("/api/v1/auth/user").authenticated()
+                        .requestMatchers("/api/v1/auth/username").authenticated()
+                        .requestMatchers("/api/v1/utilisateurs/changer-mot-de-passe").authenticated()
 
                         // Tout le reste nécessite une authentification
                         .anyRequest().authenticated())
@@ -100,6 +143,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -165,19 +209,22 @@ public class SecurityConfig {
         role.setUtilisateur(utilisateur);
         return role;
     }
-    
+
     private Entreprise createDefaultEntreprise(EntrepriseRepository entrepriseRepository) {
-        Entreprise existing = entrepriseRepository.findByNom("Système");
-        if (existing != null) {
-            return existing;
+        if (!entrepriseRepository.existsByNom("Default Company")) {
+            Entreprise entreprise = new Entreprise();
+            entreprise.setNom("Default Company");
+            entreprise.setDescription("Entreprise par défaut du système");
+            entreprise.setCodeFiscal("DEFAULT001");
+            entreprise.setEmail("contact@default.com");
+            entreprise.setNumTel("+1234567890");
+            return entrepriseRepository.save(entreprise);
         }
-        
-        Entreprise entreprise = new Entreprise();
-        entreprise.setNom("Système");
-        entreprise.setDescription("Entreprise système par défaut");
-        entreprise.setCodeFiscal("SYS001");
-        entreprise.setEmail("system@gestionstock.com");
-        entreprise.setNumTel("+1234567890");
-        return entrepriseRepository.save(entreprise);
+
+        Entreprise entreprise = entrepriseRepository.findByNom("Default Company");
+        if (entreprise == null) {
+            throw new RuntimeException("Entreprise par défaut non trouvée");
+        }
+        return entreprise;
     }
 }
