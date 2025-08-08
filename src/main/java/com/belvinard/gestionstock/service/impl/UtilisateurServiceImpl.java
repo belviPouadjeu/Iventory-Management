@@ -14,6 +14,7 @@ import com.belvinard.gestionstock.service.UtilisateurService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -29,6 +30,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     private final EntrepriseRepository entrepriseRepository;
     private final RolesRepository rolesRepository;
     private final ModelMapper modelMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UtilisateurDTO save(UtilisateurDTO dto, Long entrepriseId) {
@@ -43,6 +45,9 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         // Mapping DTO -> Entity
         Utilisateur utilisateur = modelMapper.map(dto, Utilisateur.class);
         utilisateur.setEntreprise(entreprise);
+
+        // Encoder le mot de passe avant la sauvegarde
+        utilisateur.setMoteDePasse(passwordEncoder.encode(dto.getMoteDePasse()));
 
         // Sauvegarde de l'utilisateur
         Utilisateur savedUser = utilisateurRepository.save(utilisateur);
@@ -165,11 +170,13 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         Utilisateur utilisateur = utilisateurRepository.findById(dto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
 
-        if (!utilisateur.getMoteDePasse().equals(dto.getMotDePasseActuel())) {
+        // Vérifier l'ancien mot de passe avec l'encodeur
+        if (!passwordEncoder.matches(dto.getMotDePasseActuel(), utilisateur.getMoteDePasse())) {
             throw new IllegalStateException("Ancien mot de passe incorrect");
         }
 
-        utilisateur.setMoteDePasse(dto.getNouveauMotDePasse());
+        // Encoder le nouveau mot de passe
+        utilisateur.setMoteDePasse(passwordEncoder.encode(dto.getNouveauMotDePasse()));
         utilisateur = utilisateurRepository.save(utilisateur);
 
         return mapUserToDTO(utilisateur);
