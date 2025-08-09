@@ -48,16 +48,13 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Article non trouvé avec l'id " + ligneDTO.getArticleId()));
 
+        // Vérifier le stock disponible sans le diminuer
         BigDecimal stockDisponible = BigDecimal.valueOf(article.getQuantiteEnStock());
-
         if (stockDisponible.compareTo(ligneDTO.getQuantite()) < 0) {
             throw new IllegalArgumentException("Stock insuffisant pour l'article : quantité demandée = "
                     + ligneDTO.getQuantite() + ", en stock = " + stockDisponible);
         }
-
-        BigDecimal nouveauStock = stockDisponible.subtract(ligneDTO.getQuantite());
-        article.setQuantiteEnStock(nouveauStock.longValue());
-        articleRepository.save(article);
+        // NE PAS diminuer le stock ici - il sera diminué à la finalisation de la vente
 
         LigneCommandeClient ligne = new LigneCommandeClient();
         ligne.setCommandeClient(commande);

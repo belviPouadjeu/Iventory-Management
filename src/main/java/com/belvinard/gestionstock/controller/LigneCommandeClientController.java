@@ -29,7 +29,7 @@ public class LigneCommandeClientController {
 
         @PostMapping("/commande/{commandeId}")
         @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
-        @Operation(summary = "Créer une ligne de commande client (ADMIN ou MANAGERS)", description = "Crée une ligne de commande pour un article donné. L'ID de l'article doit être fourni dans le JSON. Décrémente automatiquement le stock.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Données de la ligne de commande avec l'ID de l'article", required = true, content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Exemple ligne de commande", summary = "Ligne de commande avec article dans le JSON", value = """
+        @Operation(summary = "Créer une ligne de commande client (ADMIN ou MANAGERS)", description = "Crée une ligne de commande pour un article donné. L'ID de l'article doit être fourni dans le JSON. Vérifie la disponibilité du stock sans le décrémenter.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Données de la ligne de commande avec l'ID de l'article", required = true, content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Exemple ligne de commande", summary = "Ligne de commande avec article dans le JSON", value = """
                         {
                           "articleId": 1,
                           "quantite": 5.0

@@ -102,12 +102,33 @@ public class MvtStkServiceImpl implements MvtStkService {
         // Implementation for commande fournisseur stock movement
     }
 
+    @Override
+    @Transactional
+    public MvtStkDTO reserverStock(Long articleId, BigDecimal quantite, Long entrepriseId) {
+        return createMvtStk(articleId, quantite, TypeMvtStk.RESERVATION, SourceMvtStk.VENTE, entrepriseId);
+    }
+
+    @Override
+    @Transactional
+    public MvtStkDTO annulerReservation(Long articleId, BigDecimal quantite, Long entrepriseId) {
+        return createMvtStk(articleId, quantite, TypeMvtStk.ANNULATION_RESERVATION, SourceMvtStk.VENTE, entrepriseId);
+    }
+
     private MvtStkDTO createMvtStk(Long articleId, BigDecimal quantite, TypeMvtStk typeMvt, SourceMvtStk source, Long entrepriseId) {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Article", "id", articleId));
 
+        // Vérification du stock disponible pour réservation
+        if (typeMvt == TypeMvtStk.RESERVATION) {
+            Long stockDisponible = article.getQuantiteEnStock() - (article.getQuantiteReservee() != null ? article.getQuantiteReservee() : 0L);
+            if (stockDisponible < quantite.longValue()) {
+                throw new InvalidOperationException("Stock insuffisant pour l'article: " + article.getDesignation());
+            }
+        }
+        
+        // Vérification du stock physique pour sortie
         if (typeMvt == TypeMvtStk.SORTIE && article.getQuantiteEnStock() < quantite.longValue()) {
-            throw new InvalidOperationException("Stock insuffisant");
+            throw new InvalidOperationException("Stock insuffisant pour l'article: " + article.getDesignation());
         }
 
         updateArticleStock(article, quantite, typeMvt);
@@ -126,22 +147,29 @@ public class MvtStkServiceImpl implements MvtStkService {
 
     private void updateArticleStock(Article article, BigDecimal quantite, TypeMvtStk typeMvt) {
         Long currentStock = article.getQuantiteEnStock();
-        Long newStock;
-
+        Long currentReserved = article.getQuantiteReservee() != null ? article.getQuantiteReservee() : 0L;
+        
         switch (typeMvt) {
             case ENTREE:
             case CORRECTION_POS:
-                newStock = currentStock + quantite.longValue();
+                article.setQuantiteEnStock(currentStock + quantite.longValue());
                 break;
             case SORTIE:
             case CORRECTION_NEG:
-                newStock = currentStock - quantite.longValue();
+                article.setQuantiteEnStock(currentStock - quantite.longValue());
+                break;
+            case RESERVATION:
+                // Réservation : SEULEMENT augmente la quantité réservée, NE TOUCHE PAS au stock physique
+                article.setQuantiteReservee(currentReserved + quantite.longValue());
+                break;
+            case ANNULATION_RESERVATION:
+                // Annulation : SEULEMENT diminue la quantité réservée, NE TOUCHE PAS au stock physique
+                article.setQuantiteReservee(Math.max(0L, currentReserved - quantite.longValue()));
                 break;
             default:
                 throw new InvalidOperationException("Type de mouvement non supporté: " + typeMvt);
         }
 
-        article.setQuantiteEnStock(newStock);
         articleRepository.save(article);
     }
 

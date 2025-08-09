@@ -6,6 +6,7 @@ import com.belvinard.gestionstock.exceptions.*;
 import com.belvinard.gestionstock.models.*;
 import com.belvinard.gestionstock.repositories.*;
 import com.belvinard.gestionstock.service.VenteService;
+import com.belvinard.gestionstock.service.MvtStkService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,8 @@ public class VenteServiceImpl implements VenteService {
     private final ArticleRepository articleRepository;
     private final EntrepriseRepository entrepriseRepository;
     private final CommandeClientRepository commandeClientRepository;
+    private final MvtStkService mvtStkService;
+    private final MvtStkRepository mvtStkRepository;
     private final ModelMapper modelMapper;
 
     @Override
@@ -57,6 +60,9 @@ public class VenteServiceImpl implements VenteService {
         if (vente.getEtatVente() == EtatVente.FINALISEE) {
             throw new InvalidOperationException("Impossible de supprimer une vente finalisée");
         }
+        
+        // Pas besoin de libérer le stock car il n'est pas réservé
+        
         // Delete all line items first
         ligneVenteRepository.deleteAllByVenteId(id);
         venteRepository.delete(vente);
@@ -127,14 +133,28 @@ public class VenteServiceImpl implements VenteService {
         }
         vente.setEtatVente(EtatVente.FINALISEE);
         venteRepository.save(vente);
-        // Update stock for each article
+        
+        // Convertir les réservations en sorties réelles
         for (LigneVente ligne : lignes) {
             Article article = ligne.getArticle();
-            if (article.getQuantiteEnStock() < ligne.getQuantite().longValue()) {
-                throw new APIException("Stock insuffisant pour l'article: " + article.getDesignation());
-            }
-            article.setQuantiteEnStock(article.getQuantiteEnStock() - ligne.getQuantite().longValue());
+            Long quantite = ligne.getQuantite().longValue();
+            
+            // SEULEMENT diminuer le stock physique (les réservations restent pour traçabilité)
+            article.setQuantiteEnStock(article.getQuantiteEnStock() - quantite);
             articleRepository.save(article);
+            
+            // Créer SEULEMENT le mouvement de sortie pour la traçabilité (sans passer par le service)
+            MvtStk mvtStk = new MvtStk();
+            mvtStk.setArticle(article);
+            mvtStk.setQuantite(ligne.getQuantite());
+            mvtStk.setTypeMvt(TypeMvtStk.SORTIE);
+            mvtStk.setSourceMvt(SourceMvtStk.VENTE);
+            mvtStk.setEntrepriseId(vente.getEntreprise().getId());
+            mvtStk.setDateMvt(LocalDateTime.now());
+            mvtStk.setCreationDate(LocalDateTime.now());
+            mvtStk.setLastModifiedDate(LocalDateTime.now());
+            
+            mvtStkRepository.save(mvtStk);
         }
         return modelMapper.map(vente, VenteDTO.class);
     }
@@ -202,8 +222,8 @@ public class VenteServiceImpl implements VenteService {
         Article article = articleRepository.findById(ligneVenteDTO.getIdArticle())
                 .orElseThrow(() -> new ResourceNotFoundException("Article", "id", ligneVenteDTO.getIdArticle()));
 
-        // Vérifier le stock
-        if (BigDecimal.valueOf(article.getQuantiteEnStock()).compareTo(ligneVenteDTO.getQuantite()) < 0) {
+        // Vérifier le stock disponible sans le réserver
+        if (article.getQuantiteEnStock() < ligneVenteDTO.getQuantite().longValue()) {
             throw new APIException("Stock insuffisant pour l'article: " + article.getDesignation());
         }
 
@@ -252,6 +272,11 @@ public class VenteServiceImpl implements VenteService {
 
         // 5. Créer les lignes de vente depuis les lignes de commande
         for (LigneCommandeClient ligneCommande : commande.getLigneCommandeClients()) {
+            // Vérifier le stock disponible
+            if (ligneCommande.getArticle().getQuantiteEnStock() < ligneCommande.getQuantite().longValue()) {
+                throw new APIException("Stock insuffisant pour l'article: " + ligneCommande.getArticle().getDesignation());
+            }
+
             LigneVente ligneVente = new LigneVente();
             ligneVente.setVente(savedVente);
             ligneVente.setArticle(ligneCommande.getArticle());
