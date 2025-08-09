@@ -19,17 +19,25 @@ public class VenteDTO {
     @Schema(description = "Code unique de la vente", example = "V12345")
     private String code;
 
+    @Schema(description = "Date de la vente", example = "2025-08-09T13:00:00")
+    private LocalDateTime dateVente;
+
     @Schema(description = "Commentaire optionnel associé à la vente", example = "Vente urgente")
     private String commentaire;
-
-    @Schema(hidden = true, description = "Identifiant de l'entreprise associée", example = "1")
-    private Long idEntreprise;
 
     @NotNull(message = "L'état de la vente est obligatoire")
     private EtatVente etatVente;
 
-    // Ce champ est automatiquement rempli côté backend
-    @Schema(hidden = true)
+    @Schema(hidden = true, description = "Identifiant du client associé", example = "1")
+    private Long clientId;
+
+    @Schema(hidden = true, description = "Nom complet du client")
+    private String clientName;
+
+    @Schema(hidden = true, description = "Identifiant de l'entreprise associée", example = "1")
+    private Long entrepriseId;
+
+    @Schema(hidden = true, description = "Nom de l'entreprise")
     private String entrepriseName;
 
     @Schema(hidden = true, description = "Date de création de la vente", example = "2025-04-05T10:00:00")

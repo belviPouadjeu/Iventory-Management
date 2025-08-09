@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,9 +25,8 @@ public class VenteServiceImpl implements VenteService {
     private final LigneVenteRepository ligneVenteRepository;
     private final ArticleRepository articleRepository;
     private final EntrepriseRepository entrepriseRepository;
+    private final CommandeClientRepository commandeClientRepository;
     private final ModelMapper modelMapper;
-
-
 
     @Override
     public VenteDTO findById(Long id) {
@@ -72,17 +72,17 @@ public class VenteServiceImpl implements VenteService {
                 .anyMatch(v -> v.getCode().equals(venteDTO.getCode()))) {
             throw new APIException("Une vente avec le code '" + venteDTO.getCode() + "' existe déjà");
         }
-        
+
         // Verify enterprise exists
         Entreprise entreprise = entrepriseRepository.findById(entrepriseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Entreprise", "id", entrepriseId));
-        
+
         // Map DTO to entity
         Vente vente = modelMapper.map(venteDTO, Vente.class);
         vente.setEntreprise(entreprise);
         vente.setCreationDate(LocalDateTime.now());
         vente.setEtatVente(EtatVente.EN_COURS);
-        
+
         // Save and return
         Vente saved = venteRepository.save(vente);
         VenteDTO result = modelMapper.map(saved, VenteDTO.class);
@@ -171,7 +171,7 @@ public class VenteServiceImpl implements VenteService {
 
     @Override
     public List<VenteDTO> findByEntrepriseAndDateRange(Long entrepriseId, LocalDateTime startDate,
-                                                       LocalDateTime endDate) {
+            LocalDateTime endDate) {
         return venteRepository.findAllByEntrepriseIdAndCreationDateBetween(entrepriseId, startDate, endDate).stream()
                 .map(vente -> modelMapper.map(vente, VenteDTO.class))
                 .collect(Collectors.toList());
@@ -219,6 +219,64 @@ public class VenteServiceImpl implements VenteService {
         return modelMapper.map(saved, LigneVenteDTO.class);
     }
 
+    @Override
+    @Transactional
+    public VenteDTO createVenteFromCommande(Long commandeClientId) {
+        // 1. Récupérer la commande client
+        CommandeClient commande = commandeClientRepository.findById(commandeClientId)
+                .orElseThrow(() -> new ResourceNotFoundException("CommandeClient", "id", commandeClientId));
 
+        // 2. Validation : La commande doit être VALIDEE
+        if (commande.getEtatCommande() != EtatCommande.VALIDEE) {
+            throw new BusinessRuleException(
+                    "Seules les commandes à l'état VALIDEE peuvent être transformées en vente. " +
+                            "État actuel de la commande : " + commande.getEtatCommande());
+        }
+
+        // 3. Vérifier qu'il y a des lignes de commande
+        if (commande.getLigneCommandeClients() == null || commande.getLigneCommandeClients().isEmpty()) {
+            throw new BusinessRuleException(
+                    "Impossible de créer une vente à partir d'une commande sans lignes de commande.");
+        }
+
+        // 4. Créer la vente
+        Vente vente = new Vente();
+        vente.setCode("VTE-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        vente.setDateVente(LocalDateTime.now());
+        vente.setClient(commande.getClient());
+        vente.setEntreprise(commande.getEntreprise());
+        vente.setCommentaire("Vente générée depuis la commande " + commande.getCode());
+        vente.setEtatVente(EtatVente.EN_COURS); // État initial de la vente
+
+        Vente savedVente = venteRepository.save(vente);
+
+        // 5. Créer les lignes de vente depuis les lignes de commande
+        for (LigneCommandeClient ligneCommande : commande.getLigneCommandeClients()) {
+            LigneVente ligneVente = new LigneVente();
+            ligneVente.setVente(savedVente);
+            ligneVente.setArticle(ligneCommande.getArticle());
+            ligneVente.setQuantite(ligneCommande.getQuantite());
+            ligneVente.setPrixUnitaireHt(ligneCommande.getPrixUnitaireHt());
+            ligneVente.setTauxTva(ligneCommande.getTauxTva());
+            ligneVente.setPrixUnitaireTtc(ligneCommande.getPrixUnitaireTtc());
+
+            ligneVenteRepository.save(ligneVente);
+        }
+
+        // 6. Passer la commande à l'état LIVREE
+        commande.setEtatCommande(EtatCommande.LIVREE);
+        commandeClientRepository.save(commande);
+
+        // 7. Convertir et retourner le DTO
+        VenteDTO venteDTO = modelMapper.map(savedVente, VenteDTO.class);
+
+        // Enrichir avec les informations du client et de l'entreprise
+        venteDTO.setClientId(savedVente.getClient().getId());
+        venteDTO.setClientName(savedVente.getClient().getNom() + " " + savedVente.getClient().getPrenom());
+        venteDTO.setEntrepriseId(savedVente.getEntreprise().getId());
+        venteDTO.setEntrepriseName(savedVente.getEntreprise().getNom());
+
+        return venteDTO;
+    }
 
 }

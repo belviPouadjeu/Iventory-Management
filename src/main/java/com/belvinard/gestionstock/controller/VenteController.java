@@ -142,4 +142,22 @@ public class VenteController {
     public ResponseEntity<List<LigneVenteDTO>> findLignesVente(@PathVariable Long venteId) {
         return ResponseEntity.ok(venteService.findAllLignesVenteByVenteId(venteId));
     }
+
+    @PostMapping("/from-commande/{commandeId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES_MANAGER')")
+    @Operation(summary = "ADMIN ou SALES_MANAGER: Créer une vente depuis une commande validée", description = "Transforme une commande client à l'état VALIDEE en vente et passe automatiquement la commande à l'état LIVREE. "
+            +
+            "⚠️ Seules les commandes VALIDEE avec des lignes de commande peuvent être transformées en vente. " +
+            "Accessible aux ADMIN et SALES_MANAGER.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Vente créée avec succès depuis la commande"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Commande non trouvée"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Commande pas à l'état VALIDEE ou sans lignes de commande")
+    })
+    public ResponseEntity<VenteDTO> createVenteFromCommande(
+            @io.swagger.v3.oas.annotations.Parameter(description = "ID de la commande client validée", required = true) @PathVariable Long commandeId) {
+
+        VenteDTO vente = venteService.createVenteFromCommande(commandeId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(vente);
+    }
 }

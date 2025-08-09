@@ -36,10 +36,20 @@ public interface VenteService {
   List<VenteDTO> findByDateRange(LocalDateTime startDate, LocalDateTime endDate);
 
   List<VenteDTO> findByEntrepriseAndDateRange(Long entrepriseId, LocalDateTime startDate,
-                                              LocalDateTime endDate);
+      LocalDateTime endDate);
 
   List<LigneVenteDTO> findAllLignesVenteByVenteId(Long idVente);
 
   @Transactional
   LigneVenteDTO addLigneVente(Long venteId, LigneVenteDTO ligneVenteDTO);
+
+  /**
+   * Crée une vente à partir d'une commande client validée
+   * et passe automatiquement la commande à l'état LIVREE
+   * 
+   * @param commandeClientId L'identifiant de la commande client validée
+   * @return La vente créée
+   */
+  @Transactional
+  VenteDTO createVenteFromCommande(Long commandeClientId);
 }

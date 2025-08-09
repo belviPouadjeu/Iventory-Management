@@ -57,7 +57,6 @@ public class LigneVenteServiceImpl implements LigneVenteService {
         return modelMapper.map(saved, LigneVenteDTO.class);
     }
 
-
     @Override
     public LigneVenteDTO findById(Long id) {
         LigneVente ligneVente = ligneVenteRepository.findById(id)
@@ -127,11 +126,12 @@ public class LigneVenteServiceImpl implements LigneVenteService {
         LigneVente updated = ligneVenteRepository.save(ligneVente);
         return modelMapper.map(updated, LigneVenteDTO.class);
     }
+
     @Override
     public BigDecimal calculateTotalForVente(Long venteId) {
         List<LigneVente> lignes = ligneVenteRepository.findAllByVenteId(venteId);
         return lignes.stream()
-                .map(ligne -> ligne.getPrixUnitaire().multiply(ligne.getQuantite()))
+                .map(ligne -> ligne.getPrixUnitaireTtc().multiply(ligne.getQuantite()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
