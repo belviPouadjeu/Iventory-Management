@@ -5,6 +5,7 @@ import com.belvinard.gestionstock.dto.LigneCommandeClientDTO;
 import com.belvinard.gestionstock.models.EtatCommande;
 import com.belvinard.gestionstock.service.CommandeClientService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -95,7 +96,16 @@ public class CommandeClientController {
                                 .ok(commandeClientService.findAllLignesCommandesClientByCommandeClientId(commandeId));
         }
 
-        @Operation(summary = "ADMIN: Supprimer une commande client", description = "Supprime une commande client par son identifiant. Accessible uniquement aux ADMIN.")
+        @Operation(summary = "ADMIN: Supprimer une commande client", description = "Supprime une commande client par son identifiant et remet automatiquement en stock les articles. "
+                        +
+                        "⚠️ Seules les commandes EN_PREPARATION ou ANNULEE peuvent être supprimées. " +
+                        "Les commandes VALIDEE ou LIVREE ne peuvent pas être supprimées. " +
+                        "Accessible uniquement aux ADMIN.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Commande supprimée avec succès"),
+                        @ApiResponse(responseCode = "404", description = "Commande non trouvée"),
+                        @ApiResponse(responseCode = "400", description = "Commande validée ou livrée, suppression interdite")
+        })
         @PreAuthorize("hasAuthority('ROLE_ADMIN')")
         @DeleteMapping("/{id}")
         public ResponseEntity<CommandeClientDTO> deleteCommandeClient(@PathVariable Long id) {

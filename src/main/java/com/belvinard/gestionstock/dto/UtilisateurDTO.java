@@ -2,7 +2,7 @@ package com.belvinard.gestionstock.dto;
 
 import com.belvinard.gestionstock.models.Adresse;
 import io.swagger.v3.oas.annotations.media.Schema;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -39,7 +39,8 @@ public class UtilisateurDTO {
 
     @NotBlank(message = "Le mot de passe est obligatoire")
     @Size(min = 6, message = "Le mot de passe doit contenir au moins 6 caractères")
-    @JsonIgnore // Ne pas exposer le mot de passe dans les réponses JSON
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Permet la lecture depuis JSON mais pas l'écriture dans les
+                                                           // réponses
     private String moteDePasse;
 
     private Adresse adresse;

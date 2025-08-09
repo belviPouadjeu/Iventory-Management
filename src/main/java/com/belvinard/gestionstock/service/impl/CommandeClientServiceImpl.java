@@ -4,10 +4,13 @@ import com.belvinard.gestionstock.dto.CommandeClientDTO;
 import com.belvinard.gestionstock.dto.LigneCommandeClientDTO;
 import com.belvinard.gestionstock.exceptions.BusinessRuleException;
 import com.belvinard.gestionstock.exceptions.ResourceNotFoundException;
+import com.belvinard.gestionstock.models.Article;
 import com.belvinard.gestionstock.models.Client;
 import com.belvinard.gestionstock.models.CommandeClient;
 import com.belvinard.gestionstock.models.Entreprise;
 import com.belvinard.gestionstock.models.EtatCommande;
+import com.belvinard.gestionstock.models.LigneCommandeClient;
+import com.belvinard.gestionstock.repositories.ArticleRepository;
 import com.belvinard.gestionstock.repositories.ClientRepository;
 import com.belvinard.gestionstock.repositories.CommandeClientRepository;
 import com.belvinard.gestionstock.repositories.EntrepriseRepository;
@@ -28,6 +31,7 @@ public class CommandeClientServiceImpl implements CommandeClientService {
     private final ClientRepository clientRepository;
     private final EntrepriseRepository entrepriseRepository;
     private final LigneCommandeClientRepository ligneCommandeClientRepository;
+    private final ArticleRepository articleRepository;
     private final ModelMapper modelMapper;
     private static final Logger log = LoggerFactory.getLogger(CommandeClientServiceImpl.class);
 
@@ -165,14 +169,46 @@ public class CommandeClientServiceImpl implements CommandeClientService {
         CommandeClient commande = commandeClientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Commande client introuvable avec l'ID " + id));
 
-        // Vérification : si la commande est déjà livrée, on bloque la suppression
+        // Validations avant suppression
         if (EtatCommande.LIVREE.equals(commande.getEtatCommande())) {
             throw new BusinessRuleException("Impossible de supprimer une commande déjà livrée.");
         }
 
+        if (EtatCommande.VALIDEE.equals(commande.getEtatCommande())) {
+            throw new BusinessRuleException(
+                    "Impossible de supprimer une commande validée. Annulez d'abord la commande si nécessaire.");
+        }
+
+        // Mapper AVANT la suppression pour éviter les problèmes avec les collections
+        // Hibernate
+        CommandeClientDTO commandeDTO = modelMapper.map(commande, CommandeClientDTO.class);
+
+        // Enrichir les informations manquantes
+        commandeDTO.setClientName(commande.getClient().getNom() + " " + commande.getClient().getPrenom());
+        commandeDTO.setClientId(commande.getClient().getId());
+        commandeDTO.setEntrepriseId(commande.getEntreprise().getId());
+
+        // Remettre en stock les articles des lignes de commande avant suppression
+        if (commande.getLigneCommandeClients() != null && !commande.getLigneCommandeClients().isEmpty()) {
+            for (LigneCommandeClient ligne : commande.getLigneCommandeClients()) {
+                Article article = ligne.getArticle();
+                // Remettre la quantité en stock
+                Long nouvelleQuantite = article.getQuantiteEnStock() + ligne.getQuantite().longValue();
+                article.setQuantiteEnStock(nouvelleQuantite);
+                articleRepository.save(article);
+
+                log.info(
+                        "Remise en stock de {} unités pour l'article {} (ID: {}) lors de la suppression de la commande {}",
+                        ligne.getQuantite(), article.getDesignation(), article.getId(), commande.getCode());
+            }
+        }
+
+        // Supprimer la commande
         commandeClientRepository.delete(commande);
 
-        return modelMapper.map(commande, CommandeClientDTO.class);
+        log.info("Commande {} supprimée avec succès", commande.getCode());
+
+        return commandeDTO;
     }
 
     @Override
