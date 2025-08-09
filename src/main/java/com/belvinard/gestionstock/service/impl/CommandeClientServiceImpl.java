@@ -55,6 +55,14 @@ public class CommandeClientServiceImpl implements CommandeClientService {
             throw new BusinessRuleException("Ce client n'appartient pas à cette entreprise.");
         }
 
+        // Validation : Une nouvelle commande ne peut pas être créée directement avec
+        // l'état VALIDEE ou LIVREE
+        if (commandeClientDTO.getEtatCommande() == EtatCommande.VALIDEE ||
+                commandeClientDTO.getEtatCommande() == EtatCommande.LIVREE) {
+            throw new BusinessRuleException(
+                    "Une nouvelle commande ne peut pas être créée directement avec l'état VALIDEE ou LIVREE. Créez d'abord la commande en état EN_PREPARATION, ajoutez des lignes de commande, puis modifiez l'état.");
+        }
+
         CommandeClient commandeClient = modelMapper.map(commandeClientDTO, CommandeClient.class);
         commandeClient.setClient(client);
         commandeClient.setEntreprise(entreprise);
@@ -82,9 +90,8 @@ public class CommandeClientServiceImpl implements CommandeClientService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "CommandeClient", "id", idCommande));
 
-        if (commande.getEtatCommande() == EtatCommande.LIVREE) {
-            throw new BusinessRuleException("Impossible de modifier une commande déjà livrée.");
-        }
+        // Valider la transition d'état
+        validateEtatTransition(commande, etatCommande);
 
         log.info("Mise à jour de la commande ID {} vers l'état {}", idCommande, etatCommande);
 
@@ -93,6 +100,48 @@ public class CommandeClientServiceImpl implements CommandeClientService {
         CommandeClient updatedCommande = commandeClientRepository.save(commande);
 
         return convertToDTO(updatedCommande);
+    }
+
+    @Override
+    public CommandeClientDTO annulerCommande(Long idCommande) {
+        CommandeClient commande = commandeClientRepository.findById(idCommande)
+                .orElseThrow(() -> new ResourceNotFoundException("CommandeClient", "id", idCommande));
+
+        // Vérifier que la commande peut être annulée
+        if (commande.getEtatCommande() == EtatCommande.LIVREE) {
+            throw new BusinessRuleException("Impossible d'annuler une commande déjà livrée.");
+        }
+
+        if (commande.getEtatCommande() == EtatCommande.VALIDEE) {
+            throw new BusinessRuleException(
+                    "Impossible d'annuler une commande déjà validée. Une commande validée est en cours de préparation.");
+        }
+
+        if (commande.getEtatCommande() == EtatCommande.ANNULEE) {
+            throw new BusinessRuleException("Cette commande est déjà annulée.");
+        }
+
+        // Remettre en stock les articles si la commande avait des lignes
+        if (commande.getLigneCommandeClients() != null && !commande.getLigneCommandeClients().isEmpty()) {
+            for (LigneCommandeClient ligne : commande.getLigneCommandeClients()) {
+                Article article = ligne.getArticle();
+                // Remettre la quantité en stock
+                Long nouvelleQuantite = article.getQuantiteEnStock() + ligne.getQuantite().longValue();
+                article.setQuantiteEnStock(nouvelleQuantite);
+                articleRepository.save(article);
+
+                log.info("Remise en stock de {} unités pour l'article {} (ID: {})",
+                        ligne.getQuantite(), article.getDesignation(), article.getId());
+            }
+        }
+
+        // Changer l'état vers ANNULEE
+        commande.setEtatCommande(EtatCommande.ANNULEE);
+        CommandeClient commandeAnnulee = commandeClientRepository.save(commande);
+
+        log.info("Commande {} annulée avec succès", commande.getCode());
+
+        return convertToDTO(commandeAnnulee);
     }
 
     @Override
@@ -147,11 +196,85 @@ public class CommandeClientServiceImpl implements CommandeClientService {
 
     private CommandeClientDTO convertToDTO(CommandeClient commandeClient) {
         CommandeClientDTO dto = modelMapper.map(commandeClient, CommandeClientDTO.class);
-        dto.setClientName(commandeClient.getClient().getNom());
+        dto.setClientName(commandeClient.getClient().getNom() + " " + commandeClient.getClient().getPrenom());
         dto.setClientId(commandeClient.getClient().getId());
         dto.setEntrepriseId(commandeClient.getEntreprise().getId());
 
+        // Enrichir les lignes de commande avec les informations manquantes
+        if (commandeClient.getLigneCommandeClients() != null && !commandeClient.getLigneCommandeClients().isEmpty()) {
+            List<LigneCommandeClientDTO> lignesEnrichies = commandeClient.getLigneCommandeClients().stream()
+                    .map(ligne -> {
+                        LigneCommandeClientDTO ligneDTO = modelMapper.map(ligne, LigneCommandeClientDTO.class);
+
+                        // Ajouter les informations de l'article
+                        if (ligne.getArticle() != null) {
+                            ligneDTO.setArticleId(ligne.getArticle().getId());
+                            ligneDTO.setArticleName(ligne.getArticle().getDesignation());
+                        }
+
+                        // Ajouter les informations de la commande
+                        ligneDTO.setCommandeClientId(commandeClient.getId());
+                        ligneDTO.setCommandeClientName(commandeClient.getCode());
+
+                        // Calculer le prix total
+                        if (ligne.getPrixUnitaireTtc() != null && ligne.getQuantite() != null) {
+                            ligneDTO.setPrixTotal(ligne.getPrixUnitaireTtc().multiply(ligne.getQuantite()));
+                        }
+
+                        return ligneDTO;
+                    })
+                    .collect(Collectors.toList());
+
+            dto.setLigneCommandeClients(lignesEnrichies);
+        }
+
         return dto;
+    }
+
+    /**
+     * Valide qu'une commande peut être mise dans l'état demandé
+     * 
+     * @param commande   La commande à valider
+     * @param nouvelEtat Le nouvel état souhaité
+     */
+    private void validateEtatTransition(CommandeClient commande, EtatCommande nouvelEtat) {
+        // Vérifier qu'une commande livrée ne peut plus être modifiée
+        if (commande.getEtatCommande() == EtatCommande.LIVREE) {
+            throw new BusinessRuleException("Impossible de modifier une commande déjà livrée.");
+        }
+
+        // Vérifier qu'une commande ne peut être validée ou livrée sans lignes de
+        // commande
+        if (nouvelEtat == EtatCommande.VALIDEE || nouvelEtat == EtatCommande.LIVREE) {
+            if (commande.getLigneCommandeClients() == null || commande.getLigneCommandeClients().isEmpty()) {
+                throw new BusinessRuleException(
+                        "Impossible de valider ou livrer une commande sans lignes de commande. " +
+                                "Veuillez d'abord ajouter des articles à la commande.");
+            }
+        }
+
+        // Vérifier la logique de transition d'état
+        EtatCommande etatActuel = commande.getEtatCommande();
+
+        // Une commande annulée ne peut plus être modifiée
+        if (etatActuel == EtatCommande.ANNULEE) {
+            throw new BusinessRuleException(
+                    "Impossible de modifier une commande annulée. Utilisez la méthode d'annulation pour annuler une commande.");
+        }
+
+        // Empêcher de passer directement de EN_PREPARATION à LIVREE sans passer par
+        // VALIDEE
+        if (etatActuel == EtatCommande.EN_PREPARATION && nouvelEtat == EtatCommande.LIVREE) {
+            throw new BusinessRuleException(
+                    "Une commande doit être validée avant d'être livrée. " +
+                            "Changez d'abord l'état vers VALIDEE, puis vers LIVREE.");
+        }
+
+        // Pour annuler une commande, utiliser la méthode dédiée
+        if (nouvelEtat == EtatCommande.ANNULEE) {
+            throw new BusinessRuleException(
+                    "Pour annuler une commande, utilisez l'endpoint dédié /annuler au lieu de modifier directement l'état.");
+        }
     }
 
 }

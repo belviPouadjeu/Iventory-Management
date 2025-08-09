@@ -32,7 +32,7 @@ public class CommandeClientController {
                           "entrepriseId": 1,
                           "dateCommande": "2026-02-10",
                           "etatCommande": "EN_PREPARATION",
-                          "commentaire": "Commande urgente"
+                          "commentaire": "Commande urgente - dateCommande est la date de livraison souhaitée"
                         }
                         """))))
         @ApiResponses(value = {
@@ -100,5 +100,24 @@ public class CommandeClientController {
         @DeleteMapping("/{id}")
         public ResponseEntity<CommandeClientDTO> deleteCommandeClient(@PathVariable Long id) {
                 return ResponseEntity.ok(commandeClientService.deleteCommandeClient(id));
+        }
+
+        @Operation(summary = "ADMIN ou MANAGERS: Annuler une commande client", description = "Annule une commande client et remet automatiquement en stock les articles des lignes de commande. "
+                        +
+                        "⚠️ Seules les commandes en état EN_PREPARATION peuvent être annulées. " +
+                        "Les commandes VALIDEE, LIVREE ou déjà ANNULEE ne peuvent pas être annulées. " +
+                        "Accessible aux ADMIN et MANAGERS.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Commande annulée avec succès"),
+                        @ApiResponse(responseCode = "404", description = "Commande non trouvée"),
+                        @ApiResponse(responseCode = "400", description = "Commande déjà validée, livrée ou déjà annulée")
+        })
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
+        @PutMapping("/{commandeId}/annuler")
+        public ResponseEntity<CommandeClientDTO> annulerCommande(
+                        @Parameter(description = "ID de la commande à annuler", required = true) @PathVariable Long commandeId) {
+
+                CommandeClientDTO commandeAnnulee = commandeClientService.annulerCommande(commandeId);
+                return ResponseEntity.ok(commandeAnnulee);
         }
 }

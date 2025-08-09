@@ -31,9 +31,9 @@ public class CommandeClientDTO {
     @Schema(hidden = true)
     private LocalDateTime lastModifiedDate;
 
-    @NotNull(message = "La date de commande est obligatoire")
-    @FutureOrToday(message = "La date de commande ne peut pas être antérieure à aujourd'hui")
-    @Schema(description = "Date de la commande (format: YYYY-MM-DD)", example = "2026-02-10", required = true)
+    @NotNull(message = "La date de livraison souhaitée est obligatoire")
+    @FutureOrToday(message = "La date de livraison ne peut pas être antérieure à aujourd'hui")
+    @Schema(description = "Date de livraison souhaitée (format: YYYY-MM-DD)", example = "2026-02-10", required = true)
     private LocalDate dateCommande;
 
     @NotNull(message = "L'état de la commande est obligatoire")

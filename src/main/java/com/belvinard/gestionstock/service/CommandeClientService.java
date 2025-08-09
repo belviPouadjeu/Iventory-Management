@@ -20,4 +20,12 @@ public interface CommandeClientService {
     CommandeClientDTO deleteCommandeClient(Long id);
 
     CommandeClientDTO findByCode(String code);
+
+    /**
+     * Annule une commande client
+     * 
+     * @param idCommande L'identifiant de la commande à annuler
+     * @return La commande annulée
+     */
+    CommandeClientDTO annulerCommande(Long idCommande);
 }

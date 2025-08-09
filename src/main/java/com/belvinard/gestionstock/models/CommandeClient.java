@@ -23,6 +23,10 @@ public class CommandeClient extends AbstractEntity {
   @Size(min = 4, max = 50, message = "Le code de la commande doit contenir entre 4 et 50 caractères")
   private String code;
 
+  /**
+   * Date de livraison souhaitée pour la commande
+   * (différente de creationDate qui est la date de création automatique)
+   */
   @Column(name = "date_commande")
   private LocalDate dateCommande;
 

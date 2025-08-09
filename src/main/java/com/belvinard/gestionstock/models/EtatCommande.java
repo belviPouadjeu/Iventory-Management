@@ -7,7 +7,9 @@ public enum EtatCommande {
 
   EN_PREPARATION,
   VALIDEE,
-  LIVREE;
+  LIVREE,
+  ANNULEE;
+
 
   @JsonCreator
   public static EtatCommande fromString(@JsonProperty("etatCommande") String value) {
