@@ -34,6 +34,10 @@ public class LigneCommandeFournisseur extends AbstractEntity {
     @Column(name = "quantite_commande")
     private BigDecimal quantite;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "etat_ligne")
+    private EtatLigneCommandeFournisseur etatLigne = EtatLigneCommandeFournisseur.EN_PREPARATION;
+
     //private String photo;
 
     @ManyToOne

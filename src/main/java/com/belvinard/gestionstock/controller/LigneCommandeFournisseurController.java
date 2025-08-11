@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,7 +31,24 @@ public class LigneCommandeFournisseurController {
 
         @PostMapping("/commande/{commandeFournisseurId}")
         @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_STOCK_MANAGER')")
-        @Operation(summary = "Créer une nouvelle ligne de commande fournisseur (ADMIN ou STOCK_MANAGER)", description = "Cette méthode permet de créer une nouvelle ligne de commande fournisseur avec les informations fournies")
+        @Operation(summary = "Créer une nouvelle ligne de commande fournisseur (ADMIN ou STOCK_MANAGER)", 
+                description = "Crée une ligne de commande fournisseur. Le prix et la TVA sont récupérés automatiquement depuis l'article.",
+                requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                        description = "Données de la ligne de commande avec seulement la quantité et l'ID de l'article",
+                        required = true,
+                        content = @Content(mediaType = "application/json",
+                                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                        name = "Ligne de commande simplifiée",
+                                        summary = "Format JSON simplifié",
+                                        value = """
+                                                {
+                                                  "quantite": 5,
+                                                  "articleId": 1
+                                                }
+                                                """
+                                )
+                        )
+                ))
         public ResponseEntity<LigneCommandeFournisseurDTO> create(
                         @Parameter(description = "ID de la commande fournisseur", required = true) @PathVariable @NotNull Long commandeFournisseurId,
                         @Parameter(description = "Données de la ligne de commande fournisseur", required = true) @Valid @RequestBody LigneCommandeFournisseurDTO ligneCommandeFournisseurDTO) {
@@ -112,5 +130,15 @@ public class LigneCommandeFournisseurController {
                 java.math.BigDecimal total = ligneCommandeFournisseurService
                                 .getTotalByCommandeFournisseurId(commandeFournisseurId);
                 return ResponseEntity.ok(total);
+        }
+
+        @PutMapping("/{id}/valider")
+        @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_STOCK_MANAGER')")
+        @Operation(summary = "Valider une ligne de commande fournisseur (ADMIN ou STOCK_MANAGER)", description = "Change l'état de la ligne de EN_PREPARATION à VALIDEE")
+        public ResponseEntity<LigneCommandeFournisseurDTO> validerLigne(
+                        @Parameter(description = "ID de la ligne de commande fournisseur", required = true) @PathVariable @NotNull Long id) {
+
+                LigneCommandeFournisseurDTO ligneValidee = ligneCommandeFournisseurService.validerLigne(id);
+                return ResponseEntity.ok(ligneValidee);
         }
 }
