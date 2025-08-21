@@ -36,7 +36,7 @@ public class ClientController {
                                         "    \"adresse1\": \"Quartier Bastos\",\n" +
                                         "    \"adresse2\": \"Immeuble Socrate\",\n" +
                                         "    \"ville\": \"Yaoundé\",\n" +
-                                        "    \"codePostal\": \"237\",\n" +
+                                        "    \"codePostale\": \"237\",\n" +
                                         "    \"pays\": \"Cameroun\"\n" +
                                         "  },\n" +
                                         "  \"photo\": \"clarisse.jpg\",\n" +

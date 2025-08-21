@@ -47,6 +47,16 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
 
         CommandeFournisseur commande = modelMapper.map(commandeFournisseurDTO, CommandeFournisseur.class);
         commande.setFournisseur(fournisseur);
+        
+        // Empêcher la création directe avec un état autre que EN_PREPARATION
+        if (commande.getEtatCommande() != null && commande.getEtatCommande() != EtatCommande.EN_PREPARATION) {
+            throw new InvalidOperationException(
+                    "Une nouvelle commande ne peut être créée qu'avec l'état EN_PREPARATION. État reçu: " + commande.getEtatCommande()
+            );
+        }
+        
+        // Forcer l'état à EN_PREPARATION pour une nouvelle commande
+        commande.setEtatCommande(EtatCommande.EN_PREPARATION);
 
         CommandeFournisseur savedCommandeFournisseur = commandeFournisseurRepository.save(commande);
 
@@ -146,6 +156,25 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
             );
         }
 
+        // Vérifier qu'une commande ne peut pas passer directement de EN_PREPARATION à LIVREE
+        if (commande.getEtatCommande() == EtatCommande.EN_PREPARATION && nouvelEtat == EtatCommande.LIVREE) {
+            throw new InvalidOperationException(
+                    "Impossible de passer directement de EN_PREPARATION à LIVREE pour la commande " + commande.getCode() +
+                            ". La commande doit d'abord être VALIDEE"
+            );
+        }
+
+        // Vérifier qu'une commande ne peut pas passer directement à LIVREE sans lignes
+        if (nouvelEtat == EtatCommande.LIVREE) {
+            List<LigneCommandeFournisseur> lignes = ligneCommandeFournisseurRepository.findAllByCommandeFournisseurId(commande.getId());
+            if (lignes.isEmpty()) {
+                throw new InvalidOperationException(
+                        "Impossible de livrer la commande " + commande.getCode() +
+                                " car elle ne contient aucune ligne de commande"
+                );
+            }
+        }
+
         commande.setEtatCommande(nouvelEtat);
 
         // Si la commande passe à LIVREE, augmenter le stock des articles
@@ -165,6 +194,30 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
         return dto;
     }
 
+    @Override
+    @Transactional
+    public CommandeFournisseurDTO annulerCommande(Long idCommande) {
+        CommandeFournisseur commande = commandeFournisseurRepository.findById(idCommande)
+                .orElseThrow(() -> new ResourceNotFoundException("Commande fournisseur non trouvée avec l'ID: " + idCommande));
+
+        if (commande.getEtatCommande() == EtatCommande.LIVREE) {
+            throw new InvalidOperationException(
+                    "Impossible d'annuler la commande " + commande.getCode() +
+                            " car elle est déjà livrée"
+            );
+        }
+
+        commande.setEtatCommande(EtatCommande.ANNULEE);
+        CommandeFournisseur updatedCommande = commandeFournisseurRepository.save(commande);
+        
+        CommandeFournisseurDTO dto = modelMapper.map(updatedCommande, CommandeFournisseurDTO.class);
+        if (updatedCommande.getFournisseur() != null) {
+            Fournisseur fournisseur = updatedCommande.getFournisseur();
+            dto.setFournisseurId(fournisseur.getId());
+            dto.setFournisseurName(fournisseur.getNom() + " " + fournisseur.getPrenom());
+        }
+        return dto;
+    }
 
     private void augmenterStockArticles(Long commandeId) {
         // Récupérer toutes les lignes validées de la commande
