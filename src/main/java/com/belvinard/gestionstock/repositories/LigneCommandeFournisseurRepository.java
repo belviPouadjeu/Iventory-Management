@@ -13,7 +13,7 @@ public interface LigneCommandeFournisseurRepository extends JpaRepository<LigneC
 
     List<LigneCommandeFournisseur> findAllByCommandeFournisseurId(Long commandeFournisseurId);
 
-    //List<LigneCommandeFournisseur> findAllByArticleId(Long articleId);
+    List<LigneCommandeFournisseur> findAllByCommandeFournisseurIdAndEtatLigne(Long commandeFournisseurId, com.belvinard.gestionstock.models.EtatLigneCommandeFournisseur etatLigne);
 
     List<LigneCommandeFournisseur> findByArticleId(Long articleId);
     

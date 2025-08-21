@@ -38,6 +38,11 @@ public class UtilisateurServiceImpl implements UtilisateurService {
             throw new IllegalArgumentException("L'id de l'entreprise ne doit pas être null");
         }
 
+        // Validation de l'unicité de l'email
+        if (utilisateurRepository.existsByEmail(dto.getEmail())) {
+            throw new IllegalArgumentException("Un utilisateur avec cet email existe déjà");
+        }
+
         // Récupération de l'entreprise
         Entreprise entreprise = entrepriseRepository.findById(entrepriseId)
                 .orElseThrow(() -> new EntityNotFoundException("Aucune entreprise trouvée avec l'id " + entrepriseId));

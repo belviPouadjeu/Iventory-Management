@@ -44,11 +44,6 @@ public class LigneCommandeFournisseurServiceImpl implements LigneCommandeFournis
             throw new BusinessRuleException("Impossible d'ajouter une ligne : la commande est déjà livrée.");
         }
 
-        // Mise à jour du stock
-        BigDecimal stockDisponible = BigDecimal.valueOf(article.getQuantiteEnStock());
-        BigDecimal nouveauStock = stockDisponible.add(ligneCommandeFournisseurDTO.getQuantite());
-        article.setQuantiteEnStock(nouveauStock.longValue());
-        articleRepository.save(article);
 
         // Vérification de la quantité
         if (ligneCommandeFournisseurDTO.getQuantite() == null) {
@@ -183,12 +178,7 @@ public class LigneCommandeFournisseurServiceImpl implements LigneCommandeFournis
             throw new BusinessRuleException("Impossible de supprimer une ligne validée.");
         }
         
-        // Diminuer le stock de l'article (annuler l'augmentation faite lors de la création)
-        Article article = ligne.getArticle();
-        BigDecimal stockActuel = BigDecimal.valueOf(article.getQuantiteEnStock());
-        BigDecimal nouveauStock = stockActuel.subtract(ligne.getQuantite());
-        article.setQuantiteEnStock(Math.max(0L, nouveauStock.longValue()));
-        articleRepository.save(article);
+        // Pas besoin de diminuer le stock car il n'a pas été augmenté lors de la création
         
         // Suppression
         ligneCommandeFournisseurRepository.delete(ligne);
@@ -263,6 +253,19 @@ public class LigneCommandeFournisseurServiceImpl implements LigneCommandeFournis
         
         ligne.setEtatLigne(EtatLigneCommandeFournisseur.VALIDEE);
         LigneCommandeFournisseur updatedLigne = ligneCommandeFournisseurRepository.save(ligne);
+        
+        // Vérifier si toutes les lignes de la commande sont validées
+        CommandeFournisseur commande = ligne.getCommandeFournisseur();
+        List<LigneCommandeFournisseur> toutesLignes = ligneCommandeFournisseurRepository.findAllByCommandeFournisseurId(commande.getId());
+        
+        boolean toutesLignesValidees = toutesLignes.stream()
+                .allMatch(l -> l.getEtatLigne() == EtatLigneCommandeFournisseur.VALIDEE);
+        
+        // Si toutes les lignes sont validées, passer la commande à VALIDEE
+        if (toutesLignesValidees && commande.getEtatCommande() == EtatCommande.EN_PREPARATION) {
+            commande.setEtatCommande(EtatCommande.VALIDEE);
+            commandeFournisseurRepository.save(commande);
+        }
         
         LigneCommandeFournisseurDTO dto = modelMapper.map(updatedLigne, LigneCommandeFournisseurDTO.class);
         dto.setCommandeFournisseurId(updatedLigne.getCommandeFournisseur().getId());
