@@ -26,7 +26,7 @@ public class ClientController {
 
         private final ClientService clientService;
 
-        @Operation(summary = "ADMIN ou MANAGERS: Créer un client", description = "Permet d'enregistrer un nouveau client pour une entreprise donnée. Accessible aux ADMIN et MANAGERS.", parameters = {
+        @Operation(summary = "ADMIN, ROLE_SALES_MANAGER ou MANAGERS: Créer un client", description = "Permet d'enregistrer un nouveau client pour une entreprise donnée. Accessible aux ADMIN et MANAGERS.", parameters = {
                         @Parameter(name = "entrepriseId", description = "Identifiant de l'entreprise à laquelle le client sera rattaché", required = true, example = "1")
         }, requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Représentation JSON du client à créer", required = true, content = @Content(mediaType = "application/json", examples = {
                         @ExampleObject(name = "Exemple Cameroun", summary = "Client situé au Cameroun", value = "{\n" +
@@ -58,7 +58,7 @@ public class ClientController {
                 return new ResponseEntity<>(savedClient, HttpStatus.CREATED);
         }
 
-        @Operation(summary = "MANAGER ou ADMIN: Rechercher un client par ID", description = "Recherche un client à partir de son identifiant. Accessible aux MANAGER ou ADMIN.")
+        @Operation(summary = "MANAGER, ROLE_STOCK_MANAGER ou ADMIN: Rechercher un client par ID", description = "Recherche un client à partir de son identifiant. Accessible aux MANAGER ou ADMIN.")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Client trouvé"),
                         @ApiResponse(responseCode = "404", description = "Client non trouvé")
@@ -70,7 +70,7 @@ public class ClientController {
                 return ResponseEntity.ok(clientDTO);
         }
 
-        @Operation(summary = "MANAGERS ou ADMIN: Liste des clients", description = "Retourne tous les clients enregistrés. Accessible aux MANAGERS ou ADMIN.")
+        @Operation(summary = "MANAGERS, ROLE_STOCK_MANAGER ou ADMIN: Liste des clients", description = "Retourne tous les clients enregistrés. Accessible aux MANAGERS ou ADMIN.")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Liste des clients récupérée avec succès")
         })

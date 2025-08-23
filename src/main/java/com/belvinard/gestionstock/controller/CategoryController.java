@@ -35,7 +35,7 @@ public class CategoryController {
                 return ResponseEntity.ok(categories);
         }
 
-        @Operation(summary = "ADMIN: Créer une nouvelle catégorie", description = "Ajoute une catégorie à une entreprise existante. Accessible uniquement aux ADMIN.")
+        @Operation(summary = "ADMIN, ROLE_SALES_MANAGER, ROLE_STOCK_MANAGER: Créer une nouvelle catégorie", description = "Ajoute une catégorie à une entreprise existante. Accessible uniquement aux ADMIN.")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "201", description = "Catégorie créée avec succès"),
                         @ApiResponse(responseCode = "400", description = "Données invalides"),
@@ -51,7 +51,7 @@ public class CategoryController {
                 return new ResponseEntity<>(created, HttpStatus.CREATED);
         }
 
-        @Operation(summary = "MANAGER ou ADMIN: Lister toutes les catégories avec leur entreprise", description = "Accessible aux rôles ADMIN ou MANAGER.")
+        @Operation(summary = "MANAGER, ROLE_SALES_MANAGER ou ADMIN: Lister toutes les catégories avec leur entreprise", description = "Accessible aux rôles ADMIN ou MANAGER.")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Liste retournée avec succès"),
                         @ApiResponse(responseCode = "500", description = "Erreur interne du serveur")

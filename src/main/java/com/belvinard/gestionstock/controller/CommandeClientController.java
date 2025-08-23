@@ -28,7 +28,7 @@ public class CommandeClientController {
 
         private final CommandeClientService commandeClientService;
 
-        @Operation(summary = "ADMIN ou MANAGERS: Créer une commande client", description = "Crée une commande pour un client donné. L'ID de l'entreprise doit être fourni dans le JSON. Accessible aux ADMIN et MANAGERS.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Données de la commande client avec l'ID de l'entreprise", required = true, content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Exemple commande client", summary = "Commande client avec entreprise dans le JSON", value = """
+        @Operation(summary = "ADMIN, ROLE_SALES_MANAGER ou MANAGERS: Créer une commande client", description = "Crée une commande pour un client donné. L'ID de l'entreprise doit être fourni dans le JSON. Accessible aux ADMIN et MANAGERS.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Données de la commande client avec l'ID de l'entreprise", required = true, content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "Exemple commande client", summary = "Commande client avec entreprise dans le JSON", value = """
                         {
                           "entrepriseId": 1,
                           "dateCommande": "2026-02-10",
@@ -74,21 +74,21 @@ public class CommandeClientController {
         }
 
         @Operation(summary = "MANAGER ou ADMIN: Lister toutes les commandes clients", description = "Retourne toutes les commandes clients enregistrées. Accessible aux MANAGER ou ADMIN.")
-        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
         @GetMapping
         public ResponseEntity<List<CommandeClientDTO>> findAll() {
                 return ResponseEntity.ok(commandeClientService.findAll());
         }
 
         @Operation(summary = "MANAGER ou ADMIN: Rechercher une commande client par ID", description = "Retourne une commande client à partir de son identifiant. Accessible aux MANAGER ou ADMIN.")
-        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
         @GetMapping("/{id}")
         public ResponseEntity<CommandeClientDTO> findById(@PathVariable Long id) {
                 return ResponseEntity.ok(commandeClientService.findById(id));
         }
 
         @Operation(summary = "MANAGER ou ADMIN: Lister les lignes d'une commande client", description = "Retourne toutes les lignes de commande associées à une commande client. Accessible aux MANAGER ou ADMIN.")
-        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
         @GetMapping("/{commandeId}/lignes")
         public ResponseEntity<List<LigneCommandeClientDTO>> findAllLignesCommandesClientByCommandeClientId(
                         @PathVariable Long commandeId) {
@@ -112,7 +112,7 @@ public class CommandeClientController {
                 return ResponseEntity.ok(commandeClientService.deleteCommandeClient(id));
         }
 
-        @Operation(summary = "ADMIN ou MANAGERS: Annuler une commande client", description = "Annule une commande client et remet automatiquement en stock les articles des lignes de commande. "
+        @Operation(summary = "ADMIN, ROLE_SALES_MANAGER ou MANAGERS: Annuler une commande client", description = "Annule une commande client et remet automatiquement en stock les articles des lignes de commande. "
                         +
                         "⚠️ Seules les commandes en état EN_PREPARATION peuvent être annulées. " +
                         "Les commandes VALIDEE, LIVREE ou déjà ANNULEE ne peuvent pas être annulées. " +

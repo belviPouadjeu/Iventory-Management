@@ -64,7 +64,7 @@ public class ArticleController {
     }
 
     /* ================== GET ARTICLE BY ID ================== */
-    @Operation(summary = "USER, MANAGER ou ADMIN: Récupérer un article par ID")
+    @Operation(summary = "USER, SALE MANAGER, MANAGER ou ADMIN: Récupérer un article par ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Article trouvé"),
             @ApiResponse(responseCode = "404", description = "Article non trouvé")
@@ -90,7 +90,7 @@ public class ArticleController {
     }
 
     /* ================== GET BY CODE ================== */
-    @Operation(summary = "USER, MANAGER ou ADMIN: Rechercher un article par code")
+    @Operation(summary = "USER, SALES MANAGER, MANAGER ou ADMIN: Rechercher un article par code")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
     @GetMapping("/manager/code/{codeArticle}")
     public ResponseEntity<ArticleDTO> findByCodeArticle(@PathVariable String codeArticle) {
@@ -99,7 +99,7 @@ public class ArticleController {
     }
 
     /* ================== GET BY CATEGORY ================== */
-    @Operation(summary = "USER, MANAGER ou ADMIN: Lister les articles d'une catégorie")
+    @Operation(summary = "USER, SALES MANAGER, MANAGER ou ADMIN: Lister les articles d'une catégorie")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
     @GetMapping("/category/{idCategory}")
     public ResponseEntity<List<ArticleDTO>> findAllByCategory(@PathVariable Long idCategory) {

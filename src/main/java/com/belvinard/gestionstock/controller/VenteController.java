@@ -88,7 +88,7 @@ public class VenteController {
         return ResponseEntity.ok(venteService.findByEtatVente(etatVente));
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES_MANAGER', 'ROLE_MANAGER')")
     @GetMapping("/entreprise/{entrepriseId}/etat/{etatVente}")
     @Operation(summary = "['ADMIN', 'SALES', 'MANAGER'] Récupérer les ventes par entreprise et état")
     public ResponseEntity<List<VenteDTO>> findByEntrepriseAndEtatVente(
@@ -98,7 +98,7 @@ public class VenteController {
     }
 
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES', 'ROLE_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES_MANAGER', 'ROLE_MANAGER')")
     @GetMapping("/{venteId}/lignes")
     @Operation(summary = "['ADMIN', 'SALES', 'MANAGER'] Récupérer les lignes de vente")
     public ResponseEntity<List<LigneVenteDTO>> findLignesVente(@PathVariable Long venteId) {
