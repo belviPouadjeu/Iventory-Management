@@ -30,8 +30,8 @@ public class CommandeFournisseurController {
         private final CommandeFournisseurService commandeFournisseurService;
 
         @PostMapping("/fournisseur/{fournisseurId}")
-        @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-        @Operation(summary = "ADMIN: Créer une nouvelle commande fournisseur", description = "Accessible uniquement aux ADMIN. Crée une nouvelle commande pour un fournisseur spécifique.")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER')")
+        @Operation(summary = "ADMIN ou STOCK_MANAGER: Créer une nouvelle commande fournisseur", description = "Accessible aux ADMIN et STOCK_MANAGER. Crée une nouvelle commande pour un fournisseur spécifique.")
         public ResponseEntity<CommandeFournisseurDTO> createCommandeFournisseur(
                         @PathVariable Long fournisseurId,
                         @Valid @RequestBody CommandeFournisseurDTO commandeFournisseurDTO) {
@@ -41,7 +41,7 @@ public class CommandeFournisseurController {
         }
 
         @GetMapping("/{fournisseurId}")
-        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
         @Operation(summary = "MANAGER ou ADMIN: Rechercher une commande fournisseur par ID", description = "Retourne une commande fournisseur en fonction de son ID. Accès réservé aux MANAGER ou ADMIN.")
         public ResponseEntity<CommandeFournisseurDTO> getCommandeFournisseurById(
                         @PathVariable Long fournisseurId) {

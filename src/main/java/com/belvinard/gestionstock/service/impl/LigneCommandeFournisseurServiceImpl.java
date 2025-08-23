@@ -142,8 +142,32 @@ public class LigneCommandeFournisseurServiceImpl implements LigneCommandeFournis
             throw new BusinessRuleException("La quantité ne peut pas être null");
         }
         
-        // Mise à jour des champs modifiables
+        // Mise à jour de la quantité
         existingLigne.setQuantite(ligneCommandeFournisseurDTO.getQuantite());
+        
+        // Mise à jour de l'article si fourni
+        if (ligneCommandeFournisseurDTO.getArticleId() != null) {
+            Article nouvelArticle = articleRepository.findById(ligneCommandeFournisseurDTO.getArticleId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Article", "ID", ligneCommandeFournisseurDTO.getArticleId()));
+            
+            existingLigne.setArticle(nouvelArticle);
+            
+            // Recalcul des prix avec le nouvel article
+            BigDecimal prixHT = nouvelArticle.getPrixUnitaireHt();
+            BigDecimal tauxTVA = nouvelArticle.getTauxTva();
+            BigDecimal tva = prixHT.multiply(tauxTVA)
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            BigDecimal prixTTC = prixHT.add(tva);
+            
+            existingLigne.setPrixUnitaireHt(prixHT);
+            existingLigne.setTauxTva(tauxTVA);
+            existingLigne.setPrixUnitaireTtc(prixTTC);
+        }
+        
+        // Mise à jour de l'état si fourni
+        if (ligneCommandeFournisseurDTO.getEtatLigne() != null) {
+            existingLigne.setEtatLigne(ligneCommandeFournisseurDTO.getEtatLigne());
+        }
         
         // Recalcul du prix total
         BigDecimal prixTotal = existingLigne.getPrixUnitaireTtc().multiply(ligneCommandeFournisseurDTO.getQuantite());

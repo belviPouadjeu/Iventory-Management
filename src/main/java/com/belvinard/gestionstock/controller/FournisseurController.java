@@ -44,7 +44,7 @@ public class FournisseurController {
         }
 
         @GetMapping
-        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
         @Operation(summary = "Récupérer tous les fournisseurs (ADMIN ou MANAGER)", description = "Récupère la liste complète des fournisseurs avec leurs informations d'entreprise", responses = {
                         @ApiResponse(responseCode = "200", description = "Liste des fournisseurs récupérée avec succès", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = FournisseurDTO.class)))),
                         @ApiResponse(responseCode = "404", description = "Aucun fournisseur trouvé", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
@@ -55,7 +55,7 @@ public class FournisseurController {
         }
 
         @GetMapping("/{fournisseurId}")
-        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
         @Operation(summary = "Rechercher un fournisseur par ID (ADMIN ou MANAGER)", description = "Cette opération permet de rechercher un fournisseur à partir de son identifiant.")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Fournisseur trouvé"),
