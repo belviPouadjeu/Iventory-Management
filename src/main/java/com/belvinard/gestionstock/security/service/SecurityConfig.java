@@ -27,6 +27,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
@@ -42,6 +43,7 @@ public class SecurityConfig {
     private final UtilisateurRepository utilisateurRepository;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -50,7 +52,8 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // ========== ENDPOINTS PUBLICS ==========
