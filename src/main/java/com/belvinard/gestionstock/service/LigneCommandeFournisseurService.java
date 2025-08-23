@@ -13,5 +13,6 @@ public interface LigneCommandeFournisseurService {
     List<LigneCommandeFournisseurDTO> findByCommandeFournisseurId(Long commandeFournisseurId);
     List<LigneCommandeFournisseurDTO> findByArticleId(Long articleId);
     java.math.BigDecimal getTotalByCommandeFournisseurId(Long commandeFournisseurId);
+    LigneCommandeFournisseurDTO validerLigne(Long id);
 
 }

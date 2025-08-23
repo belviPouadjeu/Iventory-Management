@@ -1,6 +1,7 @@
 package com.belvinard.gestionstock.service.impl;
 
 import com.belvinard.gestionstock.dto.ChangerMotDePasseUtilisateurDTO;
+import com.belvinard.gestionstock.dto.RolesDTO;
 import com.belvinard.gestionstock.dto.UtilisateurDTO;
 import com.belvinard.gestionstock.models.Entreprise;
 import com.belvinard.gestionstock.models.RoleType;
@@ -13,8 +14,10 @@ import com.belvinard.gestionstock.service.UtilisateurService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,11 +30,17 @@ public class UtilisateurServiceImpl implements UtilisateurService {
     private final EntrepriseRepository entrepriseRepository;
     private final RolesRepository rolesRepository;
     private final ModelMapper modelMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UtilisateurDTO save(UtilisateurDTO dto, Long entrepriseId) {
         if (entrepriseId == null) {
             throw new IllegalArgumentException("L'id de l'entreprise ne doit pas être null");
+        }
+
+        // Validation de l'unicité de l'email
+        if (utilisateurRepository.existsByEmail(dto.getEmail())) {
+            throw new IllegalArgumentException("Un utilisateur avec cet email existe déjà");
         }
 
         // Récupération de l'entreprise
@@ -42,18 +51,38 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         Utilisateur utilisateur = modelMapper.map(dto, Utilisateur.class);
         utilisateur.setEntreprise(entreprise);
 
+        // Encoder le mot de passe avant la sauvegarde
+        utilisateur.setMoteDePasse(passwordEncoder.encode(dto.getMoteDePasse()));
+
         // Sauvegarde de l'utilisateur
         Utilisateur savedUser = utilisateurRepository.save(utilisateur);
 
-        // Assignation du rôle par défaut
-        assignRole(savedUser.getId(), RoleType.SALES_REP);
+        // Assignation du rôle demandé ou USER_BASE par défaut
+        RoleType roleToAssign = RoleType.USER_BASE;
+        if (dto.getRoles() != null && !dto.getRoles().isEmpty() && dto.getRoles().get(0).getRoleType() != null) {
+            roleToAssign = dto.getRoles().get(0).getRoleType();
+        }
+        assignRole(savedUser.getId(), roleToAssign);
 
-        // Mapping Entity -> DTO
-        UtilisateurDTO utilisateurDTO = modelMapper.map(savedUser, UtilisateurDTO.class);
+        // Récupération de l'utilisateur avec son rôle assigné
+        Utilisateur userWithRole = utilisateurRepository.findById(savedUser.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé après sauvegarde"));
+
+        // Mapping Entity -> DTO avec le rôle
+        UtilisateurDTO utilisateurDTO = modelMapper.map(userWithRole, UtilisateurDTO.class);
         utilisateurDTO.setEntrepriseId(entrepriseId); // pour que le champ soit bien renseigné
+
+        // S'assurer que le rôle est bien mappé
+        if (userWithRole.getRole() != null) {
+            RolesDTO roleDTO = new RolesDTO();
+            roleDTO.setId(userWithRole.getRole().getId());
+            roleDTO.setRoleName(userWithRole.getRole().getRoleName());
+            roleDTO.setRoleType(userWithRole.getRole().getRoleType());
+            utilisateurDTO.setRoles(Collections.singletonList(roleDTO));
+        }
+
         return utilisateurDTO;
     }
-
 
     @Override
     public UtilisateurDTO findById(Long id) {
@@ -61,16 +90,58 @@ public class UtilisateurServiceImpl implements UtilisateurService {
             throw new IllegalArgumentException("L'identifiant est obligatoire");
         }
 
-        return utilisateurRepository.findById(id.longValue())
-                .map(user -> modelMapper.map(user, UtilisateurDTO.class))
+        Utilisateur user = utilisateurRepository.findById(id.longValue())
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
+
+        // Mapping de base
+        UtilisateurDTO dto = modelMapper.map(user, UtilisateurDTO.class);
+
+        // Mapping manuel du rôle
+        if (user.getRole() != null) {
+            RolesDTO roleDTO = new RolesDTO();
+            roleDTO.setId(user.getRole().getId());
+            roleDTO.setRoleName(user.getRole().getRoleName());
+            roleDTO.setRoleType(user.getRole().getRoleType());
+            dto.setRoles(Collections.singletonList(roleDTO));
+        }
+
+        // S'assurer que l'entrepriseId est bien mappé
+        if (user.getEntreprise() != null) {
+            dto.setEntrepriseId(user.getEntreprise().getId());
+        }
+
+        return dto;
     }
 
     @Override
     public List<UtilisateurDTO> findAll() {
         return utilisateurRepository.findAll().stream()
-                .map(user -> modelMapper.map(user, UtilisateurDTO.class))
+                .map(this::mapUserToDTO)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Méthode helper pour mapper un Utilisateur vers UtilisateurDTO avec le rôle
+     */
+    private UtilisateurDTO mapUserToDTO(Utilisateur user) {
+        // Mapping de base
+        UtilisateurDTO dto = modelMapper.map(user, UtilisateurDTO.class);
+
+        // Mapping manuel du rôle
+        if (user.getRole() != null) {
+            RolesDTO roleDTO = new RolesDTO();
+            roleDTO.setId(user.getRole().getId());
+            roleDTO.setRoleName(user.getRole().getRoleName());
+            roleDTO.setRoleType(user.getRole().getRoleType());
+            dto.setRoles(Collections.singletonList(roleDTO));
+        }
+
+        // S'assurer que l'entrepriseId est bien mappé
+        if (user.getEntreprise() != null) {
+            dto.setEntrepriseId(user.getEntreprise().getId());
+        }
+
+        return dto;
     }
 
     @Override
@@ -93,27 +164,30 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         }
 
         return utilisateurRepository.findByEmail(email)
-                .map(user -> modelMapper.map(user, UtilisateurDTO.class))
+                .map(this::mapUserToDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Aucun utilisateur avec cet email"));
     }
 
     @Override
     public UtilisateurDTO changerMotDePasse(ChangerMotDePasseUtilisateurDTO dto) {
-        if (dto == null || dto.getId() == null || dto.getMotDePasseActuel() == null || dto.getNouveauMotDePasse() == null) {
+        if (dto == null || dto.getId() == null || dto.getMotDePasseActuel() == null
+                || dto.getNouveauMotDePasse() == null) {
             throw new IllegalArgumentException("Les informations de changement de mot de passe sont incomplètes");
         }
 
         Utilisateur utilisateur = utilisateurRepository.findById(dto.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
 
-        if (!utilisateur.getMoteDePasse().equals(dto.getMotDePasseActuel())) {
+        // Vérifier l'ancien mot de passe avec l'encodeur
+        if (!passwordEncoder.matches(dto.getMotDePasseActuel(), utilisateur.getMoteDePasse())) {
             throw new IllegalStateException("Ancien mot de passe incorrect");
         }
 
-        utilisateur.setMoteDePasse(dto.getNouveauMotDePasse());
+        // Encoder le nouveau mot de passe
+        utilisateur.setMoteDePasse(passwordEncoder.encode(dto.getNouveauMotDePasse()));
         utilisateur = utilisateurRepository.save(utilisateur);
 
-        return modelMapper.map(utilisateur, UtilisateurDTO.class);
+        return mapUserToDTO(utilisateur);
     }
 
     @Override
@@ -123,7 +197,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         }
 
         return utilisateurRepository.findById(id)
-                .map(user -> modelMapper.map(user, UtilisateurDTO.class))
+                .map(this::mapUserToDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
     }
 
@@ -138,21 +212,36 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         Utilisateur utilisateur = utilisateurRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
 
-        // Supprimer tous les rôles existants de l'utilisateur
-        List<Roles> existingRoles = rolesRepository.findByUtilisateurId(userId);
+        // Chercher ou créer le rôle
+        List<Roles> existingRoles = rolesRepository.findByRoleType(roleType);
+        Roles role;
         if (!existingRoles.isEmpty()) {
-            rolesRepository.deleteAll(existingRoles);
+            role = existingRoles.get(0); // Prendre le premier rôle trouvé
+        } else {
+            // Créer un nouveau rôle
+            role = new Roles();
+            role.setRoleType(roleType);
+            role.setRoleName("ROLE_" + roleType.name());
+            role = rolesRepository.save(role);
         }
 
-        // Créer et assigner le nouveau rôle
-        Roles nouveauRole = new Roles();
-        nouveauRole.setRoleType(roleType);
-        nouveauRole.setUtilisateur(utilisateur);
-        nouveauRole.setRoleName(roleType.name());
+        // Assigner le rôle à l'utilisateur
+        utilisateur.setRole(role);
+        Utilisateur savedUser = utilisateurRepository.save(utilisateur);
 
-        rolesRepository.save(nouveauRole);
+        // Mapper vers DTO avec le rôle
+        UtilisateurDTO dto = modelMapper.map(savedUser, UtilisateurDTO.class);
 
-        return modelMapper.map(utilisateur, UtilisateurDTO.class);
+        // Mapper manuellement le rôle
+        if (savedUser.getRole() != null) {
+            RolesDTO roleDTO = new RolesDTO();
+            roleDTO.setId(savedUser.getRole().getId());
+            roleDTO.setRoleName(savedUser.getRole().getRoleName());
+            roleDTO.setRoleType(savedUser.getRole().getRoleType());
+            dto.setRoles(Collections.singletonList(roleDTO));
+        }
+
+        return dto;
     }
 
     @Override
@@ -164,15 +253,15 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         Utilisateur utilisateur = utilisateurRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé"));
 
-        Roles roleToRemove = utilisateur.getRoles().stream()
-                .filter(role -> role.getRoleType() == roleType)
-                .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("L'utilisateur ne possède pas ce rôle"));
+        // Vérifier que l'utilisateur a bien ce rôle
+        if (utilisateur.getRole() != null && utilisateur.getRole().getRoleType() == roleType) {
+            utilisateur.setRole(null); // Supprimer le rôle
+            utilisateurRepository.save(utilisateur);
+        } else {
+            throw new EntityNotFoundException("L'utilisateur ne possède pas ce rôle");
+        }
 
-        utilisateur.getRoles().remove(roleToRemove);
-        rolesRepository.delete(roleToRemove);
-
-        return modelMapper.map(utilisateur, UtilisateurDTO.class);
+        return mapUserToDTO(utilisateur);
     }
 
     @Override
@@ -181,8 +270,8 @@ public class UtilisateurServiceImpl implements UtilisateurService {
             throw new IllegalArgumentException("Le type de rôle est obligatoire");
         }
 
-        return utilisateurRepository.findByRoles_RoleType(roleType).stream()
-                .map(user -> modelMapper.map(user, UtilisateurDTO.class))
+        return utilisateurRepository.findByRoleType(roleType).stream()
+                .map(this::mapUserToDTO)
                 .collect(Collectors.toList());
     }
 
@@ -198,7 +287,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         utilisateur.setActif(true); // ou le nom de votre méthode setter
         utilisateur = utilisateurRepository.save(utilisateur);
 
-        return modelMapper.map(utilisateur, UtilisateurDTO.class);
+        return mapUserToDTO(utilisateur);
     }
 
     @Override
@@ -213,7 +302,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         utilisateur.setActif(false); // ou le nom de votre méthode setter
         utilisateur = utilisateurRepository.save(utilisateur);
 
-        return modelMapper.map(utilisateur, UtilisateurDTO.class);
+        return mapUserToDTO(utilisateur);
     }
 
     @Override
@@ -223,21 +312,21 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         }
 
         return utilisateurRepository.findByEntrepriseId(entrepriseId).stream()
-                .map(user -> modelMapper.map(user, UtilisateurDTO.class))
+                .map(this::mapUserToDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<UtilisateurDTO> findActiveUsers() {
         return utilisateurRepository.findByActifTrue().stream()
-                .map(user -> modelMapper.map(user, UtilisateurDTO.class))
+                .map(this::mapUserToDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<UtilisateurDTO> findInactiveUsers() {
         return utilisateurRepository.findByActifFalse().stream()
-                .map(user -> modelMapper.map(user, UtilisateurDTO.class))
+                .map(this::mapUserToDTO)
                 .collect(Collectors.toList());
     }
 
@@ -248,7 +337,12 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         }
 
         return utilisateurRepository.findByEntrepriseIdAndActifTrue(entrepriseId).stream()
-                .map(user -> modelMapper.map(user, UtilisateurDTO.class))
+                .map(this::mapUserToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UtilisateurDTO> findAdminUsers() {
+        return findAll();
     }
 }

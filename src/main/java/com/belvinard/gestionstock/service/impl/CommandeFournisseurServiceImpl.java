@@ -5,12 +5,10 @@ import com.belvinard.gestionstock.exceptions.APIException;
 import com.belvinard.gestionstock.exceptions.InvalidEntityException;
 import com.belvinard.gestionstock.exceptions.InvalidOperationException;
 import com.belvinard.gestionstock.exceptions.ResourceNotFoundException;
-import com.belvinard.gestionstock.models.CommandeFournisseur;
-import com.belvinard.gestionstock.models.EtatCommande;
-import com.belvinard.gestionstock.models.Fournisseur;
-import com.belvinard.gestionstock.repositories.CommandeFournisseurRepository;
-import com.belvinard.gestionstock.repositories.EntrepriseRepository;
-import com.belvinard.gestionstock.repositories.FournisseurRepository;
+import com.belvinard.gestionstock.models.*;
+import com.belvinard.gestionstock.repositories.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import com.belvinard.gestionstock.service.CommandeFournisseurService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -26,18 +24,12 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
     private final CommandeFournisseurRepository commandeFournisseurRepository;
     private final FournisseurRepository fournisseurRepository;
     private final EntrepriseRepository entrepriseRepository;
+    private final LigneCommandeFournisseurRepository ligneCommandeFournisseurRepository;
+    private final ArticleRepository articleRepository;
+    private final MvtStkRepository mvtStkRepository;
     private final ModelMapper modelMapper;
 
-    /**
-     * Crée une nouvelle commande fournisseur
-     *
-     * @param commandeFournisseurDTO Les données de la commande
-     * @param fournisseurId          L'ID du fournisseur
-     * @return CommandeFournisseurDTO avec les informations complètes incluant le nom du fournisseur
-     * @throws InvalidEntityException    si la commande est invalide
-     * @throws APIException              si le code existe déjà
-     * @throws ResourceNotFoundException si le fournisseur n'existe pas
-     */
+
     @Override
     @Transactional
     public CommandeFournisseurDTO saveCommandFournisseur(CommandeFournisseurDTO commandeFournisseurDTO,
@@ -57,6 +49,16 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
 
         CommandeFournisseur commande = modelMapper.map(commandeFournisseurDTO, CommandeFournisseur.class);
         commande.setFournisseur(fournisseur);
+        
+        // Empêcher la création directe avec un état autre que EN_PREPARATION
+        if (commande.getEtatCommande() != null && commande.getEtatCommande() != EtatCommande.EN_PREPARATION) {
+            throw new InvalidOperationException(
+                    "Une nouvelle commande ne peut être créée qu'avec l'état EN_PREPARATION. État reçu: " + commande.getEtatCommande()
+            );
+        }
+        
+        // Forcer l'état à EN_PREPARATION pour une nouvelle commande
+        commande.setEtatCommande(EtatCommande.EN_PREPARATION);
 
         CommandeFournisseur savedCommandeFournisseur = commandeFournisseurRepository.save(commande);
 
@@ -70,13 +72,6 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
         return savedDTO;
     }
 
-    /**
-     * Recherche une commande fournisseur par son ID
-     *
-     * @param commandeId L'ID de la commande à rechercher
-     * @return CommandeFournisseurDTO avec les informations complètes
-     * @throws ResourceNotFoundException si la commande n'est pas trouvée
-     */
     @Override
     public CommandeFournisseurDTO findById(Long commandeId) {
         CommandeFournisseur commandeFournisseur = commandeFournisseurRepository.findById(commandeId)
@@ -94,23 +89,7 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
     }
 
 
-    /**
-     * Récupère toutes les commandes fournisseurs avec leurs informations détaillées
-     *
-     * @return Liste des CommandeFournisseurDTO avec les informations des fournisseurs
-     */
-    /**
-     * Récupère toutes les commandes fournisseurs avec leurs informations détaillées.
-     *
-     * @return Liste des CommandeFournisseurDTO contenant les informations des commandes et de leurs fournisseurs
-     * @throws ResourceNotFoundException si aucune commande fournisseur n'est trouvée dans la base de données
-     *                                   <p>
-     *                                   Cette méthode :
-     *                                   1. Récupère toutes les commandes de la base de données
-     *                                   2. Vérifie si des commandes existent
-     *                                   3. Convertit chaque commande en DTO
-     *                                   4. Enrichit les DTOs avec les informations des fournisseurs associés
-     */
+
     @Override
     public List<CommandeFournisseurDTO> findAll() {
         List<CommandeFournisseur> commandes = commandeFournisseurRepository.findAll();
@@ -135,14 +114,6 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
     }
 
 
-    /**
-     * Supprime une commande fournisseur
-     *
-     * @param commandeId L'ID de la commande à supprimer
-     * @return CommandeFournisseurDTO Les informations de la commande supprimée
-     * @throws ResourceNotFoundException si la commande n'existe pas
-     * @throws InvalidOperationException si la commande ne peut pas être supprimée
-     */
     @Override
     @Transactional
     public CommandeFournisseurDTO delete(Long commandeId) {
@@ -170,15 +141,6 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
         return dto;
     }
 
-    /**
-     * Met à jour l'état d'une commande fournisseur
-     *
-     * @param idCommande ID de la commande à modifier
-     * @param nouvelEtat Nouvel état de la commande
-     * @return CommandeFournisseurDTO avec les informations mises à jour
-     * @throws ResourceNotFoundException si la commande n'existe pas
-     * @throws InvalidOperationException si la modification n'est pas autorisée
-     */
     @Override
     @Transactional
     public CommandeFournisseurDTO updateEtatCommande(Long idCommande, EtatCommande nouvelEtat) {
@@ -196,7 +158,31 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
             );
         }
 
+        // Vérifier qu'une commande ne peut pas passer directement de EN_PREPARATION à LIVREE
+        if (commande.getEtatCommande() == EtatCommande.EN_PREPARATION && nouvelEtat == EtatCommande.LIVREE) {
+            throw new InvalidOperationException(
+                    "Impossible de passer directement de EN_PREPARATION à LIVREE pour la commande " + commande.getCode() +
+                            ". La commande doit d'abord être VALIDEE"
+            );
+        }
+
+        // Vérifier qu'une commande ne peut pas passer directement à LIVREE sans lignes
+        if (nouvelEtat == EtatCommande.LIVREE) {
+            List<LigneCommandeFournisseur> lignes = ligneCommandeFournisseurRepository.findAllByCommandeFournisseurId(commande.getId());
+            if (lignes.isEmpty()) {
+                throw new InvalidOperationException(
+                        "Impossible de livrer la commande " + commande.getCode() +
+                                " car elle ne contient aucune ligne de commande"
+                );
+            }
+        }
+
         commande.setEtatCommande(nouvelEtat);
+
+        // Si la commande passe à LIVREE, augmenter le stock des articles et créer les mouvements
+        if (nouvelEtat == EtatCommande.LIVREE) {
+            augmenterStockArticles(commande.getId());
+        }
 
         CommandeFournisseur updatedCommande = commandeFournisseurRepository.save(commande);
         CommandeFournisseurDTO dto = modelMapper.map(updatedCommande, CommandeFournisseurDTO.class);
@@ -210,14 +196,60 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
         return dto;
     }
 
-    /**
-     * Recherche une commande fournisseur par son code, sans tenir compte de la casse.
-     *
-     * @param code Le code unique de la commande fournisseur à rechercher
-     * @return CommandeFournisseurDTO L'objet DTO contenant les informations de la commande fournisseur
-     * @throws IllegalArgumentException si le code fourni est null
-     * @throws ResourceNotFoundException si aucune commande fournisseur n'est trouvée avec le code spécifié
-     */
+    @Override
+    @Transactional
+    public CommandeFournisseurDTO annulerCommande(Long idCommande) {
+        CommandeFournisseur commande = commandeFournisseurRepository.findById(idCommande)
+                .orElseThrow(() -> new ResourceNotFoundException("Commande fournisseur non trouvée avec l'ID: " + idCommande));
+
+        if (commande.getEtatCommande() == EtatCommande.LIVREE) {
+            throw new InvalidOperationException(
+                    "Impossible d'annuler la commande " + commande.getCode() +
+                            " car elle est déjà livrée"
+            );
+        }
+
+        commande.setEtatCommande(EtatCommande.ANNULEE);
+        CommandeFournisseur updatedCommande = commandeFournisseurRepository.save(commande);
+        
+        CommandeFournisseurDTO dto = modelMapper.map(updatedCommande, CommandeFournisseurDTO.class);
+        if (updatedCommande.getFournisseur() != null) {
+            Fournisseur fournisseur = updatedCommande.getFournisseur();
+            dto.setFournisseurId(fournisseur.getId());
+            dto.setFournisseurName(fournisseur.getNom() + " " + fournisseur.getPrenom());
+        }
+        return dto;
+    }
+
+    private void augmenterStockArticles(Long commandeId) {
+        // Récupérer toutes les lignes validées de la commande
+        List<LigneCommandeFournisseur> lignesValidees = ligneCommandeFournisseurRepository
+                .findAllByCommandeFournisseurIdAndEtatLigne(commandeId, EtatLigneCommandeFournisseur.VALIDEE);
+        
+        CommandeFournisseur commande = commandeFournisseurRepository.findById(commandeId).orElse(null);
+        Long entrepriseId = commande != null && commande.getFournisseur() != null && commande.getFournisseur().getEntreprise() != null 
+                ? commande.getFournisseur().getEntreprise().getId() : 1L;
+        
+        for (LigneCommandeFournisseur ligne : lignesValidees) {
+            Article article = ligne.getArticle();
+            BigDecimal stockActuel = BigDecimal.valueOf(article.getQuantiteEnStock());
+            BigDecimal nouveauStock = stockActuel.add(ligne.getQuantite());
+            article.setQuantiteEnStock(nouveauStock.longValue());
+            articleRepository.save(article);
+            
+            // Créer le mouvement de stock
+            MvtStk mvtStk = new MvtStk();
+            mvtStk.setArticle(article);
+            mvtStk.setQuantite(ligne.getQuantite());
+            mvtStk.setTypeMvt(TypeMvtStk.ENTREE);
+            mvtStk.setSourceMvt(SourceMvtStk.COMMANDE_FOURNISSEUR);
+            mvtStk.setEntrepriseId(entrepriseId);
+            mvtStk.setDateMvt(LocalDateTime.now());
+            mvtStkRepository.save(mvtStk);
+        }
+    }
+
+
     @Override
     public CommandeFournisseurDTO findByCode(String code) {
         if (code == null) {

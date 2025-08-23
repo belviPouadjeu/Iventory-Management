@@ -33,46 +33,28 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
     private final ArticleRepository articleRepository;
     private final ModelMapper modelMapper;
 
-    /**
-     * Creates a new order line item for a customer order.
-     *
-     * @param commandeId The ID of the customer order
-     * @param articleId The ID of the article/product to add to the order
-     * @param ligneDTO Data transfer object containing the order line details, including quantity
-     *
-     * @return LigneCommandeClientDTO The created order line with complete details including prices
-     *
-     * @throws ResourceNotFoundException If either the order or article is not found
-     * @throws IllegalArgumentException If requested quantity exceeds available stock
-     *
-     * This method:
-     * 1. Verifies the existence of both the order and article
-     * 2. Checks if sufficient stock is available
-     * 3. Updates the stock quantity
-     * 4. Calculates prices (HT, TVA, TTC)
-     * 5. Creates and saves the order line
-     * 6. Returns a DTO with complete order line information
-     */
     @Override
-    public LigneCommandeClientDTO createLigneCommandeClient(Long commandeId, Long articleId,
-                                                            LigneCommandeClientDTO ligneDTO) {
+    public LigneCommandeClientDTO createLigneCommandeClient(Long commandeId, LigneCommandeClientDTO ligneDTO) {
+        // Validation des paramètres obligatoires
+        if (ligneDTO.getArticleId() == null) {
+            throw new IllegalArgumentException("L'ID de l'article est obligatoire dans le JSON");
+        }
 
         CommandeClient commande = commandeClientRepository.findById(commandeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Commande client non trouvée avec l'id " + commandeId));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Commande client non trouvée avec l'id " + commandeId));
 
-        Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Article non trouvé avec l'id " + articleId));
+        Article article = articleRepository.findById(ligneDTO.getArticleId())
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Article non trouvé avec l'id " + ligneDTO.getArticleId()));
 
+        // Vérifier le stock disponible sans le diminuer
         BigDecimal stockDisponible = BigDecimal.valueOf(article.getQuantiteEnStock());
-
         if (stockDisponible.compareTo(ligneDTO.getQuantite()) < 0) {
             throw new IllegalArgumentException("Stock insuffisant pour l'article : quantité demandée = "
                     + ligneDTO.getQuantite() + ", en stock = " + stockDisponible);
         }
-
-        BigDecimal nouveauStock = stockDisponible.subtract(ligneDTO.getQuantite());
-        article.setQuantiteEnStock(nouveauStock.longValue());
-        articleRepository.save(article);
+        // NE PAS diminuer le stock ici - il sera diminué à la finalisation de la vente
 
         LigneCommandeClient ligne = new LigneCommandeClient();
         ligne.setCommandeClient(commande);
@@ -102,20 +84,6 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
         return ligneCommandeClientDTO;
     }
 
-    /**
-     * Récupère toutes les lignes de commande client et les convertit en DTOs.
-     *
-     * @return Liste de LigneCommandeClientDTO contenant toutes les lignes de commande client
-     * @throws APIException si aucune ligne de commande n'est trouvée dans la base de données
-     *
-     * Cette méthode :
-     * 1. Récupère toutes les lignes de commande client depuis le repository
-     * 2. Convertit chaque ligne de commande en objet DTO
-     * 3. Définit les informations supplémentaires incluant :
-     *    - Détails de la commande client (ID et code)
-     *    - Détails de l'article (ID et désignation)
-     *    - Calcule le prix total (prix unitaire * quantité)
-     */
     @Override
     public List<LigneCommandeClientDTO> getAllLigneCommandeClients() {
         List<LigneCommandeClient> lignes = ligneCommandeClientRepository.findAll();
@@ -147,27 +115,11 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
         }).collect(Collectors.toList());
     }
 
-    /**
-     * Récupère une ligne de commande client par son identifiant.
-     *
-     * @param ligneId L'identifiant de la ligne de commande à rechercher
-     * @return LigneCommandeClientDTO contenant les informations détaillées de la ligne de commande
-     * @throws ResourceNotFoundException si la ligne de commande n'existe pas
-     *
-     * Cette méthode :
-     * 1. Recherche la ligne de commande dans la base de données
-     * 2. Convertit l'entité en DTO
-     * 3. Enrichit le DTO avec :
-     *    - Les informations de la commande client (ID et code)
-     *    - Les informations de l'article (ID et désignation)
-     *    - Le calcul du prix total (prix unitaire TTC * quantité) si les données sont disponibles
-     *
-     * Note : Le prix total n'est calculé que si le prix unitaire TTC et la quantité sont non null
-     */
     @Override
     public LigneCommandeClientDTO getLigneCommandeClientById(Long ligneId) {
         LigneCommandeClient ligne = ligneCommandeClientRepository.findById(ligneId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ligne commande client non trouvée avec l'id " + ligneId));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Ligne commande client non trouvée avec l'id " + ligneId));
 
         LigneCommandeClientDTO ligneCommandeClientDTO = modelMapper.map(ligne, LigneCommandeClientDTO.class);
 
@@ -181,32 +133,9 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
             ligneCommandeClientDTO.setPrixTotal(prixTotal);
         }
 
-        return ligneCommandeClientDTO ;
+        return ligneCommandeClientDTO;
     }
 
-    /**
-     * Met à jour une ligne de commande client existante.
-     *
-     * @param ligneId  L'identifiant de la ligne de commande à modifier
-     * @param ligneDTO Les nouvelles données de la ligne de commande
-     * @return LigneCommandeClientDTO contenant les informations mises à jour
-     * @throws ResourceNotFoundException si la ligne de commande ou l'article n'existe pas
-     * @throws IllegalStateException si la commande est déjà dans l'état "LIVREE"
-     *
-     * Cette méthode :
-     * 1. Vérifie l'existence de la ligne de commande
-     * 2. Contrôle que la commande n'est pas déjà livrée
-     * 3. Vérifie l'existence de l'article
-     * 4. Met à jour les informations de la ligne avec :
-     *    - Le nouvel article et la nouvelle quantité
-     *    - Recalcul automatique des prix :
-     *      * Prix HT
-     *      * TVA
-     *      * Prix TTC
-     *      * Prix total (Prix TTC * quantité)
-     * 5. Sauvegarde les modifications
-     * 6. Retourne un DTO avec toutes les informations mises à jour
-     */
     @Override
     public LigneCommandeClientDTO updateLigneCommandeClient(Long ligneId, LigneCommandeClientDTO ligneDTO) {
         LigneCommandeClient ligne = ligneCommandeClientRepository.findById(ligneId)
@@ -214,13 +143,13 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
 
         CommandeClient commande = ligne.getCommandeClient();
 
-
         if (commande.getEtatCommande() == EtatCommande.LIVREE) {
             throw new IllegalStateException("Impossible de modifier une ligne de commande déjà livrée.");
         }
 
         Article article = articleRepository.findById(ligneDTO.getArticleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Article non trouvé avec l'id " + ligneDTO.getArticleId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Article non trouvé avec l'id " + ligneDTO.getArticleId()));
 
         ligne.setArticle(article);
         ligne.setQuantite(ligneDTO.getQuantite());
@@ -247,27 +176,11 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
         return result;
     }
 
-    /**
-     * Supprime une ligne de commande client.
-     *
-     * @param ligneId L'identifiant de la ligne de commande à supprimer
-     * @return LigneCommandeClientDTO contenant les informations de la ligne supprimée
-     * @throws ResourceNotFoundException si la ligne de commande n'existe pas
-     * @throws InvalidOperationException si la commande associée est déjà livrée
-     *
-     * Cette méthode :
-     * 1. Vérifie l'existence de la ligne de commande dans la base de données
-     * 2. Contrôle que la commande associée n'est pas dans l'état "LIVREE"
-     * 3. Convertit la ligne en DTO avant sa suppression
-     * 4. Supprime la ligne de commande
-     * 5. Retourne les informations de la ligne supprimée
-     *
-     * Note : La suppression n'est possible que si la commande n'est pas encore livrée
-     */
     @Override
     public LigneCommandeClientDTO deleteLigneCommandeClient(Long ligneId) {
         LigneCommandeClient ligneFromDb = ligneCommandeClientRepository.findById(ligneId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ligne de commande client introuvable avec ID : " + ligneId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Ligne de commande client introuvable avec ID : " + ligneId));
 
         if (ligneFromDb.getCommandeClient().getEtatCommande() == EtatCommande.LIVREE) {
             throw new InvalidOperationException("Impossible de supprimer une ligne : la commande est déjà livrée");
@@ -276,24 +189,9 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
         LigneCommandeClientDTO deletedLigne = modelMapper.map(ligneFromDb, LigneCommandeClientDTO.class);
 
         ligneCommandeClientRepository.delete(ligneFromDb);
-        return deletedLigne ;
+        return deletedLigne;
     }
 
-    /**
-     * Récupère l'historique des commandes clients pour un article spécifique.
-     *
-     * @param idArticle L'identifiant de l'article dont on souhaite obtenir l'historique des commandes
-     * @return Liste de LigneCommandeClientDTO contenant l'historique des commandes pour l'article spécifié
-     * @throws ResourceNotFoundException si l'article avec l'ID spécifié n'existe pas
-     *
-     * Cette méthode :
-     * 1. Vérifie l'existence de l'article dans la base de données
-     * 2. Récupère toutes les lignes de commande associées à cet article
-     * 3. Pour chaque ligne de commande, crée un DTO contenant :
-     *    - Les informations de l'article (ID et désignation)
-     *    - Les informations de la commande client (ID et code)
-     *    - Le calcul du prix total (prix unitaire TTC * quantité)
-     */
     @Override
     public List<LigneCommandeClientDTO> findHistoriqueCommandeClient(Long idArticle) {
 
@@ -304,7 +202,8 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
 
         return ligneCommandAndArticle.stream()
                 .map(ligne -> {
-                    LigneCommandeClientDTO ligneCommandeClientDTO = modelMapper.map(ligne, LigneCommandeClientDTO.class);
+                    LigneCommandeClientDTO ligneCommandeClientDTO = modelMapper.map(ligne,
+                            LigneCommandeClientDTO.class);
 
                     ligneCommandeClientDTO.setArticleId(ligne.getArticle().getId());
                     ligneCommandeClientDTO.setArticleName(ligne.getArticle().getDesignation());
@@ -322,6 +221,5 @@ public class LigneCommandeClientServiceImpl implements LigneCommandeClientServic
                 })
                 .collect(Collectors.toList());
     }
-
 
 }

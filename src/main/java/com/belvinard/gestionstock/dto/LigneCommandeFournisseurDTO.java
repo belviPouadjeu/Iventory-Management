@@ -1,5 +1,6 @@
 package com.belvinard.gestionstock.dto;
 
+import com.belvinard.gestionstock.models.EtatLigneCommandeFournisseur;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
@@ -23,12 +24,10 @@ public class LigneCommandeFournisseurDTO {
  @DecimalMin(value = "0.1", message = "La quantité doit être supérieure à 0")
  private BigDecimal quantite;
 
- @NotNull(message = "Le prix unitaire HT est obligatoire")
- @DecimalMin(value = "1.0", message = "Le prix unitaire HT doit être au moins 1")
+ @Schema(description = "Prix unitaire HT (récupéré automatiquement depuis l'article si non fourni)", hidden = true)
  private BigDecimal prixUnitaireHt;
 
- @NotNull(message = "Le taux de TVA est obligatoire")
- @DecimalMin(value = "0.0", message = "Le taux de TVA ne peut pas être négatif")
+ @Schema(description = "Taux de TVA (récupéré automatiquement depuis l'article si non fourni)", hidden = true)
  private BigDecimal tauxTva;
 
  @Schema(hidden = true)
@@ -50,5 +49,8 @@ public class LigneCommandeFournisseurDTO {
 
  @Schema(hidden = true)
  private String articleName;
+
+ @Schema(description = "État de la ligne de commande", example = "EN_PREPARATION")
+ private EtatLigneCommandeFournisseur etatLigne = EtatLigneCommandeFournisseur.EN_PREPARATION;
 
 }

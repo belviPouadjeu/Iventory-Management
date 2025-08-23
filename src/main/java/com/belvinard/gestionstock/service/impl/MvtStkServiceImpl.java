@@ -5,6 +5,7 @@ import com.belvinard.gestionstock.exceptions.InvalidOperationException;
 import com.belvinard.gestionstock.exceptions.ResourceNotFoundException;
 import com.belvinard.gestionstock.models.*;
 import com.belvinard.gestionstock.repositories.ArticleRepository;
+import com.belvinard.gestionstock.repositories.EntrepriseRepository;
 import com.belvinard.gestionstock.repositories.MvtStkRepository;
 import com.belvinard.gestionstock.service.MvtStkService;
 import lombok.RequiredArgsConstructor;
@@ -24,10 +25,23 @@ public class MvtStkServiceImpl implements MvtStkService {
     private final MvtStkRepository mvtStkRepository;
     private final ArticleRepository articleRepository;
     private final ModelMapper modelMapper;
+    private final EntrepriseRepository entrepriseRepository;
 
     @Override
     @Transactional
     public MvtStkDTO entreeStock(Long articleId, BigDecimal quantite, SourceMvtStk source, Long entrepriseId) {
+        if (articleId == null || quantite == null || source == null || entrepriseId == null) {
+            throw new InvalidOperationException("Tous les paramètres sont obligatoires");
+        }
+        
+        // Vérifier que l'article existe
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Article", "id", articleId));
+        
+        // Vérifier que l'entreprise existe (vous devez ajouter EntrepriseRepository si nécessaire)
+        entrepriseRepository.findById(entrepriseId)
+           .orElseThrow(() -> new ResourceNotFoundException("Entreprise", "id", entrepriseId));
+        
         return createMvtStk(articleId, quantite, TypeMvtStk.ENTREE, source, entrepriseId);
     }
 
@@ -59,7 +73,9 @@ public class MvtStkServiceImpl implements MvtStkService {
 
     @Override
     public List<MvtStkDTO> findByTypeMvt(TypeMvtStk typeMvt) {
-        return mvtStkRepository.findByTypeMvt(typeMvt).stream()
+        List<MvtStk> mouvements = mvtStkRepository.findByTypeMvt(typeMvt);
+        System.out.println("Recherche mouvements pour type: " + typeMvt + ", trouvés: " + mouvements.size());
+        return mouvements.stream()
                 .map(mvt -> modelMapper.map(mvt, MvtStkDTO.class))
                 .collect(Collectors.toList());
     }
@@ -102,12 +118,33 @@ public class MvtStkServiceImpl implements MvtStkService {
         // Implementation for commande fournisseur stock movement
     }
 
+    @Override
+    @Transactional
+    public MvtStkDTO reserverStock(Long articleId, BigDecimal quantite, Long entrepriseId) {
+        return createMvtStk(articleId, quantite, TypeMvtStk.RESERVATION, SourceMvtStk.VENTE, entrepriseId);
+    }
+
+    @Override
+    @Transactional
+    public MvtStkDTO annulerReservation(Long articleId, BigDecimal quantite, Long entrepriseId) {
+        return createMvtStk(articleId, quantite, TypeMvtStk.ANNULATION_RESERVATION, SourceMvtStk.VENTE, entrepriseId);
+    }
+
     private MvtStkDTO createMvtStk(Long articleId, BigDecimal quantite, TypeMvtStk typeMvt, SourceMvtStk source, Long entrepriseId) {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Article", "id", articleId));
 
+        // Vérification du stock disponible pour réservation
+        if (typeMvt == TypeMvtStk.RESERVATION) {
+            Long stockDisponible = article.getQuantiteEnStock() - (article.getQuantiteReservee() != null ? article.getQuantiteReservee() : 0L);
+            if (stockDisponible < quantite.longValue()) {
+                throw new InvalidOperationException("Stock insuffisant pour l'article: " + article.getDesignation());
+            }
+        }
+        
+        // Vérification du stock physique pour sortie
         if (typeMvt == TypeMvtStk.SORTIE && article.getQuantiteEnStock() < quantite.longValue()) {
-            throw new InvalidOperationException("Stock insuffisant");
+            throw new InvalidOperationException("Stock insuffisant pour l'article: " + article.getDesignation());
         }
 
         updateArticleStock(article, quantite, typeMvt);
@@ -126,22 +163,29 @@ public class MvtStkServiceImpl implements MvtStkService {
 
     private void updateArticleStock(Article article, BigDecimal quantite, TypeMvtStk typeMvt) {
         Long currentStock = article.getQuantiteEnStock();
-        Long newStock;
-
+        Long currentReserved = article.getQuantiteReservee() != null ? article.getQuantiteReservee() : 0L;
+        
         switch (typeMvt) {
             case ENTREE:
             case CORRECTION_POS:
-                newStock = currentStock + quantite.longValue();
+                article.setQuantiteEnStock(currentStock + quantite.longValue());
                 break;
             case SORTIE:
             case CORRECTION_NEG:
-                newStock = currentStock - quantite.longValue();
+                article.setQuantiteEnStock(currentStock - quantite.longValue());
+                break;
+            case RESERVATION:
+                // Réservation : SEULEMENT augmente la quantité réservée, NE TOUCHE PAS au stock physique
+                article.setQuantiteReservee(currentReserved + quantite.longValue());
+                break;
+            case ANNULATION_RESERVATION:
+                // Annulation : SEULEMENT diminue la quantité réservée, NE TOUCHE PAS au stock physique
+                article.setQuantiteReservee(Math.max(0L, currentReserved - quantite.longValue()));
                 break;
             default:
                 throw new InvalidOperationException("Type de mouvement non supporté: " + typeMvt);
         }
 
-        article.setQuantiteEnStock(newStock);
         articleRepository.save(article);
     }
 

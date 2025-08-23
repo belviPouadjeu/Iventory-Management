@@ -15,15 +15,22 @@ import java.math.BigDecimal;
 @Entity
 @Data
 @NoArgsConstructor
-public class LigneVente extends AbstractEntity{
+public class LigneVente extends AbstractEntity {
 
     @NotNull(message = "La quantité est obligatoire")
     @DecimalMin(value = "0.01", message = "La quantité doit être supérieure à zéro")
     private BigDecimal quantite;
 
-    @NotNull(message = "Le prix unitaire est obligatoire")
-    @DecimalMin(value = "0.01", message = "Le prix unitaire doit être supérieur à zéro")
-    private BigDecimal prixUnitaire;
+    @NotNull(message = "Le prix unitaire HT est obligatoire")
+    @DecimalMin(value = "0.01", message = "Le prix unitaire HT doit être supérieur à zéro")
+    private BigDecimal prixUnitaireHt;
+
+    @DecimalMin(value = "0.0", message = "Le taux de TVA doit être positif")
+    private BigDecimal tauxTva;
+
+    @NotNull(message = "Le prix unitaire TTC est obligatoire")
+    @DecimalMin(value = "0.01", message = "Le prix unitaire TTC doit être supérieur à zéro")
+    private BigDecimal prixUnitaireTtc;
 
     @NotNull(message = "La vente est obligatoire")
     @ManyToOne
@@ -34,6 +41,5 @@ public class LigneVente extends AbstractEntity{
     @ManyToOne
     @JoinColumn(name = "idarticle")
     private Article article;
-
 
 }

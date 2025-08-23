@@ -4,6 +4,7 @@ import com.belvinard.gestionstock.dto.LigneCommandeFournisseurDTO;
 import com.belvinard.gestionstock.exceptions.BusinessRuleException;
 import com.belvinard.gestionstock.exceptions.ResourceNotFoundException;
 import com.belvinard.gestionstock.models.*;
+import com.belvinard.gestionstock.models.EtatLigneCommandeFournisseur;
 import com.belvinard.gestionstock.repositories.ArticleRepository;
 import com.belvinard.gestionstock.repositories.CommandeFournisseurRepository;
 import com.belvinard.gestionstock.repositories.LigneCommandeFournisseurRepository;
@@ -25,16 +26,7 @@ public class LigneCommandeFournisseurServiceImpl implements LigneCommandeFournis
     private final ArticleRepository articleRepository;
     private final ModelMapper modelMapper;
 
-    /**
-     * Sauvegarde une nouvelle ligne de commande fournisseur.
-     *
-     * @param ligneCommandeFournisseurDTO Les données de la ligne de commande
-     * @param commandeFournisseurId L'ID de la commande fournisseur
-     * @param articleId L'ID de l'article
-     * @return LigneCommandeFournisseurDTO La ligne de commande créée
-     * @throws ResourceNotFoundException si la commande ou l'article n'existe pas
-     * @throws BusinessRuleException si la commande est déjà livrée
-     */
+    
     @Override
     @Transactional
     public LigneCommandeFournisseurDTO save(LigneCommandeFournisseurDTO ligneCommandeFournisseurDTO,
@@ -52,11 +44,6 @@ public class LigneCommandeFournisseurServiceImpl implements LigneCommandeFournis
             throw new BusinessRuleException("Impossible d'ajouter une ligne : la commande est déjà livrée.");
         }
 
-        // Mise à jour du stock
-        BigDecimal stockDisponible = BigDecimal.valueOf(article.getQuantiteEnStock());
-        BigDecimal nouveauStock = stockDisponible.add(ligneCommandeFournisseurDTO.getQuantite());
-        article.setQuantiteEnStock(nouveauStock.longValue());
-        articleRepository.save(article);
 
         // Vérification de la quantité
         if (ligneCommandeFournisseurDTO.getQuantite() == null) {
@@ -145,9 +132,9 @@ public class LigneCommandeFournisseurServiceImpl implements LigneCommandeFournis
         LigneCommandeFournisseur existingLigne = ligneCommandeFournisseurRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("LigneCommandeFournisseur", "ID", id));
         
-        // Vérification de l'état de la commande
-        if (existingLigne.getCommandeFournisseur().getEtatCommande() == EtatCommande.LIVREE) {
-            throw new BusinessRuleException("Impossible de modifier une ligne : la commande est déjà livrée.");
+        // Vérification de l'état de la ligne
+        if (existingLigne.getEtatLigne() == EtatLigneCommandeFournisseur.VALIDEE) {
+            throw new BusinessRuleException("Impossible de modifier une ligne validée.");
         }
         
         // Vérification de la quantité
@@ -155,8 +142,32 @@ public class LigneCommandeFournisseurServiceImpl implements LigneCommandeFournis
             throw new BusinessRuleException("La quantité ne peut pas être null");
         }
         
-        // Mise à jour des champs modifiables
+        // Mise à jour de la quantité
         existingLigne.setQuantite(ligneCommandeFournisseurDTO.getQuantite());
+        
+        // Mise à jour de l'article si fourni
+        if (ligneCommandeFournisseurDTO.getArticleId() != null) {
+            Article nouvelArticle = articleRepository.findById(ligneCommandeFournisseurDTO.getArticleId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Article", "ID", ligneCommandeFournisseurDTO.getArticleId()));
+            
+            existingLigne.setArticle(nouvelArticle);
+            
+            // Recalcul des prix avec le nouvel article
+            BigDecimal prixHT = nouvelArticle.getPrixUnitaireHt();
+            BigDecimal tauxTVA = nouvelArticle.getTauxTva();
+            BigDecimal tva = prixHT.multiply(tauxTVA)
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            BigDecimal prixTTC = prixHT.add(tva);
+            
+            existingLigne.setPrixUnitaireHt(prixHT);
+            existingLigne.setTauxTva(tauxTVA);
+            existingLigne.setPrixUnitaireTtc(prixTTC);
+        }
+        
+        // Mise à jour de l'état si fourni
+        if (ligneCommandeFournisseurDTO.getEtatLigne() != null) {
+            existingLigne.setEtatLigne(ligneCommandeFournisseurDTO.getEtatLigne());
+        }
         
         // Recalcul du prix total
         BigDecimal prixTotal = existingLigne.getPrixUnitaireTtc().multiply(ligneCommandeFournisseurDTO.getQuantite());
@@ -186,10 +197,12 @@ public class LigneCommandeFournisseurServiceImpl implements LigneCommandeFournis
         LigneCommandeFournisseur ligne = ligneCommandeFournisseurRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("LigneCommandeFournisseur", "ID", id));
         
-        // Vérification de l'état de la commande
-        if (ligne.getCommandeFournisseur().getEtatCommande() == EtatCommande.LIVREE) {
-            throw new BusinessRuleException("Impossible de supprimer une ligne : la commande est déjà livrée.");
+        // Vérification de l'état de la ligne
+        if (ligne.getEtatLigne() == EtatLigneCommandeFournisseur.VALIDEE) {
+            throw new BusinessRuleException("Impossible de supprimer une ligne validée.");
         }
+        
+        // Pas besoin de diminuer le stock car il n'a pas été augmenté lors de la création
         
         // Suppression
         ligneCommandeFournisseurRepository.delete(ligne);
@@ -246,6 +259,46 @@ public class LigneCommandeFournisseurServiceImpl implements LigneCommandeFournis
         }
         
         return ligneCommandeFournisseurRepository.getTotalByCommandeFournisseurId(commandeFournisseurId);
+    }
+
+    @Override
+    @Transactional
+    public LigneCommandeFournisseurDTO validerLigne(Long id) {
+        if (id == null) {
+            throw new BusinessRuleException("L'ID ne peut pas être null");
+        }
+        
+        LigneCommandeFournisseur ligne = ligneCommandeFournisseurRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("LigneCommandeFournisseur", "ID", id));
+        
+        if (ligne.getEtatLigne() == EtatLigneCommandeFournisseur.VALIDEE) {
+            throw new BusinessRuleException("La ligne est déjà validée.");
+        }
+        
+        ligne.setEtatLigne(EtatLigneCommandeFournisseur.VALIDEE);
+        LigneCommandeFournisseur updatedLigne = ligneCommandeFournisseurRepository.save(ligne);
+        
+        // Vérifier si toutes les lignes de la commande sont validées
+        CommandeFournisseur commande = ligne.getCommandeFournisseur();
+        List<LigneCommandeFournisseur> toutesLignes = ligneCommandeFournisseurRepository.findAllByCommandeFournisseurId(commande.getId());
+        
+        boolean toutesLignesValidees = toutesLignes.stream()
+                .allMatch(l -> l.getEtatLigne() == EtatLigneCommandeFournisseur.VALIDEE);
+        
+        // Si toutes les lignes sont validées, passer la commande à VALIDEE
+        if (toutesLignesValidees && commande.getEtatCommande() == EtatCommande.EN_PREPARATION) {
+            commande.setEtatCommande(EtatCommande.VALIDEE);
+            commandeFournisseurRepository.save(commande);
+        }
+        
+        LigneCommandeFournisseurDTO dto = modelMapper.map(updatedLigne, LigneCommandeFournisseurDTO.class);
+        dto.setCommandeFournisseurId(updatedLigne.getCommandeFournisseur().getId());
+        dto.setCommandeFournisseurName(updatedLigne.getCommandeFournisseur().getCode());
+        dto.setArticleId(updatedLigne.getArticle().getId());
+        dto.setArticleName(updatedLigne.getArticle().getDesignation());
+        dto.setPrixTotal(updatedLigne.getPrixUnitaireTtc().multiply(updatedLigne.getQuantite()));
+        
+        return dto;
     }
 
 }

@@ -32,6 +32,9 @@ public class Article extends AbstractEntity {
 
   private Long quantiteEnStock;
 
+  @Column(name = "quantite_reservee", nullable = false)
+  private Long quantiteReservee = 0L;
+
   @NotNull(message = "Le prix HT est obligatoire")
   @DecimalMin(value = "0.0", inclusive = false,
           message = "Le prix HT doit être positif")

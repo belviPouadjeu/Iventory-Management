@@ -31,4 +31,5 @@ public interface UtilisateurService {
   List<UtilisateurDTO> findActiveUsers();
   List<UtilisateurDTO> findInactiveUsers();
   List<UtilisateurDTO> findActiveUsersByEntreprise(Long entrepriseId);
+  List<UtilisateurDTO> findAdminUsers();
 }

@@ -44,7 +44,10 @@ public interface MvtStkService {
     // Create movement when supplier order is received
     void createMvtStkForCommandeFournisseur(Long commandeId);
 
+    // Reserve stock for a sale
+    MvtStkDTO reserverStock(Long articleId, BigDecimal quantite, Long entrepriseId);
 
-
+    // Cancel stock reservation
+    MvtStkDTO annulerReservation(Long articleId, BigDecimal quantite, Long entrepriseId);
 
 }

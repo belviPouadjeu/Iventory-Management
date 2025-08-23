@@ -16,5 +16,7 @@ public interface CommandeFournisseurService{
 
     CommandeFournisseurDTO updateEtatCommande(Long idCommande, EtatCommande nouvelEtat);
 
+    CommandeFournisseurDTO annulerCommande(Long idCommande);
+
     CommandeFournisseurDTO findByCode(String code);
 }

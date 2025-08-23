@@ -6,6 +6,7 @@ import com.belvinard.gestionstock.exceptions.*;
 import com.belvinard.gestionstock.models.*;
 import com.belvinard.gestionstock.repositories.*;
 import com.belvinard.gestionstock.service.VenteService;
+import com.belvinard.gestionstock.service.MvtStkService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,28 +26,29 @@ public class VenteServiceImpl implements VenteService {
     private final LigneVenteRepository ligneVenteRepository;
     private final ArticleRepository articleRepository;
     private final EntrepriseRepository entrepriseRepository;
+    private final CommandeClientRepository commandeClientRepository;
+    private final MvtStkService mvtStkService;
+    private final MvtStkRepository mvtStkRepository;
     private final ModelMapper modelMapper;
-
-
 
     @Override
     public VenteDTO findById(Long id) {
         Vente vente = venteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vente", "id", id));
-        return modelMapper.map(vente, VenteDTO.class);
+        return enrichVenteDTO(vente);
     }
 
     @Override
     public VenteDTO findByCode(String code) {
         Vente vente = venteRepository.findByCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Vente", "code", code));
-        return modelMapper.map(vente, VenteDTO.class);
+        return enrichVenteDTO(vente);
     }
 
     @Override
     public List<VenteDTO> findAll() {
         return venteRepository.findAll().stream()
-                .map(vente -> modelMapper.map(vente, VenteDTO.class))
+                .map(this::enrichVenteDTO)
                 .collect(Collectors.toList());
     }
 
@@ -57,6 +60,9 @@ public class VenteServiceImpl implements VenteService {
         if (vente.getEtatVente() == EtatVente.FINALISEE) {
             throw new InvalidOperationException("Impossible de supprimer une vente finalisée");
         }
+        
+        // Pas besoin de libérer le stock car il n'est pas réservé
+        
         // Delete all line items first
         ligneVenteRepository.deleteAllByVenteId(id);
         venteRepository.delete(vente);
@@ -72,17 +78,17 @@ public class VenteServiceImpl implements VenteService {
                 .anyMatch(v -> v.getCode().equals(venteDTO.getCode()))) {
             throw new APIException("Une vente avec le code '" + venteDTO.getCode() + "' existe déjà");
         }
-        
+
         // Verify enterprise exists
         Entreprise entreprise = entrepriseRepository.findById(entrepriseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Entreprise", "id", entrepriseId));
-        
+
         // Map DTO to entity
         Vente vente = modelMapper.map(venteDTO, Vente.class);
         vente.setEntreprise(entreprise);
         vente.setCreationDate(LocalDateTime.now());
         vente.setEtatVente(EtatVente.EN_COURS);
-        
+
         // Save and return
         Vente saved = venteRepository.save(vente);
         VenteDTO result = modelMapper.map(saved, VenteDTO.class);
@@ -101,7 +107,7 @@ public class VenteServiceImpl implements VenteService {
         vente.setCode(venteDTO.getCode());
         vente.setCommentaire(venteDTO.getCommentaire());
         Vente updated = venteRepository.save(vente);
-        return modelMapper.map(updated, VenteDTO.class);
+        return enrichVenteDTO(updated);
     }
 
     @Transactional
@@ -110,7 +116,7 @@ public class VenteServiceImpl implements VenteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vente", "id", idVente));
         vente.setEtatVente(etatVente);
         Vente updated = venteRepository.save(vente);
-        return modelMapper.map(updated, VenteDTO.class);
+        return enrichVenteDTO(updated);
     }
 
     @Transactional
@@ -127,16 +133,30 @@ public class VenteServiceImpl implements VenteService {
         }
         vente.setEtatVente(EtatVente.FINALISEE);
         venteRepository.save(vente);
-        // Update stock for each article
+        
+        // Convertir les réservations en sorties réelles
         for (LigneVente ligne : lignes) {
             Article article = ligne.getArticle();
-            if (article.getQuantiteEnStock() < ligne.getQuantite().longValue()) {
-                throw new APIException("Stock insuffisant pour l'article: " + article.getDesignation());
-            }
-            article.setQuantiteEnStock(article.getQuantiteEnStock() - ligne.getQuantite().longValue());
+            Long quantite = ligne.getQuantite().longValue();
+            
+            // SEULEMENT diminuer le stock physique (les réservations restent pour traçabilité)
+            article.setQuantiteEnStock(article.getQuantiteEnStock() - quantite);
             articleRepository.save(article);
+            
+            // Créer SEULEMENT le mouvement de sortie pour la traçabilité (sans passer par le service)
+            MvtStk mvtStk = new MvtStk();
+            mvtStk.setArticle(article);
+            mvtStk.setQuantite(ligne.getQuantite());
+            mvtStk.setTypeMvt(TypeMvtStk.SORTIE);
+            mvtStk.setSourceMvt(SourceMvtStk.VENTE);
+            mvtStk.setEntrepriseId(vente.getEntreprise().getId());
+            mvtStk.setDateMvt(LocalDateTime.now());
+            mvtStk.setCreationDate(LocalDateTime.now());
+            mvtStk.setLastModifiedDate(LocalDateTime.now());
+            
+            mvtStkRepository.save(mvtStk);
         }
-        return modelMapper.map(vente, VenteDTO.class);
+        return enrichVenteDTO(vente);
     }
 
     // --- Search and Filter Operations ---
@@ -144,36 +164,36 @@ public class VenteServiceImpl implements VenteService {
     @Override
     public List<VenteDTO> findAllByEntreprise(Long entrepriseId) {
         return venteRepository.findAllByEntrepriseId(entrepriseId).stream()
-                .map(vente -> modelMapper.map(vente, VenteDTO.class))
+                .map(this::enrichVenteDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<VenteDTO> findByEtatVente(EtatVente etatVente) {
         return venteRepository.findAllByEtatVente(etatVente).stream()
-                .map(vente -> modelMapper.map(vente, VenteDTO.class))
+                .map(this::enrichVenteDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<VenteDTO> findByEntrepriseAndEtatVente(Long entrepriseId, EtatVente etatVente) {
         return venteRepository.findAllByEntrepriseIdAndEtatVente(entrepriseId, etatVente).stream()
-                .map(vente -> modelMapper.map(vente, VenteDTO.class))
+                .map(this::enrichVenteDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<VenteDTO> findByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
         return venteRepository.findAllByCreationDateBetween(startDate, endDate).stream()
-                .map(vente -> modelMapper.map(vente, VenteDTO.class))
+                .map(this::enrichVenteDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<VenteDTO> findByEntrepriseAndDateRange(Long entrepriseId, LocalDateTime startDate,
-                                                       LocalDateTime endDate) {
+            LocalDateTime endDate) {
         return venteRepository.findAllByEntrepriseIdAndCreationDateBetween(entrepriseId, startDate, endDate).stream()
-                .map(vente -> modelMapper.map(vente, VenteDTO.class))
+                .map(this::enrichVenteDTO)
                 .collect(Collectors.toList());
     }
 
@@ -202,8 +222,8 @@ public class VenteServiceImpl implements VenteService {
         Article article = articleRepository.findById(ligneVenteDTO.getIdArticle())
                 .orElseThrow(() -> new ResourceNotFoundException("Article", "id", ligneVenteDTO.getIdArticle()));
 
-        // Vérifier le stock
-        if (BigDecimal.valueOf(article.getQuantiteEnStock()).compareTo(ligneVenteDTO.getQuantite()) < 0) {
+        // Vérifier le stock disponible sans le réserver
+        if (article.getQuantiteEnStock() < ligneVenteDTO.getQuantite().longValue()) {
             throw new APIException("Stock insuffisant pour l'article: " + article.getDesignation());
         }
 
@@ -219,6 +239,90 @@ public class VenteServiceImpl implements VenteService {
         return modelMapper.map(saved, LigneVenteDTO.class);
     }
 
+    @Override
+    @Transactional
+    public VenteDTO createVenteFromCommande(Long commandeClientId) {
+        // 1. Récupérer la commande client
+        CommandeClient commande = commandeClientRepository.findById(commandeClientId)
+                .orElseThrow(() -> new ResourceNotFoundException("CommandeClient", "id", commandeClientId));
 
+        // 2. Validation : La commande doit être VALIDEE
+        if (commande.getEtatCommande() != EtatCommande.VALIDEE) {
+            throw new BusinessRuleException(
+                    "Seules les commandes à l'état VALIDEE peuvent être transformées en vente. " +
+                            "État actuel de la commande : " + commande.getEtatCommande());
+        }
+
+        // 3. Vérifier qu'il y a des lignes de commande
+        if (commande.getLigneCommandeClients() == null || commande.getLigneCommandeClients().isEmpty()) {
+            throw new BusinessRuleException(
+                    "Impossible de créer une vente à partir d'une commande sans lignes de commande.");
+        }
+
+        // 4. Créer la vente
+        Vente vente = new Vente();
+        vente.setCode("VTE-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        vente.setDateVente(LocalDateTime.now());
+        vente.setClient(commande.getClient());
+        vente.setEntreprise(commande.getEntreprise());
+        vente.setCommentaire("Vente générée depuis la commande " + commande.getCode());
+        vente.setEtatVente(EtatVente.EN_COURS); // État initial de la vente
+
+        Vente savedVente = venteRepository.save(vente);
+
+        // 5. Créer les lignes de vente depuis les lignes de commande
+        for (LigneCommandeClient ligneCommande : commande.getLigneCommandeClients()) {
+            // Vérifier le stock disponible
+            if (ligneCommande.getArticle().getQuantiteEnStock() < ligneCommande.getQuantite().longValue()) {
+                throw new APIException("Stock insuffisant pour l'article: " + ligneCommande.getArticle().getDesignation());
+            }
+
+            LigneVente ligneVente = new LigneVente();
+            ligneVente.setVente(savedVente);
+            ligneVente.setArticle(ligneCommande.getArticle());
+            ligneVente.setQuantite(ligneCommande.getQuantite());
+            ligneVente.setPrixUnitaireHt(ligneCommande.getPrixUnitaireHt());
+            ligneVente.setTauxTva(ligneCommande.getTauxTva());
+            ligneVente.setPrixUnitaireTtc(ligneCommande.getPrixUnitaireTtc());
+
+            ligneVenteRepository.save(ligneVente);
+        }
+
+        // 6. Passer la commande à l'état LIVREE
+        commande.setEtatCommande(EtatCommande.LIVREE);
+        commandeClientRepository.save(commande);
+
+        // 7. Convertir et retourner le DTO
+        VenteDTO venteDTO = modelMapper.map(savedVente, VenteDTO.class);
+
+        // Enrichir avec les informations du client et de l'entreprise
+        venteDTO.setClientId(savedVente.getClient().getId());
+        venteDTO.setClientName(savedVente.getClient().getNom() + " " + savedVente.getClient().getPrenom());
+        venteDTO.setEntrepriseId(savedVente.getEntreprise().getId());
+        venteDTO.setEntrepriseName(savedVente.getEntreprise().getNom());
+
+        return venteDTO;
+    }
+
+    /**
+     * Méthode helper pour enrichir un VenteDTO avec les noms du client et de l'entreprise
+     */
+    private VenteDTO enrichVenteDTO(Vente vente) {
+        VenteDTO dto = modelMapper.map(vente, VenteDTO.class);
+        
+        // Enrichir avec le nom du client
+        if (vente.getClient() != null) {
+            dto.setClientId(vente.getClient().getId());
+            dto.setClientName(vente.getClient().getNom() + " " + vente.getClient().getPrenom());
+        }
+        
+        // Enrichir avec le nom de l'entreprise
+        if (vente.getEntreprise() != null) {
+            dto.setEntrepriseId(vente.getEntreprise().getId());
+            dto.setEntrepriseName(vente.getEntreprise().getNom());
+        }
+        
+        return dto;
+    }
 
 }

@@ -13,7 +13,9 @@ public interface EntrepriseService {
     EntrepriseDTO findEntrepriseById(Long id);
     EntrepriseDTO deleteEntrepriseById(Long id);
     EntrepriseDTO updateEntrepriseImage(Long id, MultipartFile image) throws IOException;
+    EntrepriseDTO updateEntreprise(Long id, EntrepriseDTO entrepriseDTO);
     String getPresignedImageUrl(Long id);
+
 
 
 }

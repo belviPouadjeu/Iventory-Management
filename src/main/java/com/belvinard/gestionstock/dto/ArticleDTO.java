@@ -29,6 +29,8 @@ public class ArticleDTO {
     private String designation;
 
     private Long quantiteEnStock;
+    @Schema(hidden = true)
+    private Long quantiteReservee = 0L;
 
     @NotNull(message = "Le prix HT est obligatoire")
     @DecimalMin(value = "0.0", inclusive = false,
@@ -42,6 +44,7 @@ public class ArticleDTO {
 
     @Schema(hidden = true)
     private BigDecimal prixUnitaireTtc;
+
     private String photo;
 
     // Rendre visible dans Swagger et JSON
@@ -61,4 +64,10 @@ public class ArticleDTO {
 
     @Schema(hidden = true)
     private LocalDateTime lastModifiedDate;
+
+    // Méthode utilitaire pour calculer le stock disponible
+    @Schema(hidden = true)
+    public Long getStockDisponible() {
+        return quantiteEnStock - (quantiteReservee != null ? quantiteReservee : 0L);
+    }
 }
