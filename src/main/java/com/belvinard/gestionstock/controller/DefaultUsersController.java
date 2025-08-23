@@ -60,14 +60,6 @@ public class DefaultUsersController {
                         RoleType.OPERATOR,
                         "Exécution des opérations quotidiennes d'entrepôt et manutention"),
                 new DefaultUserInfoDTO(
-                        "sales.rep@gestionstock.com",
-                        "salesrep123",
-                        "Sales",
-                        "Representative",
-                        "salesrep",
-                        RoleType.SALES_REP,
-                        "Consultation des stocks et création de commandes clients"),
-                new DefaultUserInfoDTO(
                         "user@gestionstock.com",
                         "user123",
                         "User",

@@ -44,6 +44,7 @@ public class ArticleDTO {
 
     @Schema(hidden = true)
     private BigDecimal prixUnitaireTtc;
+
     private String photo;
 
     // Rendre visible dans Swagger et JSON

@@ -57,9 +57,12 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         // Sauvegarde de l'utilisateur
         Utilisateur savedUser = utilisateurRepository.save(utilisateur);
 
-        // Assignation du rôle par défaut USER_BASE (peu importe ce que l'utilisateur a
-        // demandé)
-        assignRole(savedUser.getId(), RoleType.USER_BASE);
+        // Assignation du rôle demandé ou USER_BASE par défaut
+        RoleType roleToAssign = RoleType.USER_BASE;
+        if (dto.getRoles() != null && !dto.getRoles().isEmpty() && dto.getRoles().get(0).getRoleType() != null) {
+            roleToAssign = dto.getRoles().get(0).getRoleType();
+        }
+        assignRole(savedUser.getId(), roleToAssign);
 
         // Récupération de l'utilisateur avec son rôle assigné
         Utilisateur userWithRole = utilisateurRepository.findById(savedUser.getId())
@@ -336,5 +339,10 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         return utilisateurRepository.findByEntrepriseIdAndActifTrue(entrepriseId).stream()
                 .map(this::mapUserToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UtilisateurDTO> findAdminUsers() {
+        return findAll();
     }
 }

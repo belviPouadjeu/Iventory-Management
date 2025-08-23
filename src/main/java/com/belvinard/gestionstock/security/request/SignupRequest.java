@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Set;
 
 @Data
@@ -32,7 +33,7 @@ public class SignupRequest {
     private String prenom;
 
     @NotNull
-    private LocalDateTime dateDeNaissance;
+    private LocalDate dateDeNaissance;
 
     @NotNull
     private Long entrepriseId;

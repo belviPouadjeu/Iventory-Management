@@ -12,6 +12,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.List;
 
 @Data
@@ -35,12 +37,12 @@ public class UtilisateurDTO {
     private String email;
 
     @NotNull(message = "La date de naissance est obligatoire")
-    private LocalDateTime dateDeNaissance;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate dateDeNaissance;
 
     @NotBlank(message = "Le mot de passe est obligatoire")
     @Size(min = 6, message = "Le mot de passe doit contenir au moins 6 caractères")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Permet la lecture depuis JSON mais pas l'écriture dans les
-                                                           // réponses
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Permet la lecture depuis JSON mais pas l'écriture dans les// réponses
     private String moteDePasse;
 
     private Adresse adresse;

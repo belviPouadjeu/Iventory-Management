@@ -126,6 +126,13 @@ public class UtilisateurController {
         return ResponseEntity.ok(utilisateurService.findActiveUsersByEntreprise(entrepriseId));
     }
 
+//    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+//    @GetMapping("/admins")
+//    @Operation(summary = "[ADMIN] Récupérer tous les utilisateurs créés")
+//    public ResponseEntity<List<UtilisateurDTO>> findAdminUsers() {
+//        return ResponseEntity.ok(utilisateurService.findAdminUsers());
+//    }
+
     // === ACCESSIBLE À TOUS LES UTILISATEURS ===
 
     @PreAuthorize("isAuthenticated()")

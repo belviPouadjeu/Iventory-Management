@@ -79,10 +79,7 @@ public class AuthController {
 
     @PostMapping("/public/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        // Vérifications d'existence username et email
-        if (utilisateurRepository.existsByUserName(signUpRequest.getUsername())) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
-        }
+        // Vérifications d'existence email uniquement (pas de username)
         if (utilisateurRepository.existsByEmail(signUpRequest.getEmail())) {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
         }
@@ -92,7 +89,7 @@ public class AuthController {
         utilisateurDTO.setNom(signUpRequest.getNom());
         utilisateurDTO.setPrenom(signUpRequest.getPrenom());
         utilisateurDTO.setEmail(signUpRequest.getEmail());
-        utilisateurDTO.setMoteDePasse(encoder.encode(signUpRequest.getPassword())); // encode le mdp ici
+        utilisateurDTO.setMoteDePasse(signUpRequest.getPassword()); // pas d'encodage ici, fait dans le service
         utilisateurDTO.setDateDeNaissance(signUpRequest.getDateDeNaissance());
 
         // tu peux gérer adresse, photo, etc. ici aussi si nécessaire
@@ -112,8 +109,8 @@ public class AuthController {
             }
             utilisateurService.assignRole(savedUser.getId(), roleType);
         } else {
-            // Si aucun rôle demandé, assigner un rôle par défaut (ex SALES_REP)
-            utilisateurService.assignRole(savedUser.getId(), RoleType.SALES_REP);
+            // Si aucun rôle demandé, assigner un rôle par défaut (ex USER_BASE)
+            utilisateurService.assignRole(savedUser.getId(), RoleType.USER_BASE);
         }
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));

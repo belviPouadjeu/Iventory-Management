@@ -29,6 +29,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Configuration
@@ -173,20 +174,20 @@ public class SecurityConfig {
 
                         // ========== CONSULTATION VENTES (ADMIN, SALES, SALES_MANAGER) ==========
                         .requestMatchers(HttpMethod.GET, "/api/v1/ventes/**")
-                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SALES_REP", "ROLE_SALES_MANAGER")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SALES_MANAGER")
 
-                        // ========== LIGNES VENTE CONSULTATION (ADMIN, SALES_MANAGER, SALES_REP)
+                        // ========== LIGNES VENTE CONSULTATION (ADMIN, SALES_MANAGER)
                         // ==========
                         .requestMatchers(HttpMethod.GET, "/api/v1/lignes-vente/*")
-                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SALES_MANAGER", "ROLE_SALES_REP")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SALES_MANAGER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/lignes-vente/vente/*")
-                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SALES_MANAGER", "ROLE_SALES_REP")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SALES_MANAGER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/lignes-vente/article/*")
-                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SALES_MANAGER", "ROLE_SALES_REP")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SALES_MANAGER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/lignes-vente/vente/*/total")
-                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SALES_MANAGER", "ROLE_SALES_REP")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SALES_MANAGER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/lignes-vente/check-stock/*")
-                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SALES_MANAGER", "ROLE_SALES_REP")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_SALES_MANAGER")
 
                         // ========== AUTHENTIFICATION REQUISE POUR LE RESTE ==========
                         .requestMatchers("/api/v1/auth/user").authenticated()
@@ -253,7 +254,7 @@ public class SecurityConfig {
         user.setNom(nom);
         user.setPrenom(prenom);
         user.setUserName(userName);
-        user.setDateDeNaissance(LocalDateTime.now().minusYears(25));
+        user.setDateDeNaissance(LocalDate.now().minusYears(25));
         user.setEntreprise(entreprise);
         user.setActif(true);
         return user;
@@ -273,8 +274,6 @@ public class SecurityConfig {
                         RoleType.SALES_MANAGER),
                 new DefaultUserInfo("operator@gestionstock.com", "operator123", "Operator", "Warehouse", "operator",
                         RoleType.OPERATOR),
-                new DefaultUserInfo("sales.rep@gestionstock.com", "salesrep123", "Sales", "Representative", "salesrep",
-                        RoleType.SALES_REP),
                 new DefaultUserInfo("user@gestionstock.com", "user123", "User", "Base", "userbase", RoleType.USER_BASE)
         };
 

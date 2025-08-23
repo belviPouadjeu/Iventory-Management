@@ -6,6 +6,7 @@ import com.belvinard.gestionstock.dto.RolesDTO;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -18,7 +19,7 @@ public class UserInfoResponse {
     private String nom;
     private String prenom;
     private String email;
-    private LocalDateTime dateDeNaissance;
+    private LocalDate dateDeNaissance;
     private String photo;
     private AdresseDTO adresse;
     private EntrepriseDTO entreprise;

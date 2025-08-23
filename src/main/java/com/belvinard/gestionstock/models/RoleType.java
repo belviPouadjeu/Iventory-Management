@@ -5,8 +5,9 @@ public enum RoleType {
     STOCK_MANAGER("Gestionnaire de Stock", "Supervision complète des mouvements de stock"),
     SALES_MANAGER("Responsable Commercial", "Gestion des ventes et relations clients"),
     OPERATOR("Opérateur", "Exécution des opérations quotidiennes d'entrepôt"),
-    SALES_REP("Commercial/Vendeur", "Consultation des stocks et création de commandes"),
-    USER_BASE("Utilisateur", "Accès aux fonctionnalités de base");
+    USER_BASE("Utilisateur", "Accès aux fonctionnalités de base"),
+    @Deprecated
+    SALES_REP("Commercial", "Rôle obsolète - migrer vers SALES_MANAGER");
 
     private final String displayName;
     private final String description;

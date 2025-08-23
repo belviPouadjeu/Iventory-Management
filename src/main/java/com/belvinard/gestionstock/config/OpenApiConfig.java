@@ -55,17 +55,6 @@ public class OpenApiConfig {
                                                                 - **Description**: Gestion des ventes et relations clients
                                                                 - **Permissions**: Gestion des ventes, clients, commandes
                                                                 - **Endpoints**: `/ventes/**`, `/clients/**`, `/commande-clients/**`
-
-                                                                #### ⚙️ OPERATOR - Opérateur
-                                                                - **Description**: Exécution des opérations quotidiennes d'entrepôt
-                                                                - **Permissions**: Consultation et mise à jour des stocks
-                                                                - **Endpoints**: Lecture des articles et mouvements de stock
-
-                                                                #### 🛒 SALES_REP - Commercial/Vendeur
-                                                                - **Description**: Consultation des stocks et création de commandes
-                                                                - **Permissions**: Consultation des articles, création de commandes
-                                                                - **Endpoints**: Lecture des articles, création de commandes clients
-
                                                                 #### 👤 USER_BASE - Utilisateur
                                                                 - **Description**: Accès aux fonctionnalités de base
                                                                 - **Permissions**: Consultation limitée des données

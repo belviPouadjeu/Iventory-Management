@@ -48,14 +48,6 @@ public class RoleUtils {
             "⚙️"
         ));
         
-        ROLE_DESCRIPTIONS.put(RoleType.SALES_REP, new RoleInfo(
-            "Commercial/Vendeur", 
-            "Consultation des stocks et création de commandes",
-            "Consultation des articles, création de commandes",
-            "Lecture des articles, création de commandes clients",
-            "🛒"
-        ));
-        
         ROLE_DESCRIPTIONS.put(RoleType.USER_BASE, new RoleInfo(
             "Utilisateur", 
             "Accès aux fonctionnalités de base",

@@ -12,6 +12,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -35,7 +36,7 @@ public class Utilisateur extends AbstractEntity {
   private String email;
 
   @NotNull(message = "La date de naissance est obligatoire")
-  private LocalDateTime dateDeNaissance;
+  private LocalDate dateDeNaissance;
 
   @NotBlank(message = "Le mot de passe est obligatoire")
   @Size(min = 6, message = "Le mot de passe doit contenir au moins 6 caractères")
