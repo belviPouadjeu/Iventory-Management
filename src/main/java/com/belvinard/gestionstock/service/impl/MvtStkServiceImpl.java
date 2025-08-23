@@ -73,7 +73,9 @@ public class MvtStkServiceImpl implements MvtStkService {
 
     @Override
     public List<MvtStkDTO> findByTypeMvt(TypeMvtStk typeMvt) {
-        return mvtStkRepository.findByTypeMvt(typeMvt).stream()
+        List<MvtStk> mouvements = mvtStkRepository.findByTypeMvt(typeMvt);
+        System.out.println("Recherche mouvements pour type: " + typeMvt + ", trouvés: " + mouvements.size());
+        return mouvements.stream()
                 .map(mvt -> modelMapper.map(mvt, MvtStkDTO.class))
                 .collect(Collectors.toList());
     }

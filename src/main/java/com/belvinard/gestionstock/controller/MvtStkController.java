@@ -87,9 +87,9 @@ public class MvtStkController {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER')")
     @Operation(summary = "Récupérer les mouvements dans une période (ADMIN ou STOCK_MANAGER)")
     public ResponseEntity<List<MvtStkDTO>> findByDateRange(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        return ResponseEntity.ok(mvtStkService.findByDateRange(startDate, endDate));
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") java.time.LocalDate startDate,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") java.time.LocalDate endDate) {
+        return ResponseEntity.ok(mvtStkService.findByDateRange(startDate.atStartOfDay(), endDate.atTime(23, 59, 59)));
     }
 
     @GetMapping("/stock-actuel/{articleId}")
