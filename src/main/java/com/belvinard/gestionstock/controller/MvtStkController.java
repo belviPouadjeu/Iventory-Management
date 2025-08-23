@@ -63,29 +63,29 @@ public class MvtStkController {
     }
 
     @GetMapping("/entreprise/{entrepriseId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
-    @Operation(summary = "Récupérer les mouvements de stock d'une entreprise (ADMIN ou MANAGER)")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER')")
+    @Operation(summary = "Récupérer les mouvements de stock d'une entreprise (ADMIN ou STOCK_MANAGER)")
     public ResponseEntity<List<MvtStkDTO>> findByEntrepriseId(@PathVariable Long entrepriseId) {
         return ResponseEntity.ok(mvtStkService.findByEntrepriseId(entrepriseId));
     }
 
     @GetMapping("/type/{typeMvt}")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
-    @Operation(summary = "Récupérer les mouvements par type (ADMIN ou MANAGER)")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER')")
+    @Operation(summary = "Récupérer les mouvements par type (ADMIN ou STOCK_MANAGER)")
     public ResponseEntity<List<MvtStkDTO>> findByTypeMvt(@PathVariable TypeMvtStk typeMvt) {
         return ResponseEntity.ok(mvtStkService.findByTypeMvt(typeMvt));
     }
 
     @GetMapping("/source/{sourceMvt}")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
-    @Operation(summary = "Récupérer les mouvements par source (ADMIN ou MANAGER)")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER')")
+    @Operation(summary = "Récupérer les mouvements par source (ADMIN ou STOCK_MANAGER)")
     public ResponseEntity<List<MvtStkDTO>> findBySourceMvt(@PathVariable SourceMvtStk sourceMvt) {
         return ResponseEntity.ok(mvtStkService.findBySourceMvt(sourceMvt));
     }
 
     @GetMapping("/date-range")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
-    @Operation(summary = "Récupérer les mouvements dans une période (ADMIN ou MANAGER)")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER')")
+    @Operation(summary = "Récupérer les mouvements dans une période (ADMIN ou STOCK_MANAGER)")
     public ResponseEntity<List<MvtStkDTO>> findByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
@@ -93,15 +93,15 @@ public class MvtStkController {
     }
 
     @GetMapping("/stock-actuel/{articleId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
-    @Operation(summary = "Calculer le stock actuel d'un article (ADMIN ou MANAGER)")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER')")
+    @Operation(summary = "Calculer le stock actuel d'un article (ADMIN ou STOCK_MANAGER)")
     public ResponseEntity<BigDecimal> calculateCurrentStock(@PathVariable Long articleId) {
         return ResponseEntity.ok(mvtStkService.calculateCurrentStock(articleId));
     }
 
     @GetMapping("/historique/{articleId}")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
-    @Operation(summary = "Récupérer l'historique des mouvements d'un article (ADMIN ou MANAGER)")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER')")
+    @Operation(summary = "Récupérer l'historique des mouvements d'un article (ADMIN ou STOCK_MANAGER)")
     public ResponseEntity<List<MvtStkDTO>> getStockHistory(@PathVariable Long articleId) {
         return ResponseEntity.ok(mvtStkService.getStockHistory(articleId));
     }
