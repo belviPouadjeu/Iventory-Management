@@ -41,7 +41,7 @@ public class CategoryController {
                         @ApiResponse(responseCode = "400", description = "Données invalides"),
                         @ApiResponse(responseCode = "404", description = "Entreprise non trouvée")
         })
-        @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+        @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER', 'ROLE_SALES_MANAGER')")
         @PostMapping("/admin/category/{entrepriseId}")
         public ResponseEntity<CategoryDTO> createCategory(
                         @Parameter(description = "ID de l'entreprise") @PathVariable Long entrepriseId,

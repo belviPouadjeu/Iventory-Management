@@ -10,7 +10,6 @@ public enum EtatCommande {
   LIVREE,
   ANNULEE;
 
-
   @JsonCreator
   public static EtatCommande fromString(@JsonProperty("etatCommande") String value) {
     if (value == null) {

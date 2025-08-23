@@ -28,16 +28,6 @@ public class VenteController {
     // === ADMIN ou SALES ===
 
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES')")
-    @PostMapping("/sales/entreprise/{entrepriseId}")
-    @Operation(summary = "[SALES/ADMIN] Créer une vente pour une entreprise")
-    public ResponseEntity<VenteDTO> createVente(
-            @PathVariable Long entrepriseId,
-            @Valid @RequestBody VenteDTO venteDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(venteService.createVente(entrepriseId, venteDTO));
-    }
-
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES')")
     @PutMapping("/sales/{id}")
     @Operation(summary = "[SALES/ADMIN] Modifier une vente")
     public ResponseEntity<VenteDTO> updateVente(
@@ -51,16 +41,6 @@ public class VenteController {
     @Operation(summary = "[SALES/ADMIN] Finaliser une vente")
     public ResponseEntity<VenteDTO> finalizeVente(@PathVariable Long id) {
         return ResponseEntity.ok(venteService.finalizeVente(id));
-    }
-
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES')")
-    @PostMapping("/sales/{venteId}/lignes")
-    @Operation(summary = "[SALES/ADMIN] Ajouter une ligne de vente")
-    public ResponseEntity<LigneVenteDTO> addLigneVente(
-            @PathVariable Long venteId,
-            @Valid @RequestBody LigneVenteDTO ligneVenteDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(venteService.addLigneVente(venteId, ligneVenteDTO));
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -117,24 +97,6 @@ public class VenteController {
         return ResponseEntity.ok(venteService.findByEntrepriseAndEtatVente(entrepriseId, etatVente));
     }
 
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES', 'ROLE_MANAGER')")
-    @GetMapping("/date-range")
-    @Operation(summary = "['ADMIN', 'SALES', 'MANAGER'] Récupérer les ventes par période")
-    public ResponseEntity<List<VenteDTO>> findByDateRange(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        return ResponseEntity.ok(venteService.findByDateRange(startDate, endDate));
-    }
-
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES', 'ROLE_MANAGER')")
-    @GetMapping("/entreprise/{entrepriseId}/date-range")
-    @Operation(summary = "[ADMIN,SALES,MANAGER] Récupérer les ventes par entreprise et période")
-    public ResponseEntity<List<VenteDTO>> findByEntrepriseAndDateRange(
-            @PathVariable Long entrepriseId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        return ResponseEntity.ok(venteService.findByEntrepriseAndDateRange(entrepriseId, startDate, endDate));
-    }
 
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SALES', 'ROLE_MANAGER')")
     @GetMapping("/{venteId}/lignes")

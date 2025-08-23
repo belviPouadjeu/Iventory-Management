@@ -41,7 +41,7 @@ public class ArticleController {
             @ApiResponse(responseCode = "201", description = "Article créé avec succès"),
             @ApiResponse(responseCode = "404", description = "Entreprise ou catégorie non trouvée")
     })
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER')")
     @PostMapping("/create")
     public ResponseEntity<ArticleDTO> createArticle(
             @RequestParam Long entrepriseId,

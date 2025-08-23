@@ -37,4 +37,6 @@ public class MvtStkDTO {
     @Schema(description = "Identifiant de l'entreprise liée au mouvement de stock", example = "1")
     private Long entrepriseId;
 
+    @Schema(description = "Identifiant de l'article lié au mouvement de stock", example = "1")
+    private Long articleId;
 }

@@ -35,20 +35,20 @@ public class VenteServiceImpl implements VenteService {
     public VenteDTO findById(Long id) {
         Vente vente = venteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vente", "id", id));
-        return modelMapper.map(vente, VenteDTO.class);
+        return enrichVenteDTO(vente);
     }
 
     @Override
     public VenteDTO findByCode(String code) {
         Vente vente = venteRepository.findByCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Vente", "code", code));
-        return modelMapper.map(vente, VenteDTO.class);
+        return enrichVenteDTO(vente);
     }
 
     @Override
     public List<VenteDTO> findAll() {
         return venteRepository.findAll().stream()
-                .map(vente -> modelMapper.map(vente, VenteDTO.class))
+                .map(this::enrichVenteDTO)
                 .collect(Collectors.toList());
     }
 
@@ -107,7 +107,7 @@ public class VenteServiceImpl implements VenteService {
         vente.setCode(venteDTO.getCode());
         vente.setCommentaire(venteDTO.getCommentaire());
         Vente updated = venteRepository.save(vente);
-        return modelMapper.map(updated, VenteDTO.class);
+        return enrichVenteDTO(updated);
     }
 
     @Transactional
@@ -116,7 +116,7 @@ public class VenteServiceImpl implements VenteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vente", "id", idVente));
         vente.setEtatVente(etatVente);
         Vente updated = venteRepository.save(vente);
-        return modelMapper.map(updated, VenteDTO.class);
+        return enrichVenteDTO(updated);
     }
 
     @Transactional
@@ -156,7 +156,7 @@ public class VenteServiceImpl implements VenteService {
             
             mvtStkRepository.save(mvtStk);
         }
-        return modelMapper.map(vente, VenteDTO.class);
+        return enrichVenteDTO(vente);
     }
 
     // --- Search and Filter Operations ---
@@ -164,28 +164,28 @@ public class VenteServiceImpl implements VenteService {
     @Override
     public List<VenteDTO> findAllByEntreprise(Long entrepriseId) {
         return venteRepository.findAllByEntrepriseId(entrepriseId).stream()
-                .map(vente -> modelMapper.map(vente, VenteDTO.class))
+                .map(this::enrichVenteDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<VenteDTO> findByEtatVente(EtatVente etatVente) {
         return venteRepository.findAllByEtatVente(etatVente).stream()
-                .map(vente -> modelMapper.map(vente, VenteDTO.class))
+                .map(this::enrichVenteDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<VenteDTO> findByEntrepriseAndEtatVente(Long entrepriseId, EtatVente etatVente) {
         return venteRepository.findAllByEntrepriseIdAndEtatVente(entrepriseId, etatVente).stream()
-                .map(vente -> modelMapper.map(vente, VenteDTO.class))
+                .map(this::enrichVenteDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<VenteDTO> findByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
         return venteRepository.findAllByCreationDateBetween(startDate, endDate).stream()
-                .map(vente -> modelMapper.map(vente, VenteDTO.class))
+                .map(this::enrichVenteDTO)
                 .collect(Collectors.toList());
     }
 
@@ -193,7 +193,7 @@ public class VenteServiceImpl implements VenteService {
     public List<VenteDTO> findByEntrepriseAndDateRange(Long entrepriseId, LocalDateTime startDate,
             LocalDateTime endDate) {
         return venteRepository.findAllByEntrepriseIdAndCreationDateBetween(entrepriseId, startDate, endDate).stream()
-                .map(vente -> modelMapper.map(vente, VenteDTO.class))
+                .map(this::enrichVenteDTO)
                 .collect(Collectors.toList());
     }
 
@@ -302,6 +302,27 @@ public class VenteServiceImpl implements VenteService {
         venteDTO.setEntrepriseName(savedVente.getEntreprise().getNom());
 
         return venteDTO;
+    }
+
+    /**
+     * Méthode helper pour enrichir un VenteDTO avec les noms du client et de l'entreprise
+     */
+    private VenteDTO enrichVenteDTO(Vente vente) {
+        VenteDTO dto = modelMapper.map(vente, VenteDTO.class);
+        
+        // Enrichir avec le nom du client
+        if (vente.getClient() != null) {
+            dto.setClientId(vente.getClient().getId());
+            dto.setClientName(vente.getClient().getNom() + " " + vente.getClient().getPrenom());
+        }
+        
+        // Enrichir avec le nom de l'entreprise
+        if (vente.getEntreprise() != null) {
+            dto.setEntrepriseId(vente.getEntreprise().getId());
+            dto.setEntrepriseName(vente.getEntreprise().getNom());
+        }
+        
+        return dto;
     }
 
 }

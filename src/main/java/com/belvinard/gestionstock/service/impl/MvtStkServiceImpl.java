@@ -5,6 +5,7 @@ import com.belvinard.gestionstock.exceptions.InvalidOperationException;
 import com.belvinard.gestionstock.exceptions.ResourceNotFoundException;
 import com.belvinard.gestionstock.models.*;
 import com.belvinard.gestionstock.repositories.ArticleRepository;
+import com.belvinard.gestionstock.repositories.EntrepriseRepository;
 import com.belvinard.gestionstock.repositories.MvtStkRepository;
 import com.belvinard.gestionstock.service.MvtStkService;
 import lombok.RequiredArgsConstructor;
@@ -24,10 +25,23 @@ public class MvtStkServiceImpl implements MvtStkService {
     private final MvtStkRepository mvtStkRepository;
     private final ArticleRepository articleRepository;
     private final ModelMapper modelMapper;
+    private final EntrepriseRepository entrepriseRepository;
 
     @Override
     @Transactional
     public MvtStkDTO entreeStock(Long articleId, BigDecimal quantite, SourceMvtStk source, Long entrepriseId) {
+        if (articleId == null || quantite == null || source == null || entrepriseId == null) {
+            throw new InvalidOperationException("Tous les paramètres sont obligatoires");
+        }
+        
+        // Vérifier que l'article existe
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Article", "id", articleId));
+        
+        // Vérifier que l'entreprise existe (vous devez ajouter EntrepriseRepository si nécessaire)
+        entrepriseRepository.findById(entrepriseId)
+           .orElseThrow(() -> new ResourceNotFoundException("Entreprise", "id", entrepriseId));
+        
         return createMvtStk(articleId, quantite, TypeMvtStk.ENTREE, source, entrepriseId);
     }
 

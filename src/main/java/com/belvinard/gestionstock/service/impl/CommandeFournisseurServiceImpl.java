@@ -8,6 +8,7 @@ import com.belvinard.gestionstock.exceptions.ResourceNotFoundException;
 import com.belvinard.gestionstock.models.*;
 import com.belvinard.gestionstock.repositories.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import com.belvinard.gestionstock.service.CommandeFournisseurService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
     private final EntrepriseRepository entrepriseRepository;
     private final LigneCommandeFournisseurRepository ligneCommandeFournisseurRepository;
     private final ArticleRepository articleRepository;
+    private final MvtStkRepository mvtStkRepository;
     private final ModelMapper modelMapper;
 
 
@@ -177,7 +179,7 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
 
         commande.setEtatCommande(nouvelEtat);
 
-        // Si la commande passe à LIVREE, augmenter le stock des articles
+        // Si la commande passe à LIVREE, augmenter le stock des articles et créer les mouvements
         if (nouvelEtat == EtatCommande.LIVREE) {
             augmenterStockArticles(commande.getId());
         }
@@ -224,12 +226,26 @@ public class CommandeFournisseurServiceImpl implements CommandeFournisseurServic
         List<LigneCommandeFournisseur> lignesValidees = ligneCommandeFournisseurRepository
                 .findAllByCommandeFournisseurIdAndEtatLigne(commandeId, EtatLigneCommandeFournisseur.VALIDEE);
         
+        CommandeFournisseur commande = commandeFournisseurRepository.findById(commandeId).orElse(null);
+        Long entrepriseId = commande != null && commande.getFournisseur() != null && commande.getFournisseur().getEntreprise() != null 
+                ? commande.getFournisseur().getEntreprise().getId() : 1L;
+        
         for (LigneCommandeFournisseur ligne : lignesValidees) {
             Article article = ligne.getArticle();
             BigDecimal stockActuel = BigDecimal.valueOf(article.getQuantiteEnStock());
             BigDecimal nouveauStock = stockActuel.add(ligne.getQuantite());
             article.setQuantiteEnStock(nouveauStock.longValue());
             articleRepository.save(article);
+            
+            // Créer le mouvement de stock
+            MvtStk mvtStk = new MvtStk();
+            mvtStk.setArticle(article);
+            mvtStk.setQuantite(ligne.getQuantite());
+            mvtStk.setTypeMvt(TypeMvtStk.ENTREE);
+            mvtStk.setSourceMvt(SourceMvtStk.COMMANDE_FOURNISSEUR);
+            mvtStk.setEntrepriseId(entrepriseId);
+            mvtStk.setDateMvt(LocalDateTime.now());
+            mvtStkRepository.save(mvtStk);
         }
     }
 

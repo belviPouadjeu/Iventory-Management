@@ -28,11 +28,9 @@ public class MvtStkController {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_STOCK_MANAGER')")
     @Operation(summary = "Créer un mouvement d'entrée de stock (ADMIN ou STOCK_MANAGER)")
     public ResponseEntity<MvtStkDTO> entreeStock(
-            @RequestParam Long articleId,
-            @RequestParam BigDecimal quantite,
-            @RequestParam SourceMvtStk source,
-            @RequestParam Long entrepriseId) {
-        return ResponseEntity.ok(mvtStkService.entreeStock(articleId, quantite, source, entrepriseId));
+            @RequestBody com.belvinard.gestionstock.dto.EntreeStockRequest request,
+            @RequestParam SourceMvtStk source) {
+        return ResponseEntity.ok(mvtStkService.entreeStock(request.getArticleId(), request.getQuantite(), source, request.getEntrepriseId()));
     }
 
     @PostMapping("/sortie")
