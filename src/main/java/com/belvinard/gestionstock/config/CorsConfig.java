@@ -33,7 +33,9 @@ public class CorsConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Origines autorisées depuis les propriétés
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .toList();
         configuration.setAllowedOriginPatterns(origins);
         
         // Méthodes HTTP autorisées
