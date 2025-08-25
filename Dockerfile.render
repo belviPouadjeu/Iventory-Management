@@ -1,0 +1,23 @@
+FROM openjdk:21-jdk-slim
+
+# Créer un utilisateur non-root
+RUN addgroup --system spring && adduser --system spring --ingroup spring
+
+# Copier le JAR pré-compilé
+COPY target/*.jar app.jar
+
+# Changer le propriétaire
+RUN chown spring:spring app.jar
+
+# Utiliser l'utilisateur non-root
+USER spring:spring
+
+# Port d'écoute
+EXPOSE 8082
+
+# Variables d'environnement pour Render
+ENV SPRING_PROFILES_ACTIVE=prod
+ENV SERVER_PORT=8082
+
+# Commande de démarrage
+ENTRYPOINT ["java", "-jar", "/app.jar"]
