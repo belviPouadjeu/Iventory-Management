@@ -1,31 +1,34 @@
+version: '3.9'
+
 services:
   gestionstock-app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.render
     container_name: gestionstock-app
     ports:
-      - "${APP_PORT}:8082"
+      - "${PORT}:8082"  # Render injecte automatiquement le port
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - SPRING_DATASOURCE_URL=${DATABASE_URL}
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - MINIO_URL=${MINIO_URL}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
       - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
-      - MINIO_REGION=${MINIO_REGION}
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - MINIO_REGION=${MINIO_REGION:us-west-2}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+    restart: unless-stopped
     networks:
       - app-network
-    restart: unless-stopped
 
+  # PostgreSQL local pour tests dev (optionnel)
   postgres:
     image: postgres:15-alpine
     container_name: postgres
     ports:
-      - "${DB_PORT}:5432"
+      - "5432:5432"
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -36,12 +39,10 @@ services:
       - app-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  # MinIO retiré - utilisation d'isdrive.com
 
 volumes:
   postgres-data:
