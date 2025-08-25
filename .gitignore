@@ -27,3 +27,4 @@ logs/
 # Maven
 .mvn/wrapper/maven-wrapper.jar
 .env
+.env.prod

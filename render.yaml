@@ -1,0 +1,55 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: gestionstock-db
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.postgres
+    envVars:
+      - key: POSTGRES_DB
+        value: inventory_management
+      - key: POSTGRES_USER
+        value: postgres
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+
+  # Spring Boot Application
+  - type: web
+    name: gestionstock-app
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: gestionstock-db
+          property: host
+      - key: DB_PORT
+        fromService:
+          type: pserv
+          name: gestionstock-db
+          property: port
+      - key: DB_NAME
+        value: inventory_management
+      - key: DB_USER
+        value: postgres
+      - key: DB_PASSWORD
+        fromService:
+          type: pserv
+          name: gestionstock-db
+          property: password
+      - key: MINIO_URL
+        value: https://d6k2.or4.idrivee2-55.com
+      - key: MINIO_ACCESS_KEY
+        value: nFmZy1Jk9juGSY1LuEeO
+      - key: MINIO_SECRET_KEY
+        value: zzMd49XzPV2LkqypAMLWfXxvdVkYVzeKACHDp1ug
+      - key: MINIO_BUCKET_NAME
+        value: gestionstock
+      - key: MINIO_REGION
+        value: us-west-2
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://your-frontend.onrender.com,http://localhost:3000
