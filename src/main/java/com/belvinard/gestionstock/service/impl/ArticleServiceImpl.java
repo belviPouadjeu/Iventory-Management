@@ -221,7 +221,7 @@ public class ArticleServiceImpl implements ArticleService {
         articleFromDb.setPhoto(fileName);
 
         // 4. Générer l’URL signée
-        String imageUrl = minioService.getPreSignedUrl(fileName, 15); // en secondes ou minutes selon ta config
+        String imageUrl = minioService.getPreSignedUrl(fileName, 15);
 
         // 5. Sauvegarder l'article modifié
         Article updatedArticle = articleRepository.save(articleFromDb);
