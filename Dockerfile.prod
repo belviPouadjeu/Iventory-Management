@@ -8,6 +8,11 @@ RUN mvn clean package -DskipTests
 FROM amazoncorretto:21-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-COPY .env .env
-EXPOSE ${APP_PORT:-8082}
+
+# Variables d'environnement par défaut
+ENV APP_PORT=8082
+ENV SPRING_PROFILES_ACTIVE=prod
+
+EXPOSE $APP_PORT
+
 ENTRYPOINT ["java", "-jar", "app.jar"]
